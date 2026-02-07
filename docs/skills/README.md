@@ -57,9 +57,9 @@ skills/
 
 | 优先级 | Skill 文件 | 状态 |
 |--------|-----------|------|
-| P0 | analysis/requirement-decomposition.md | ☐ 待创建 |
-| P0 | analysis/user-story-writing.md | ☐ 待创建 |
-| P0 | ui/ui-schema-design.md | ☐ 待创建 |
+| P0 | analysis/requirement-decomposition.md | ✅ 已创建 |
+| P0 | analysis/user-story-writing.md | ✅ 已创建 |
+| P0 | ui/ui-schema-design.md | ✅ 已创建 |
 | P1 | architecture/data-model-design.md | ☐ 待创建 |
 | P1 | frontend/mock-data-creation.md | ☐ 待创建 |
 | P1 | frontend/react-component-development.md | ☐ 待创建 |
