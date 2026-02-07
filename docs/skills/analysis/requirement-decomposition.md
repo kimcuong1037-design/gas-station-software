@@ -7,6 +7,7 @@
 - **输入：**
   - 目标模块名称（如"基础运营 > 站点管理"）
   - 需求文档路径（`requirements/加气站运营管理系统-功能清单-参考.md`）
+  - 行业知识库（`knowledge-base/` 目录下的所有文件，提供行业背景、人员职能、市场调研等参考信息）
   - 术语规范（`docs/STANDARDS.md` §1 术语表）
   - ROADMAP 中该模块的范围定义（`docs/ROADMAP.md`）
 - **输出：**
@@ -125,6 +126,7 @@ L1 子系统：基础运营
 ## 输入文件
 - 需求文档：requirements/加气站运营管理系统-功能清单-参考.md
   - 目标章节：{{SECTION_REFERENCE}}
+- 行业知识库：knowledge-base/ 目录下的所有文件（行业背景、人员职能、市场调研等）
 - 术语规范：docs/STANDARDS.md §1 术语表
 - 模块范围：docs/ROADMAP.md 中【{{MODULE_NAME}}】的定义
 

@@ -6,6 +6,7 @@
 - **所属 Agent:** UI 设计 Agent (UI Designer)
 - **输入：**
   - User Story 文档（`docs/features/<domain>/<module>/user-stories.md`，由 `user-story-writing` Skill 产出）
+  - 行业知识库（`knowledge-base/` 目录下的所有文件，提供行业背景、人员职能、市场调研等参考信息）
   - UI/UX 设计规范（`docs/STANDARDS.md` §4）
   - Ant Design 组件库参考
 - **输出：**
@@ -114,6 +115,7 @@
 
 ## 输入文件
 - User Story 文档：docs/features/{{DOMAIN}}/{{MODULE}}/user-stories.md
+- 行业知识库：knowledge-base/ 目录下的所有文件（行业背景、人员职能、市场调研等）
 - UI/UX 设计规范：docs/STANDARDS.md §4
 - 组件库：Ant Design (antd) v5
 

@@ -6,6 +6,7 @@
 - **所属 Agent:** 需求分析 Agent (Requirement Analyst)
 - **输入：**
   - 需求拆解文档（`docs/features/<domain>/<module>/requirements.md`，由 `requirement-decomposition` Skill 产出）
+  - 行业知识库（`knowledge-base/` 目录下的所有文件，提供行业背景、人员职能、市场调研等参考信息）
   - 术语规范（`docs/STANDARDS.md` §1 术语表）
   - 用户角色定义（见本文件 §附录A）
 - **输出：**
@@ -89,6 +90,7 @@
 
 ## 输入文件
 - 需求拆解文档：docs/features/{{DOMAIN}}/{{MODULE}}/requirements.md
+- 行业知识库：knowledge-base/ 目录下的所有文件（行业背景、人员职能、市场调研等）
 - 术语规范：docs/STANDARDS.md §1 术语表
 - 用户角色：docs/skills/analysis/user-story-writing.md §附录A
 

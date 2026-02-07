@@ -26,7 +26,7 @@ Each concern is maintained in its own dedicated file.
 | Document | Path | Description |
 |----------|------|-------------|
 | 功能清单 | [requirements/加气站运营管理系统-功能清单-参考.md](requirements/加气站运营管理系统-功能清单-参考.md) | 主要需求文档 |
-| 市场调研 | [requirements/加气站软件市场调研.html](requirements/加气站软件市场调研.html) | 市场调研背景 |
+| **行业知识库** | [knowledge-base/](knowledge-base/) | 行业背景知识、人员职能、市场调研等参考资料 |
 
 ---
 
