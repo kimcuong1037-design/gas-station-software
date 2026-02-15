@@ -1,8 +1,8 @@
 # Agent 结构计划 (Agent Architecture Plan)
 
 **项目：** 加气站运营管理系统
-**版本：** 1.0
-**更新日期：** 2026-02-07
+**版本：** 1.1
+**更新日期：** 2026-02-15
 
 ---
 
@@ -91,11 +91,13 @@
 
 - **SubAgent 类型：** `general-purpose`
 - **负责 Skills：**
+  - `ux-design` — 用户体验设计（用户视角的流程优化、交互效率、导航清晰度）
   - `ui-schema-design` — UI Schema 编写（页面结构与交互定义）
   - `page-layout-design` — 页面布局设计
   - `component-specification` — 组件规格定义
-- **输入：** User Story、UI 规范（STANDARDS.md §4）
-- **输出：** UI Schema 文件、页面结构定义、组件使用说明
+- **输入：** User Story、行业知识库、UI/UX 规范（STANDARDS.md §4）
+- **输出：** UX 设计文档、UI Schema 文件、页面结构定义、组件使用说明
+- **执行顺序：** `ux-design` → `ui-schema-design` → `page-layout-design`
 
 #### Agent 4：前端工程 Agent (Frontend Engineer)
 
@@ -165,25 +167,34 @@
          ↓
 步骤 5: [用户确认架构设计]
          ↓
-步骤 6: UI 设计 Agent
+步骤 6: UI 设计 Agent (UX 设计)
+         → 分析用户角色和核心任务流程
+         → 优化操作效率（高频操作 ≤3 次点击）
+         → 设计导航层级和信息架构
+         → 设计引导、帮助、错误预防机制
+         → 输出: docs/features/operations/station/ux-design.md
+         ↓
+步骤 7: [用户确认 UX 设计]
+         ↓
+步骤 8: UI 设计 Agent (UI Schema)
          → 编写 UI Schema（列表页、详情页、表单页）
          → 定义交互行为
          → 输出: docs/features/operations/station/ui-schema.md
          ↓
-步骤 7: [用户确认 UI 设计]
+步骤 9: [用户确认 UI Schema]
          ↓
-步骤 8: 前端工程 Agent
-         → 创建模拟数据
-         → 实现 React 组件
-         → 集成 i18n
-         → 输出: src/features/operations/station/ 下的代码文件
-         ↓
-步骤 9: 质量保障 Agent
-         → 代码审查
-         → 编写测试
-         → 输出: 审查意见、测试文件
-         ↓
-步骤 10: 文档管理 Agent
+步骤 10: 前端工程 Agent
+          → 创建模拟数据
+          → 实现 React 组件
+          → 集成 i18n
+          → 输出: src/features/operations/station/ 下的代码文件
+          ↓
+步骤 11: 质量保障 Agent
+          → 代码审查
+          → 编写测试
+          → 输出: 审查意见、测试文件
+          ↓
+步骤 12: 文档管理 Agent
           → 更新 ROADMAP.md 进度
           → 更新 CHANGELOG
 ```
@@ -230,6 +241,7 @@ docs/skills/
 │   └── workflow-design.md             # 业务流程设计
 │
 ├── ui/                                # UI 设计类 Skills
+│   ├── ux-design.md                   # 用户体验设计（流程优化、交互效率）
 │   ├── ui-schema-design.md            # UI Schema 编写
 │   ├── page-layout-design.md          # 页面布局设计
 │   └── component-specification.md     # 组件规格定义
@@ -304,6 +316,7 @@ docs/skills/
 |--------|-------|------|
 | P0 | `requirement-decomposition` | 所有模块开发的起点 |
 | P0 | `user-story-writing` | 需求确认的载体 |
+| P0 | `ux-design` | 用户体验设计，ui-schema-design 的前置输入 |
 | P0 | `ui-schema-design` | 前端开发的直接输入 |
 | P1 | `data-model-design` | 模拟数据和组件的基础 |
 | P1 | `mock-data-creation` | MVP 阶段的数据来源 |

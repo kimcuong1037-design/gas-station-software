@@ -22,6 +22,7 @@ skills/
 │   └── workflow-design.md             # 业务流程设计
 │
 ├── ui/                                # UI 设计类
+│   ├── ux-design.md                   # 用户体验设计
 │   ├── ui-schema-design.md            # UI Schema 编写
 │   ├── page-layout-design.md          # 页面布局设计
 │   └── component-specification.md     # 组件规格定义
@@ -59,6 +60,7 @@ skills/
 |--------|-----------|------|
 | P0 | analysis/requirement-decomposition.md | ✅ 已创建 |
 | P0 | analysis/user-story-writing.md | ✅ 已创建 |
+| P0 | ui/ux-design.md | ✅ 已创建 |
 | P0 | ui/ui-schema-design.md | ✅ 已创建 |
 | P1 | architecture/data-model-design.md | ☐ 待创建 |
 | P1 | frontend/mock-data-creation.md | ☐ 待创建 |
@@ -72,3 +74,4 @@ skills/
 ---
 
 *创建时间：2026-02-07*
+*最后更新：2026-02-15*
