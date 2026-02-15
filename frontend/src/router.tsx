@@ -8,6 +8,7 @@ import { Spin } from 'antd';
 const StationList = lazy(() => import('./features/operations/station/pages/StationList'));
 const StationDetail = lazy(() => import('./features/operations/station/pages/StationDetail'));
 const StationForm = lazy(() => import('./features/operations/station/pages/StationForm'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Loading component
 const PageLoading = () => (
@@ -75,6 +76,10 @@ export const router = createBrowserRouter([
             element: <div>巡检管理 - 待开发</div>,
           },
         ],
+      },
+      {
+        path: '*',
+        element: withSuspense(NotFound),
       },
     ],
   },

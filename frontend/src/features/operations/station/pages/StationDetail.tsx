@@ -32,6 +32,7 @@ import {
   ReloadOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
+import { RequirementTag } from '../../../../components/RequirementTag';
 import type { ColumnsType } from 'antd/es/table';
 import type { StationStatus, Nozzle, DeviceStatus, FuelingStatus, Shift, StationEmployee } from '../types';
 import { stations } from '../../../../mock/stations';
@@ -43,23 +44,19 @@ const { Title, Text } = Typography;
 const { TabPane } = Tabs;
 
 /** 状态颜色映射 */
-const statusColorMap: Record<StationStatus, string> = {
-  active: 'green',
-  inactive: 'default',
-  suspended: 'orange',
-};
+import { statusColorMap } from '../constants';
 
 /** 设备状态 Badge 映射 */
-const deviceStatusMap: Record<DeviceStatus, { status: 'success' | 'error' | 'default'; text: string }> = {
-  online: { status: 'success', text: '在线' },
-  offline: { status: 'default', text: '离线' },
-  error: { status: 'error', text: '故障' },
+const deviceStatusMap: Record<DeviceStatus, { status: 'success' | 'error' | 'default'; textKey: string }> = {
+  online: { status: 'success', textKey: 'station.device.online' },
+  offline: { status: 'default', textKey: 'station.device.offline' },
+  error: { status: 'error', textKey: 'station.device.error' },
 };
 
 /** 充装状态映射 */
-const fuelingStatusMap: Record<FuelingStatus, { color: string; text: string }> = {
-  idle: { color: 'green', text: '空闲' },
-  fueling: { color: 'blue', text: '充装中' },
+const fuelingStatusMap: Record<FuelingStatus, { color: string; textKey: string }> = {
+  idle: { color: 'green', textKey: 'station.nozzle.statusIdle' },
+  fueling: { color: 'blue', textKey: 'station.nozzle.statusFueling' },
 };
 
 const StationDetail: React.FC = () => {
@@ -150,7 +147,7 @@ const StationDetail: React.FC = () => {
       render: (price: number, record) => `¥${price.toFixed(2)}/${record.fuelType?.unit || 'L'}`,
     },
     {
-      title: '设备状态',
+      title: t('station.device.online'),
       dataIndex: 'deviceStatus',
       key: 'deviceStatus',
       width: 100,
@@ -158,24 +155,24 @@ const StationDetail: React.FC = () => {
       render: (status: DeviceStatus) => (
         <Badge
           status={deviceStatusMap[status].status}
-          text={deviceStatusMap[status].text}
+          text={t(deviceStatusMap[status].textKey)}
         />
       ),
     },
     {
-      title: '充装状态',
+      title: t('station.nozzle.statusFueling'),
       dataIndex: 'fuelingStatus',
       key: 'fuelingStatus',
       width: 100,
       align: 'center',
       render: (status: FuelingStatus) => (
         <Tag color={fuelingStatusMap[status].color}>
-          {fuelingStatusMap[status].text}
+          {t(fuelingStatusMap[status].textKey)}
         </Tag>
       ),
     },
     {
-      title: '业务状态',
+      title: t('station.nozzle.businessStatus'),
       dataIndex: 'status',
       key: 'status',
       width: 80,
@@ -225,11 +222,11 @@ const StationDetail: React.FC = () => {
       width: 100,
     },
     {
-      title: '跨天',
+      title: t('station.detailPage.overnight'),
       dataIndex: 'isOvernight',
       key: 'isOvernight',
       width: 80,
-      render: (val: boolean) => (val ? <Tag color="orange">是</Tag> : <Tag>否</Tag>),
+      render: (val: boolean) => (val ? <Tag color="orange">{t('common.yes')}</Tag> : <Tag>{t('common.no')}</Tag>),
     },
     {
       title: t('station.shift.supervisor'),
@@ -253,37 +250,37 @@ const StationDetail: React.FC = () => {
   // 员工列表列定义
   const employeeColumns: ColumnsType<StationEmployee> = [
     {
-      title: '工号',
+      title: t('station.employee.no'),
       dataIndex: 'employeeNo',
       key: 'employeeNo',
       width: 100,
     },
     {
-      title: '姓名',
+      title: t('station.employee.name'),
       dataIndex: 'name',
       key: 'name',
       width: 100,
     },
     {
-      title: '电话',
+      title: t('station.employee.phone'),
       dataIndex: 'phone',
       key: 'phone',
       width: 130,
     },
     {
-      title: '岗位',
+      title: t('station.employee.position'),
       dataIndex: 'position',
       key: 'position',
       width: 100,
     },
     {
-      title: '来源',
+      title: t('station.employee.source'),
       dataIndex: 'source',
       key: 'source',
       width: 100,
       render: (source: string) => (
         <Tag color={source === 'sync' ? 'blue' : 'green'}>
-          {source === 'sync' ? '系统同步' : '本地维护'}
+          {source === 'sync' ? t('station.employee.sourceSync') : t('station.employee.sourceLocal')}
         </Tag>
       ),
     },
@@ -316,17 +313,17 @@ const StationDetail: React.FC = () => {
     );
 
     const getStatusColor = (nozzle: Nozzle) => {
-      if (nozzle.deviceStatus === 'error') return '#ff4d4f';
+      if (nozzle.deviceStatus === 'error') return '#CA3521';
       if (nozzle.deviceStatus === 'offline') return '#d9d9d9';
-      if (nozzle.fuelingStatus === 'fueling') return '#1890ff';
-      return '#52c41a';
+      if (nozzle.fuelingStatus === 'fueling') return '#22A06B';
+      return '#1F845A';
     };
 
     const getStatusIcon = (nozzle: Nozzle) => {
-      if (nozzle.deviceStatus === 'error') return '🔴';
-      if (nozzle.deviceStatus === 'offline') return '⚪';
-      if (nozzle.fuelingStatus === 'fueling') return '🔵';
-      return '🟢';
+      if (nozzle.deviceStatus === 'error') return <span role="img" aria-label={t('station.device.error')}>🔴</span>;
+      if (nozzle.deviceStatus === 'offline') return <span role="img" aria-label={t('station.device.offline')}>⚪</span>;
+      if (nozzle.fuelingStatus === 'fueling') return <span role="img" aria-label={t('station.nozzle.statusFueling')}>🔵</span>;
+      return <span role="img" aria-label={t('station.nozzle.statusIdle')}>🟢</span>;
     };
 
     return (
@@ -335,16 +332,16 @@ const StationDetail: React.FC = () => {
         <div style={{ marginBottom: 16 }}>
           <Space size="large">
             <Text>
-              🟢 空闲: {nozzles.filter((n) => n.deviceStatus === 'online' && n.fuelingStatus === 'idle').length}
+              <span role="img" aria-label={t('station.nozzle.statusIdle')}>🟢</span> {t('station.nozzle.statusIdle')}: {nozzles.filter((n) => n.deviceStatus === 'online' && n.fuelingStatus === 'idle').length}
             </Text>
             <Text>
-              🔵 充装中: {nozzles.filter((n) => n.fuelingStatus === 'fueling').length}
+              <span role="img" aria-label={t('station.nozzle.statusFueling')}>🔵</span> {t('station.nozzle.statusFueling')}: {nozzles.filter((n) => n.fuelingStatus === 'fueling').length}
             </Text>
             <Text>
-              ⚪ 离线: {nozzles.filter((n) => n.deviceStatus === 'offline').length}
+              <span role="img" aria-label={t('station.device.offline')}>⚪</span> {t('station.device.offline')}: {nozzles.filter((n) => n.deviceStatus === 'offline').length}
             </Text>
             <Text>
-              🔴 故障: {nozzles.filter((n) => n.deviceStatus === 'error').length}
+              <span role="img" aria-label={t('station.device.error')}>🔴</span> {t('station.device.error')}: {nozzles.filter((n) => n.deviceStatus === 'error').length}
             </Text>
           </Space>
         </div>
@@ -353,7 +350,7 @@ const StationDetail: React.FC = () => {
         {Object.entries(groupedNozzles).map(([dispenserNo, dispenserNozzles]) => (
           <Card
             key={dispenserNo}
-            title={`加注岛 ${dispenserNo}`}
+            title={`${t('station.nozzle.dispenser')} ${dispenserNo}`}
             size="small"
             style={{ marginBottom: 16 }}
           >
@@ -370,17 +367,17 @@ const StationDetail: React.FC = () => {
                   >
                     <div style={{ textAlign: 'center' }}>
                       <Title level={5} style={{ marginBottom: 4 }}>
-                        枪{nozzle.nozzleNo}
+                        {t('station.nozzle.code')}{nozzle.nozzleNo}
                       </Title>
                       <div style={{ marginBottom: 4 }}>
                         {getStatusIcon(nozzle)}{' '}
                         {nozzle.deviceStatus === 'error'
-                          ? '故障'
+                          ? t('station.device.error')
                           : nozzle.fuelingStatus === 'fueling'
-                          ? '充装中'
+                          ? t('station.nozzle.statusFueling')
                           : nozzle.deviceStatus === 'offline'
-                          ? '离线'
-                          : '空闲'}
+                          ? t('station.device.offline')
+                          : t('station.nozzle.statusIdle')}
                       </div>
                       <Tag>{nozzle.fuelType?.name || '-'}</Tag>
                       <div style={{ marginTop: 4 }}>
@@ -416,6 +413,7 @@ const StationDetail: React.FC = () => {
                 {station.name}
               </Title>
               {renderStatusTag(station.status)}
+              <RequirementTag componentId="station-detail" showDetail />
             </Space>
           </Col>
           <Col>
@@ -428,8 +426,13 @@ const StationDetail: React.FC = () => {
                 {t('common.edit')}
               </Button>
               <Popconfirm
-                title="确定要停用该站点吗？"
-                onConfirm={() => message.success(t('common.success'))}
+                title={t('station.detailPage.confirmDisableStation')}
+                onConfirm={() => {
+                  // TODO: 调用实际的停用站点 API
+                  // 例如: await disableStation(id);
+                  message.success(t('common.stationDisabled'));
+                  navigate('/operations/station');
+                }}
               >
                 <Button danger icon={<StopOutlined />}>
                   {t('common.disabled')}
@@ -445,10 +448,10 @@ const StationDetail: React.FC = () => {
         <Alert
           type="warning"
           showIcon
-          message={`该站点有 ${errorNozzles.length} 台枪处于故障状态`}
+          message={t('station.detailPage.errorNozzleAlert', { count: errorNozzles.length })}
           action={
             <Button size="small" onClick={() => setActiveTab('nozzle')}>
-              查看枪配置
+              {t('station.detailPage.viewNozzleConfig')}
             </Button>
           }
           style={{ marginBottom: 16 }}
@@ -459,10 +462,18 @@ const StationDetail: React.FC = () => {
       <Card>
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
           {/* 基本信息 Tab */}
-          <TabPane tab={t('station.tabBasic')} key="basic">
+          <TabPane 
+            tab={
+              <Space size={4}>
+                {t('station.tabBasic')}
+                <RequirementTag componentId="station-detail-basic-tab" />
+              </Space>
+            } 
+            key="basic"
+          >
             {/* 站点信息 */}
             <Descriptions
-              title="站点信息"
+              title={t('station.detailPage.stationInfo')}
               bordered
               column={{ xs: 1, sm: 2, md: 2 }}
               style={{ marginBottom: 24 }}
@@ -483,7 +494,7 @@ const StationDetail: React.FC = () => {
                 </Space>
               </Descriptions.Item>
               {station.latitude && station.longitude && (
-                <Descriptions.Item label="坐标">
+                <Descriptions.Item label={t('station.form.coordinate')}>
                   {station.latitude.toFixed(6)}, {station.longitude.toFixed(6)}
                 </Descriptions.Item>
               )}
@@ -505,11 +516,11 @@ const StationDetail: React.FC = () => {
                   <Space direction="vertical" size={0}>
                     <Text>
                       <ClockCircleOutlined style={{ marginRight: 8 }} />
-                      工作日: {station.businessHours.weekday}
+                      {t('station.form.weekdayHours')}: {station.businessHours.weekday}
                     </Text>
                     <Text>
                       <ClockCircleOutlined style={{ marginRight: 8 }} />
-                      周末: {station.businessHours.weekend}
+                      {t('station.form.weekendHours')}: {station.businessHours.weekend}
                     </Text>
                   </Space>
                 ) : (
@@ -522,15 +533,15 @@ const StationDetail: React.FC = () => {
               <Descriptions.Item label={t('station.region.title')}>
                 {station.region?.name || '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="员工管理模式">
+              <Descriptions.Item label={t('station.form.employeeSyncMode')}>
                 <Tag color={station.employeeSyncMode === 'sync' ? 'blue' : 'green'}>
-                  {station.employeeSyncMode === 'sync' ? '系统同步' : '本地维护'}
+                  {station.employeeSyncMode === 'sync' ? t('station.employee.sourceSync') : t('station.employee.sourceLocal')}
                 </Tag>
               </Descriptions.Item>
             </Descriptions>
 
             {/* 统计概览 */}
-            <Title level={5}>统计概览</Title>
+            <Title level={5}>{t('station.detailPage.overview')}</Title>
             <Row gutter={16}>
               <Col xs={12} sm={6}>
                 <Card>
@@ -600,7 +611,15 @@ const StationDetail: React.FC = () => {
           </TabPane>
 
           {/* 枪配置 Tab */}
-          <TabPane tab={t('station.tabNozzle')} key="nozzle">
+          <TabPane 
+            tab={
+              <Space size={4}>
+                {t('station.tabNozzle')}
+                <RequirementTag componentIds={['nozzle-list-tab', 'nozzle-realtime-status']} />
+              </Space>
+            } 
+            key="nozzle"
+          >
             <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
               <Col>
                 <Title level={5} style={{ marginBottom: 0 }}>
@@ -609,7 +628,7 @@ const StationDetail: React.FC = () => {
               </Col>
               <Col>
                 <Space>
-                  <Button icon={<ReloadOutlined />}>刷新状态</Button>
+                  <Button icon={<ReloadOutlined />}>{t('station.detailPage.refreshStatus')}</Button>
                   <Button type="primary" icon={<PlusOutlined />}>
                     {t('station.nozzle.add')}
                   </Button>
@@ -621,7 +640,7 @@ const StationDetail: React.FC = () => {
             {renderNozzleBoard()}
 
             {/* 列表视图 */}
-            <Card title="枪配置列表" style={{ marginTop: 16 }}>
+            <Card title={t('station.detailPage.nozzleConfig')} style={{ marginTop: 16 }}>
               <Table
                 columns={nozzleColumns}
                 dataSource={nozzles}
@@ -633,7 +652,15 @@ const StationDetail: React.FC = () => {
           </TabPane>
 
           {/* 班次排班 Tab */}
-          <TabPane tab={t('station.tabShift')} key="shift">
+          <TabPane 
+            tab={
+              <Space size={4}>
+                {t('station.tabShift')}
+                <RequirementTag componentId="shift-tab" />
+              </Space>
+            } 
+            key="shift"
+          >
             <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
               <Col>
                 <Title level={5} style={{ marginBottom: 0 }}>
@@ -655,7 +682,15 @@ const StationDetail: React.FC = () => {
           </TabPane>
 
           {/* 站点照片 Tab */}
-          <TabPane tab={t('station.tabPhoto')} key="photo">
+          <TabPane 
+            tab={
+              <Space size={4}>
+                {t('station.tabPhoto')}
+                <RequirementTag componentId="photo-tab" />
+              </Space>
+            } 
+            key="photo"
+          >
             <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
               <Col>
                 <Title level={5} style={{ marginBottom: 0 }}>
@@ -668,15 +703,23 @@ const StationDetail: React.FC = () => {
                 </Button>
               </Col>
             </Row>
-            <Empty description="暂无照片" />
+            <Empty description={t('station.detailPage.noPhoto')} />
           </TabPane>
 
           {/* 员工管理 Tab */}
-          <TabPane tab={t('station.tabEmployee')} key="employee">
+          <TabPane 
+            tab={
+              <Space size={4}>
+                {t('station.tabEmployee')}
+                <RequirementTag componentId="employee-tab" />
+              </Space>
+            } 
+            key="employee"
+          >
             <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
               <Col>
                 <Title level={5} style={{ marginBottom: 0 }}>
-                  员工列表
+                  {t('station.employee.list')}
                 </Title>
               </Col>
               <Col>

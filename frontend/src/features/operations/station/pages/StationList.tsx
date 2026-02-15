@@ -17,6 +17,7 @@ import {
   Typography,
   message,
 } from 'antd';
+import { RequirementTag, DevRequirementPanel } from '../../../../components/RequirementTag';
 import {
   PlusOutlined,
   SearchOutlined,
@@ -32,18 +33,12 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { Station, StationStatus } from '../types';
+import { statusColorMap } from '../constants';
 import { stations } from '../../../../mock/stations';
 import { regions } from '../../../../mock/regions';
 import { groups } from '../../../../mock/groups';
 
 const { Text, Title } = Typography;
-
-/** 状态颜色映射 */
-const statusColorMap: Record<StationStatus, string> = {
-  active: 'green',
-  inactive: 'default',
-  suspended: 'orange',
-};
 
 /** 视图类型 */
 type ViewType = 'table' | 'card';
@@ -62,6 +57,20 @@ const StationList: React.FC = () => {
   // 分页状态
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  // 注意: loading 状态目前使用 mock 数据，未来接入 API 时使用
+  const [loading] = useState(false);
+
+  // 重置筛选
+  const handleResetFilters = () => {
+    setKeyword('');
+    setStatusFilter('all');
+    setRegionFilter(undefined);
+    setGroupFilter(undefined);
+    setCurrentPage(1);
+  };
+
+  // 是否有筛选条件
+  const hasFilters = keyword || statusFilter !== 'all' || regionFilter || groupFilter;
 
   // 筛选后的数据
   const filteredData = useMemo(() => {
@@ -278,28 +287,36 @@ const StationList: React.FC = () => {
   }, []);
 
   return (
-    <div style={{ padding: 24 }}>
+    <main style={{ padding: 24 }}>
       {/* 页面标题 */}
-      <div style={{ marginBottom: 24 }}>
+      <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 8 }}>
         <Title level={4} style={{ marginBottom: 0 }}>
           {t('station.title')}
         </Title>
+        <RequirementTag componentId="station-list" showDetail />
       </div>
+
+      {/* 开发模式需求追踪面板 */}
+      <DevRequirementPanel componentId="station-list" />
 
       {/* 筛选区域 */}
       <Card style={{ marginBottom: 16 }}>
         <Row gutter={[16, 16]} align="middle">
           <Col flex="240px">
-            <Input
-              placeholder={t('common.search')}
-              prefix={<SearchOutlined />}
-              value={keyword}
-              onChange={(e) => {
-                setKeyword(e.target.value);
-                setCurrentPage(1);
-              }}
-              allowClear
-            />
+            <Space size={4}>
+              <Input
+                placeholder={t('common.search')}
+                prefix={<SearchOutlined />}
+                value={keyword}
+                onChange={(e) => {
+                  setKeyword(e.target.value);
+                  setCurrentPage(1);
+                }}
+                allowClear
+                style={{ width: 220 }}
+              />
+              <RequirementTag componentId="station-list-search" />
+            </Space>
           </Col>
           <Col flex="120px">
             <Select
@@ -345,29 +362,39 @@ const StationList: React.FC = () => {
               allowClear
             />
           </Col>
+          <Col>
+            {hasFilters && (
+              <Button onClick={handleResetFilters}>
+                {t('common.resetFilters')}
+              </Button>
+            )}
+          </Col>
           <Col flex="auto" />
           <Col>
             <Space>
-              <Button.Group>
+              <Button.Group aria-label={t('common.viewSwitch')}>
                 <Button
                   type={viewType === 'table' ? 'primary' : 'default'}
                   icon={<TableOutlined />}
                   onClick={() => setViewType('table')}
+                  aria-label={t('common.tableView')}
                 />
                 <Button
                   type={viewType === 'card' ? 'primary' : 'default'}
                   icon={<AppstoreOutlined />}
                   onClick={() => setViewType('card')}
+                  aria-label={t('common.cardView')}
                 />
               </Button.Group>
               <Button icon={<ExportOutlined />}>{t('common.export')}</Button>
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
-                onClick={() => navigate('/operations/station/create')}
+                onClick={() => navigate('/operations/station/new')}
               >
                 {t('station.add')}
               </Button>
+              <RequirementTag componentId="station-add-button" />
             </Space>
           </Col>
         </Row>
@@ -380,6 +407,7 @@ const StationList: React.FC = () => {
             columns={columns}
             dataSource={filteredData}
             rowKey="id"
+            loading={loading}
             pagination={{
               current: currentPage,
               pageSize,
@@ -405,7 +433,7 @@ const StationList: React.FC = () => {
           ))}
         </Row>
       )}
-    </div>
+    </main>
   );
 };
 
