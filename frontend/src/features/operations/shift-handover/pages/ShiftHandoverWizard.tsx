@@ -34,6 +34,7 @@ import {
 import type { PrecheckItem, PaymentSummaryItem, FuelSummaryItem } from '../types';
 import { PAYMENT_METHOD_CONFIG } from '../constants';
 import { currentShiftData, precheckItems } from '../../../../mock/shiftHandovers';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -601,6 +602,11 @@ const ShiftHandoverWizard: React.FC = () => {
 
   return (
     <div className="shift-handover-wizard-page">
+      {/* 页面级需求标记 */}
+      <div style={{ marginBottom: 8 }}>
+        <RequirementTag componentId="shift-handover-wizard" module="shift-handover" showDetail />
+      </div>
+
       <Card>
         <Title level={4}>{t('shiftHandover.wizardTitle')}</Title>
         <Paragraph type="secondary">{t('shiftHandover.wizardSubtitle')}</Paragraph>

@@ -29,6 +29,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import type { CashSettlement, SettlementStatus } from '../types';
 import { SETTLEMENT_STATUS_CONFIG, DIFFERENCE_TYPE_CONFIG } from '../constants';
 import { pendingSettlements, shiftHandovers } from '../../../../mock/shiftHandovers';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -281,6 +282,11 @@ const SettlementReview: React.FC = () => {
 
   return (
     <div className="settlement-review-page">
+      {/* 页面级需求标记 */}
+      <div style={{ marginBottom: 8 }}>
+        <RequirementTag componentId="settlement-review" module="shift-handover" showDetail />
+      </div>
+
       {/* 统计概览 */}
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12} md={6}>

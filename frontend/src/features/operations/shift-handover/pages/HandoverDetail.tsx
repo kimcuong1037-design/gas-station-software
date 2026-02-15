@@ -35,6 +35,7 @@ import {
   PAYMENT_METHOD_CONFIG,
 } from '../constants';
 import { shiftHandovers } from '../../../../mock/shiftHandovers';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title, Text } = Typography;
 
@@ -134,6 +135,11 @@ const HandoverDetail: React.FC = () => {
 
   return (
     <div className="handover-detail-page">
+      {/* 页面级需求标记 */}
+      <div style={{ marginBottom: 8 }}>
+        <RequirementTag componentId="handover-detail" module="shift-handover" showDetail />
+      </div>
+
       {/* 页面头部 */}
       <Card style={{ marginBottom: 16 }}>
         <Row justify="space-between" align="middle">
@@ -154,7 +160,10 @@ const HandoverDetail: React.FC = () => {
             </Space>
           </Col>
           <Col>
-            <Button icon={<PrinterOutlined />}>{t('shiftHandover.print')}</Button>
+            <Space>
+              <Button icon={<PrinterOutlined />}>{t('shiftHandover.print')}</Button>
+              <RequirementTag componentId="print-history-slip" module="shift-handover" />
+            </Space>
           </Col>
         </Row>
       </Card>

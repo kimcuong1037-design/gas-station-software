@@ -31,6 +31,7 @@ import { shiftHandovers } from '../../../../mock/shiftHandovers';
 import { stations } from '../../../../mock/stations';
 import { shifts } from '../../../../mock/shifts';
 import { employees } from '../../../../mock/employees';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { RangePicker } = DatePicker;
 const { Text } = Typography;
@@ -242,6 +243,11 @@ const HandoverHistory: React.FC = () => {
 
   return (
     <div className="handover-history-page">
+      {/* 页面级需求标记 */}
+      <div style={{ marginBottom: 8 }}>
+        <RequirementTag componentId="handover-history" module="shift-handover" showDetail />
+      </div>
+
       {/* 筛选区域 */}
       <Card style={{ marginBottom: 16 }}>
         <Row gutter={[16, 16]} align="middle">
@@ -258,6 +264,7 @@ const HandoverHistory: React.FC = () => {
                 }}
                 allowClear={false}
               />
+              <RequirementTag componentId="history-filter" module="shift-handover" />
             </Space>
           </Col>
           <Col>

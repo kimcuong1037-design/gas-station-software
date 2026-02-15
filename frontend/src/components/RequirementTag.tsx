@@ -3,6 +3,22 @@ import { Tooltip, Tag, Space } from 'antd';
 import { LinkOutlined, CheckCircleOutlined, ClockCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import type { UserStoryMapping } from '../features/operations/station/userStoryMapping';
 import { stationUserStories } from '../features/operations/station/userStoryMapping';
+import { shiftHandoverUserStories } from '../features/operations/shift-handover/userStoryMapping';
+
+// 合并所有模块的 User Story 映射
+const allUserStories: Record<string, UserStoryMapping> = {
+  ...stationUserStories,
+  ...shiftHandoverUserStories,
+};
+
+// 模块映射表，用于按模块筛选
+const moduleStories = {
+  station: stationUserStories,
+  'shift-handover': shiftHandoverUserStories,
+  all: allUserStories,
+} as const;
+
+type ModuleType = keyof typeof moduleStories;
 
 interface RequirementTagProps {
   /** 组件 ID，自动从映射表查找 */
@@ -11,6 +27,8 @@ interface RequirementTagProps {
   componentIds?: string[];
   /** User Story 映射数据 (优先于 componentId) */
   mapping?: UserStoryMapping;
+  /** 模块类型，用于指定从哪个模块的映射表查找 */
+  module?: ModuleType;
   /** 是否显示详细信息 */
   showDetail?: boolean;
   /** 仅在开发模式下显示 */
@@ -40,12 +58,14 @@ const priorityConfig = {
  * @example
  * ```tsx
  * <RequirementTag componentId="station-list" showDetail />
+ * <RequirementTag componentId="shift-summary" module="shift-handover" showDetail />
  * ```
  */
 export const RequirementTag: React.FC<RequirementTagProps> = ({
   componentId,
   componentIds,
   mapping: propMapping,
+  module = 'all',
   showDetail = false,
   devOnly = true,
 }) => {
@@ -54,13 +74,16 @@ export const RequirementTag: React.FC<RequirementTagProps> = ({
     return null;
   }
 
+  // 选择对应模块的映射表
+  const storiesMap = moduleStories[module];
+
   // 支持多个 componentId
   const ids = componentIds || (componentId ? [componentId] : []);
   
   // 收集所有映射
   const mappings = propMapping 
     ? [propMapping]
-    : ids.map(id => stationUserStories[id]).filter(Boolean);
+    : ids.map(id => storiesMap[id]).filter(Boolean);
   
   if (mappings.length === 0) {
     return null;
@@ -166,12 +189,13 @@ export const DevRequirementPanel: React.FC<{
   componentId?: string;
   componentIds?: string[];
   mappings?: Record<string, UserStoryMapping>;
-}> = ({ componentId, componentIds = [], mappings }) => {
+  module?: ModuleType;
+}> = ({ componentId, componentIds = [], mappings, module = 'all' }) => {
   if (import.meta.env.PROD) {
     return null;
   }
 
-  const useMappings = mappings || stationUserStories;
+  const useMappings = mappings || moduleStories[module];
   const useIds = componentId ? [componentId] : componentIds;
 
   const relevantMappings = useIds

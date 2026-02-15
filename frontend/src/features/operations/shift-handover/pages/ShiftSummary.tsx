@@ -29,6 +29,7 @@ import {
 import type { CurrentShiftData, PaymentSummaryItem, FuelSummaryItem } from '../types';
 import { PAYMENT_METHOD_CONFIG, AUTO_REFRESH_INTERVAL } from '../constants';
 import { currentShiftData as mockCurrentShiftData } from '../../../../mock/shiftHandovers';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Text } = Typography;
 
@@ -102,6 +103,11 @@ const ShiftSummary: React.FC = () => {
 
   return (
     <div className="shift-summary-page">
+      {/* 页面级需求标记 */}
+      <div style={{ marginBottom: 8 }}>
+        <RequirementTag componentId="shift-summary" module="shift-handover" showDetail />
+      </div>
+
       {/* 班次信息栏 */}
       <Card size="small" style={{ marginBottom: 16 }}>
         <Row justify="space-between" align="middle">
@@ -133,15 +139,18 @@ const ShiftSummary: React.FC = () => {
                   onClick={toggleMask}
                 />
               </Tooltip>
+              <RequirementTag componentId="amount-mask-toggle" module="shift-handover" />
               <Button icon={<ReloadOutlined />} onClick={refreshData} loading={loading}>
                 {t('common.refresh')}
               </Button>
+              <RequirementTag componentId="data-refresh-button" module="shift-handover" />
               <Button icon={<DollarOutlined />} onClick={() => navigate('/operations/shift-handover/settlement')}>
                 {t('shiftHandover.cashSettlement')}
               </Button>
               <Button type="primary" icon={<SwapOutlined />} onClick={() => navigate('/operations/shift-handover/handover')}>
                 {t('shiftHandover.handover')}
               </Button>
+              <RequirementTag componentId="start-handover-button" module="shift-handover" />
             </Space>
           </Col>
         </Row>
