@@ -35,7 +35,7 @@ const AppLayout: React.FC = () => {
           label: t('menu.station'),
         },
         {
-          key: '/operations/shift',
+          key: '/operations/shift-handover',
           icon: <SwapOutlined />,
           label: t('menu.shift'),
         },
