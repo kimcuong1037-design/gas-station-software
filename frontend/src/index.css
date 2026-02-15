@@ -18,3 +18,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: #f0f2f5;
 }
+
+/* 面包屑导航可点击样式 */
+.breadcrumb-link {
+  cursor: pointer;
+}
+
+.breadcrumb-link:hover {
+  color: #1890ff;
+}

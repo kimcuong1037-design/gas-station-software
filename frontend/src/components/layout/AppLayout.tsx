@@ -64,13 +64,34 @@ const AppLayout: React.FC = () => {
   // 生成当前路径的面包屑
   const getBreadcrumbItems = () => {
     const pathSegments = location.pathname.split('/').filter(Boolean);
-    const items: { title: React.ReactNode }[] = [{ title: <HomeOutlined /> }];
+    const items: { title: React.ReactNode; onClick?: () => void; className?: string }[] = [
+      { 
+        title: <HomeOutlined />, 
+        onClick: () => navigate('/'),
+        className: 'breadcrumb-link'
+      }
+    ];
     
     if (pathSegments.includes('operations')) {
-      items.push({ title: t('menu.operations') as string });
+      items.push({ 
+        title: t('menu.operations') as string,
+        onClick: () => navigate('/operations'),
+        className: 'breadcrumb-link'
+      });
     }
     if (pathSegments.includes('station')) {
-      items.push({ title: t('menu.station') as string });
+      items.push({ 
+        title: t('menu.station') as string,
+        onClick: () => navigate('/operations/station'),
+        className: 'breadcrumb-link'
+      });
+    }
+    if (pathSegments.includes('shift-handover')) {
+      items.push({ 
+        title: t('menu.shift') as string,
+        onClick: () => navigate('/operations/shift-handover'),
+        className: 'breadcrumb-link'
+      });
     }
     
     return items;
