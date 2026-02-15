@@ -10,6 +10,13 @@ const StationDetail = lazy(() => import('./features/operations/station/pages/Sta
 const StationForm = lazy(() => import('./features/operations/station/pages/StationForm'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
+// Shift Handover pages
+const ShiftSummary = lazy(() => import('./features/operations/shift-handover/pages/ShiftSummary'));
+const HandoverHistory = lazy(() => import('./features/operations/shift-handover/pages/HandoverHistory'));
+const HandoverDetail = lazy(() => import('./features/operations/shift-handover/pages/HandoverDetail'));
+const ShiftHandoverWizard = lazy(() => import('./features/operations/shift-handover/pages/ShiftHandoverWizard'));
+const SettlementReview = lazy(() => import('./features/operations/shift-handover/pages/SettlementReview'));
+
 // Loading component
 const PageLoading = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 200 }}>
@@ -62,10 +69,31 @@ export const router = createBrowserRouter([
               },
             ],
           },
-          // Placeholder routes for other modules
+          // Shift Handover routes
           {
-            path: 'shift',
-            element: <div>交接班管理 - 待开发</div>,
+            path: 'shift-handover',
+            children: [
+              {
+                index: true,
+                element: withSuspense(ShiftSummary),
+              },
+              {
+                path: 'handover',
+                element: withSuspense(ShiftHandoverWizard),
+              },
+              {
+                path: 'history',
+                element: withSuspense(HandoverHistory),
+              },
+              {
+                path: 'detail/:id',
+                element: withSuspense(HandoverDetail),
+              },
+              {
+                path: 'settlement-review',
+                element: withSuspense(SettlementReview),
+              },
+            ],
           },
           {
             path: 'equipment',

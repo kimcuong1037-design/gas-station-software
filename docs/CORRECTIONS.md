@@ -100,6 +100,17 @@
   2. **Skill 之间的数据传递要显式**：UI Schema 的路由定义是前端实现的输入，Skill 文件应明确这种依赖关系
   3. **评估 Skill 要有具体检查方法**：不能只说"检查 XX"，要给出可执行的验证步骤（如 grep 命令）
   4. **静态检查优于运行时发现**：路由一致性可以在代码审查阶段发现，不必等到用户点击才暴露
+
+### 2026-02-15 Vite 动态导入模块失败 (Failed to fetch dynamically imported module)
+
+- **修正内容：** 用户点击站点列表进入详情页时，浏览器报错 `TypeError: Failed to fetch dynamically imported module: http://localhost:5175/src/features/operations/station/pages/StationDetail.tsx`。经排查发现是 Vite 开发服务器缓存陈旧导致动态模块无法正确解析。据此清除了 Vite 缓存目录 (`node_modules/.vite`) 并重启开发服务器，问题解决
+- **原因分析：** Vite 通过 `node_modules/.vite` 缓存预编译的依赖和模块转换结果。当代码结构发生变化（如文件移动、依赖更新）后，旧缓存可能与新代码不匹配，导致动态 import 失败。此外，若开发服务器未运行或端口被占用，也会导致模块无法加载
+- **经验总结：**
+  1. 遇到 `Failed to fetch dynamically imported module` 错误时，首先检查开发服务器状态（是否运行、端口是否正确）
+  2. 清除 Vite 缓存的标准操作：`rm -rf node_modules/.vite && npm run dev`
+  3. 多个端口被占用时，Vite 会自动切换端口（5173 → 5174 → 5175...），需确保浏览器访问的是最新端口
+  4. 推荐做法：在 CI/CD 或重大代码变更后，清除缓存再启动开发服务器
+  5. 排查步骤优先级：检查服务器状态 → 清除缓存重启 → 检查路由配置 → 检查导出语法
 ---
 
 *创建时间：2026-02-07*

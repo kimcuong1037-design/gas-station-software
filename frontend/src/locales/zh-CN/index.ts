@@ -37,6 +37,11 @@ export default {
     viewSwitch: '视图切换',
     tableView: '表格视图',
     cardView: '卡片视图',
+    prevStep: '上一步',
+    nextStep: '下一步',
+    totalRecords: '共 {{total}} 条记录',
+    refresh: '刷新',
+    autoRefresh: '自动刷新',
   },
 
   // 导航菜单
@@ -173,5 +178,181 @@ export default {
     cng: 'CNG',
     lng: 'LNG',
     other: '其他',
+  },
+
+  // 交接班管理模块
+  shiftHandover: {
+    // 页面标题
+    title: '交接班管理',
+    summaryTitle: '当班概况',
+    historyTitle: '交接历史',
+    detailTitle: '交接详情',
+    wizardTitle: '交接班流程',
+    wizardSubtitle: '请按步骤完成交接班操作',
+    settlementReviewTitle: '解缴审核',
+    
+    // 当班概况
+    currentShift: '当前班次',
+    shiftTime: '班次时间',
+    shiftDuration: '班次时长',
+    hoursUnit: '小时',
+    startHandover: '发起交接',
+    viewHistory: '查看历史',
+    cashSettlement: '现金解缴',
+    settlementReview: '解缴审核',
+    
+    // 统计数据
+    totalAmount: '销售总额',
+    totalOrders: '总订单数',
+    ordersUnit: '笔',
+    netAmount: '净收入',
+    abnormalCount: '异常笔数',
+    refundCount: '退款笔数',
+    refundAmount: '退款金额',
+    
+    // 金额显示
+    hideAmount: '隐藏金额',
+    showAmount: '显示金额',
+    amountHidden: '****',
+    
+    // 支付方式
+    byPaymentMethod: '按支付方式',
+    paymentMethod: '支付方式',
+    cash: '现金',
+    wechat: '微信支付',
+    alipay: '支付宝',
+    unionpay: '银联卡',
+    prepaid: '预付卡',
+    credit: '挂账',
+    other: '其他',
+    
+    // 燃料类型
+    byFuelType: '按燃料类型',
+    fuelType: '燃料类型',
+    quantity: '数量',
+    amount: '金额',
+    orders: '订单数',
+    
+    // 交接历史
+    dateRange: '日期范围',
+    station: '站点',
+    shiftName: '班次',
+    stationName: '站点名称',
+    shiftDate: '班次日期',
+    handoverTime: '交接时间',
+    handoverBy: '交接人',
+    receivedBy: '接班人',
+    recordsUnit: '条',
+    viewDetail: '查看详情',
+    
+    // 状态
+    initiated: '已发起',
+    pendingReview: '待审核',
+    completed: '已完成',
+    cancelled: '已取消',
+    approved: '已通过',
+    rejected: '已驳回',
+    
+    // 详情页
+    recordNotFound: '未找到交接记录',
+    basicInfo: '基本信息',
+    handoverNo: '交接单号',
+    salesSummary: '销售汇总',
+    issueRecords: '异常记录',
+    noIssues: '无异常记录',
+    forcedHandover: '强制交接',
+    print: '打印',
+    remarks: '交接备注',
+    
+    // 异常
+    issueType: '异常类型',
+    severity: '严重程度',
+    description: '描述',
+    reportedBy: '上报人',
+    resolved: '已解决',
+    unresolved: '未解决',
+    
+    // 现金解缴
+    expectedAmount: '应缴金额',
+    actualAmount: '实缴金额',
+    difference: '差额',
+    differenceReason: '差额原因',
+    differenceNote: '差额说明',
+    settlementMethod: '解缴方式',
+    settlementNo: '解缴单号',
+    settlementTime: '解缴时间',
+    settlementStatus: '解缴状态',
+    submittedBy: '提交人',
+    reviewedBy: '审核人',
+    reviewedAt: '审核时间',
+    
+    // 差额类型
+    balanced: '无差额',
+    overage: '长款 ¥{{amount}}',
+    shortage: '短款 ¥{{amount}}',
+    
+    // 解缴方式
+    methodCashBox: '投入钱箱',
+    methodSafe: '存入保险柜',
+    methodBank: '银行存款',
+    
+    // 向导步骤
+    stepPrecheck: '交接预检',
+    stepSummary: '销售汇总',
+    stepSettlement: '现金解缴',
+    stepConfirm: '确认提交',
+    
+    // 预检
+    precheckTip: '请确认以下事项已完成，带 * 的为必选项',
+    checkAll: '全部勾选',
+    completeRequiredItems: '请完成所有必选项',
+    
+    // 解缴
+    settlementTip: '请核对并输入实际缴纳的现金金额',
+    enterActualAmount: '请输入实缴金额',
+    enterDifferenceReason: '差额超过10元，请填写原因',
+    differenceReasonPlaceholder: '请说明差额产生的原因',
+    
+    // 确认
+    confirmTip: '请确认以下交接信息无误后提交',
+    shiftInfo: '班次信息',
+    remarksPlaceholder: '如有需要交接的事项，请在此备注',
+    
+    // 提交
+    confirmSubmit: '确认提交',
+    submitSuccess: '交接班提交成功',
+    submitFailed: '提交失败，请重试',
+    cancelHandover: '取消交接',
+    confirmCancel: '确定取消交接吗？',
+    cancelWarning: '取消后已填写的数据将丢失',
+    
+    // 强制交接
+    forceHandover: '强制交接',
+    forceHandoverTitle: '强制交接确认',
+    forceHandoverWarning: '预检项目未全部完成，确定要强制提交交接吗？此操作将被记录。',
+    confirmForce: '确认强制提交',
+    
+    // 完成
+    handoverSuccess: '交接班已完成',
+    handoverSuccessTip: '交接信息已提交，等待接班人确认',
+    backToSummary: '返回当班概况',
+    
+    // 审核
+    review: '审核',
+    reviewSettlement: '审核解缴',
+    reviewResult: '审核结果',
+    approve: '通过',
+    reject: '驳回',
+    reviewNote: '审核备注',
+    reviewNotePlaceholder: '可选填审核备注',
+    enterRejectReason: '请填写驳回原因',
+    rejectReasonPlaceholder: '请说明驳回原因',
+    submitReview: '提交审核',
+    reviewApproveSuccess: '审核通过',
+    reviewRejectSuccess: '审核已驳回',
+    
+    // 统计
+    pendingReviewCount: '待审核',
+    totalDifferenceSum: '差额合计',
   },
 };

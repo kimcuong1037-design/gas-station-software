@@ -37,6 +37,11 @@ export default {
     viewSwitch: 'View Switch',
     tableView: 'Table View',
     cardView: 'Card View',
+    prevStep: 'Previous',
+    nextStep: 'Next',
+    totalRecords: 'Total {{total}} records',
+    refresh: 'Refresh',
+    autoRefresh: 'Auto Refresh',
   },
 
   // Navigation menu
@@ -173,5 +178,181 @@ export default {
     cng: 'CNG',
     lng: 'LNG',
     other: 'Other',
+  },
+
+  // Shift Handover module
+  shiftHandover: {
+    // Page titles
+    title: 'Shift Handover',
+    summaryTitle: 'Shift Summary',
+    historyTitle: 'Handover History',
+    detailTitle: 'Handover Detail',
+    wizardTitle: 'Handover Wizard',
+    wizardSubtitle: 'Please complete the handover process step by step',
+    settlementReviewTitle: 'Settlement Review',
+    
+    // Current shift
+    currentShift: 'Current Shift',
+    shiftTime: 'Shift Time',
+    shiftDuration: 'Shift Duration',
+    hoursUnit: 'hours',
+    startHandover: 'Start Handover',
+    viewHistory: 'View History',
+    cashSettlement: 'Cash Settlement',
+    settlementReview: 'Settlement Review',
+    
+    // Statistics
+    totalAmount: 'Total Sales',
+    totalOrders: 'Total Orders',
+    ordersUnit: '',
+    netAmount: 'Net Income',
+    abnormalCount: 'Abnormal Count',
+    refundCount: 'Refund Count',
+    refundAmount: 'Refund Amount',
+    
+    // Amount display
+    hideAmount: 'Hide Amount',
+    showAmount: 'Show Amount',
+    amountHidden: '****',
+    
+    // Payment methods
+    byPaymentMethod: 'By Payment Method',
+    paymentMethod: 'Payment Method',
+    cash: 'Cash',
+    wechat: 'WeChat Pay',
+    alipay: 'Alipay',
+    unionpay: 'UnionPay',
+    prepaid: 'Prepaid Card',
+    credit: 'Credit',
+    other: 'Other',
+    
+    // Fuel types
+    byFuelType: 'By Fuel Type',
+    fuelType: 'Fuel Type',
+    quantity: 'Quantity',
+    amount: 'Amount',
+    orders: 'Orders',
+    
+    // Handover history
+    dateRange: 'Date Range',
+    station: 'Station',
+    shiftName: 'Shift',
+    stationName: 'Station Name',
+    shiftDate: 'Shift Date',
+    handoverTime: 'Handover Time',
+    handoverBy: 'Handover By',
+    receivedBy: 'Received By',
+    recordsUnit: '',
+    viewDetail: 'View Detail',
+    
+    // Status
+    initiated: 'Initiated',
+    pendingReview: 'Pending Review',
+    completed: 'Completed',
+    cancelled: 'Cancelled',
+    approved: 'Approved',
+    rejected: 'Rejected',
+    
+    // Detail page
+    recordNotFound: 'Record not found',
+    basicInfo: 'Basic Info',
+    handoverNo: 'Handover No.',
+    salesSummary: 'Sales Summary',
+    issueRecords: 'Issue Records',
+    noIssues: 'No issues recorded',
+    forcedHandover: 'Forced Handover',
+    print: 'Print',
+    remarks: 'Remarks',
+    
+    // Issues
+    issueType: 'Issue Type',
+    severity: 'Severity',
+    description: 'Description',
+    reportedBy: 'Reported By',
+    resolved: 'Resolved',
+    unresolved: 'Unresolved',
+    
+    // Cash settlement
+    expectedAmount: 'Expected Amount',
+    actualAmount: 'Actual Amount',
+    difference: 'Difference',
+    differenceReason: 'Difference Reason',
+    differenceNote: 'Difference Note',
+    settlementMethod: 'Settlement Method',
+    settlementNo: 'Settlement No.',
+    settlementTime: 'Settlement Time',
+    settlementStatus: 'Settlement Status',
+    submittedBy: 'Submitted By',
+    reviewedBy: 'Reviewed By',
+    reviewedAt: 'Reviewed At',
+    
+    // Difference types
+    balanced: 'Balanced',
+    overage: 'Over ¥{{amount}}',
+    shortage: 'Short ¥{{amount}}',
+    
+    // Settlement methods
+    methodCashBox: 'Cash Box',
+    methodSafe: 'Safe',
+    methodBank: 'Bank Deposit',
+    
+    // Wizard steps
+    stepPrecheck: 'Pre-check',
+    stepSummary: 'Summary',
+    stepSettlement: 'Settlement',
+    stepConfirm: 'Confirm',
+    
+    // Pre-check
+    precheckTip: 'Please confirm the following items. Items marked with * are required.',
+    checkAll: 'Check All',
+    completeRequiredItems: 'Please complete all required items',
+    
+    // Settlement
+    settlementTip: 'Please verify and enter the actual cash amount',
+    enterActualAmount: 'Please enter actual amount',
+    enterDifferenceReason: 'Difference exceeds 10, please explain',
+    differenceReasonPlaceholder: 'Please explain the reason for difference',
+    
+    // Confirm
+    confirmTip: 'Please confirm the handover information before submitting',
+    shiftInfo: 'Shift Info',
+    remarksPlaceholder: 'Enter any notes for the next shift',
+    
+    // Submit
+    confirmSubmit: 'Confirm Submit',
+    submitSuccess: 'Handover submitted successfully',
+    submitFailed: 'Submit failed, please retry',
+    cancelHandover: 'Cancel Handover',
+    confirmCancel: 'Cancel handover?',
+    cancelWarning: 'Data entered will be lost if you cancel',
+    
+    // Force handover
+    forceHandover: 'Force Handover',
+    forceHandoverTitle: 'Force Handover Confirmation',
+    forceHandoverWarning: 'Pre-check items are not completed. Are you sure to force submit? This action will be logged.',
+    confirmForce: 'Confirm Force Submit',
+    
+    // Complete
+    handoverSuccess: 'Handover Completed',
+    handoverSuccessTip: 'Handover has been submitted, waiting for confirmation',
+    backToSummary: 'Back to Summary',
+    
+    // Review
+    review: 'Review',
+    reviewSettlement: 'Review Settlement',
+    reviewResult: 'Review Result',
+    approve: 'Approve',
+    reject: 'Reject',
+    reviewNote: 'Review Note',
+    reviewNotePlaceholder: 'Optional review notes',
+    enterRejectReason: 'Please enter rejection reason',
+    rejectReasonPlaceholder: 'Please explain the rejection reason',
+    submitReview: 'Submit Review',
+    reviewApproveSuccess: 'Approved',
+    reviewRejectSuccess: 'Rejected',
+    
+    // Statistics
+    pendingReviewCount: 'Pending Review',
+    totalDifferenceSum: 'Total Difference',
   },
 };
