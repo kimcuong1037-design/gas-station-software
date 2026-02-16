@@ -248,7 +248,7 @@
 **请求参数：**
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `station_id` | UUID | 否 | 站点ID，默认当前用户站点 |
+| `station_id` | UUID | 是 | 站点ID（用户在前端通过站点选择器选定） |
 
 **响应示例：**
 ```json
@@ -685,7 +685,7 @@ export interface CurrentShiftData {
 
 | 模块 | 依赖内容 | 说明 |
 |------|----------|------|
-| 站点管理 (1.1) | Station, Shift, Employee | 站点、班次定义、员工信息 |
+| 站点管理 (1.1) | Station, Shift, Employee, Schedule | 站点、班次定义、员工信息、排班计划 |
 | 订单与交易 (2.2) | Order | 班次内的订单数据 |
 | 系统权限 (9.1) | User, Role, Permission | 用户认证、权限控制 |
 
@@ -723,5 +723,83 @@ export interface CurrentShiftData {
 
 ---
 
+### 3.5 用户身份 API
+
+#### GET /api/auth/me
+
+获取当前登录用户信息。
+
+**响应示例：**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "user-001",
+    "name": "张建国",
+    "role": "station_master",
+    "roleName": "站长",
+    "stationIds": ["station-001", "station-002"],
+    "defaultStationId": "station-001"
+  }
+}
+```
+
+---
+
+### 3.6 站点概况聚合 API
+
+#### GET /api/stations/{stationId}/overview
+
+获取站点概况聚合数据（当前班次 + 下一班次排班 + 核心经营指标）。
+
+**路径参数：**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `stationId` | UUID | 站点ID |
+
+**响应示例：**
+```json
+{
+  "success": true,
+  "data": {
+    "currentShift": {
+      "shiftId": "shift-001",
+      "shiftName": "早班",
+      "startTime": "06:00",
+      "endTime": "14:00",
+      "scheduledEmployee": {
+        "id": "emp-001",
+        "name": "张建国"
+      }
+    },
+    "nextShift": {
+      "shiftId": "shift-002",
+      "shiftName": "中班",
+      "startTime": "14:00",
+      "endTime": "22:00",
+      "scheduledEmployee": {
+        "id": "emp-003",
+        "name": "王磊"
+      }
+    },
+    "summary": {
+      "totalAmount": 13373.00,
+      "totalOrders": 69,
+      "netAmount": 13373.00
+    },
+    "fuelSummary": [
+      {"fuelType": "LNG", "quantity": 1520.5, "amount": 9123.00, "unit": "kg"},
+      {"fuelType": "CNG", "quantity": 850.0, "amount": 4250.00, "unit": "m³"}
+    ],
+    "paymentSummary": [
+      {"paymentMethod": "cash", "amount": 3500.00, "orders": 15},
+      {"paymentMethod": "wechat", "amount": 5200.00, "orders": 28}
+    ]
+  }
+}
+```
+
+---
+
 *创建时间：2026-02-15*
-*最后更新：2026-02-15*
+*最后更新：2026-02-16*

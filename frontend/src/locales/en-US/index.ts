@@ -49,8 +49,24 @@ export default {
     operations: 'Operations',
     station: 'Station',
     shift: 'Shift',
+    shiftOverview: 'Station Overview',
+    shiftSchedule: 'Schedule',
+    shiftHistory: 'History',
+    shiftSettlementReview: 'Settlement Review',
     equipment: 'Equipment',
     inspection: 'Inspection',
+  },
+
+  // User identity
+  user: {
+    signOut: 'Sign Out',
+    signOutConfirm: 'Are you sure to sign out?',
+    role: {
+      station_master: 'Station Master',
+      shift_leader: 'Shift Leader',
+      cashier: 'Cashier',
+      finance: 'Finance',
+    },
   },
 
   // Station management module
@@ -194,7 +210,7 @@ export default {
     // Current shift
     currentShift: 'Current Shift',
     shiftTime: 'Shift Time',
-    shiftDuration: 'Shift Duration',
+    shiftDuration: 'Running',
     hoursUnit: 'hours',
     startHandover: 'Start Handover',
     viewHistory: 'View History',
@@ -209,6 +225,14 @@ export default {
     abnormalCount: 'Abnormal Count',
     refundCount: 'Refund Count',
     refundAmount: 'Refund Amount',
+    fuelQuantity: 'Fuel Quantity',
+    comparedToPrevious: 'vs Previous Shift',
+    dataRefreshed: 'Data updated',
+    refreshFailed: 'Refresh failed, please retry',
+    lastUpdated: 'Last updated',
+    seconds: 's',
+    unsettledCash: 'Unsettled Cash',
+    autoRefreshInterval: 'Auto Refresh Interval',
     
     // Amount display
     hideAmount: 'Hide Amount',
@@ -354,5 +378,30 @@ export default {
     // Statistics
     pendingReviewCount: 'Pending Review',
     totalDifferenceSum: 'Total Difference',
+
+    // Schedule
+    scheduleTitle: 'Shift Schedule',
+    scheduleThisWeek: 'This Week',
+    scheduleThisMonth: 'This Month',
+    schedulePrevWeek: 'Previous Week',
+    scheduleNextWeek: 'Next Week',
+    scheduleAddShift: 'Add Schedule',
+    scheduleEditShift: 'Edit Schedule',
+    scheduleDate: 'Date',
+    scheduleShift: 'Shift',
+    scheduleEmployee: 'Employee',
+    scheduleSave: 'Save',
+    scheduleSaveSuccess: 'Schedule saved successfully',
+    scheduleNoData: 'No schedule data. Please create schedules first.',
+    scheduleGoToSchedule: 'Go to Schedule',
+
+    // Station overview
+    overviewTitle: 'Station Overview',
+    currentShiftInfo: 'Current Shift',
+    nextShiftInfo: 'Next Shift',
+    selectStation: 'Select Station',
+    switchStation: 'Switch Station',
+    noScheduleHint: 'No schedule info. Please create schedules first.',
+    scheduled: 'Scheduled',
   },
 };

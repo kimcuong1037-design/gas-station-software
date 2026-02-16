@@ -12,6 +12,7 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Shift Handover pages
 const ShiftSummary = lazy(() => import('./features/operations/shift-handover/pages/ShiftSummary'));
+const ShiftSchedule = lazy(() => import('./features/operations/shift-handover/pages/ShiftSchedule'));
 const HandoverHistory = lazy(() => import('./features/operations/shift-handover/pages/HandoverHistory'));
 const HandoverDetail = lazy(() => import('./features/operations/shift-handover/pages/HandoverDetail'));
 const ShiftHandoverWizard = lazy(() => import('./features/operations/shift-handover/pages/ShiftHandoverWizard'));
@@ -76,6 +77,10 @@ export const router = createBrowserRouter([
               {
                 index: true,
                 element: withSuspense(ShiftSummary),
+              },
+              {
+                path: 'schedule',
+                element: withSuspense(ShiftSchedule),
               },
               {
                 path: 'handover',

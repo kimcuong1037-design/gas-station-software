@@ -49,8 +49,24 @@ export default {
     operations: '基础运营',
     station: '站点管理',
     shift: '交接班',
+    shiftOverview: '站点概况',
+    shiftSchedule: '排班表',
+    shiftHistory: '交接历史',
+    shiftSettlementReview: '解缴审核',
     equipment: '设备管理',
     inspection: '巡检管理',
+  },
+
+  // 用户身份
+  user: {
+    signOut: '退出登录',
+    signOutConfirm: '确定要退出登录吗？',
+    role: {
+      station_master: '站长',
+      shift_leader: '班长',
+      cashier: '收银员',
+      finance: '财务',
+    },
   },
 
   // 站点管理模块
@@ -194,7 +210,7 @@ export default {
     // 当班概况
     currentShift: '当前班次',
     shiftTime: '班次时间',
-    shiftDuration: '班次时长',
+    shiftDuration: '已运营',
     hoursUnit: '小时',
     startHandover: '发起交接',
     viewHistory: '查看历史',
@@ -209,6 +225,14 @@ export default {
     abnormalCount: '异常笔数',
     refundCount: '退款笔数',
     refundAmount: '退款金额',
+    fuelQuantity: '充装量',
+    comparedToPrevious: '较上班次',
+    dataRefreshed: '数据已更新',
+    refreshFailed: '数据刷新失败，请重试',
+    lastUpdated: '最后更新',
+    seconds: '秒',
+    unsettledCash: '现金待解缴',
+    autoRefreshInterval: '自动刷新间隔',
     
     // 金额显示
     hideAmount: '隐藏金额',
@@ -354,5 +378,30 @@ export default {
     // 统计
     pendingReviewCount: '待审核',
     totalDifferenceSum: '差额合计',
+
+    // 排班表
+    scheduleTitle: '排班表',
+    scheduleThisWeek: '本周',
+    scheduleThisMonth: '本月',
+    schedulePrevWeek: '上一周',
+    scheduleNextWeek: '下一周',
+    scheduleAddShift: '新增排班',
+    scheduleEditShift: '编辑排班',
+    scheduleDate: '日期',
+    scheduleShift: '班次',
+    scheduleEmployee: '值班人员',
+    scheduleSave: '保存',
+    scheduleSaveSuccess: '排班保存成功',
+    scheduleNoData: '暂无排班数据，请先创建排班',
+    scheduleGoToSchedule: '前往创建排班',
+
+    // 站点概况
+    overviewTitle: '站点概况',
+    currentShiftInfo: '当前班次',
+    nextShiftInfo: '下一班次',
+    selectStation: '请选择站点',
+    switchStation: '切换站点',
+    noScheduleHint: '暂无排班信息，请先创建排班',
+    scheduled: '已排班',
   },
 };

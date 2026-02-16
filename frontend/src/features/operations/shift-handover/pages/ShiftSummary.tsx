@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Card,
@@ -13,6 +13,9 @@ import {
   List,
   Badge,
   Tooltip,
+  Tag,
+  Divider,
+  Alert,
   message,
 } from 'antd';
 import {
@@ -24,18 +27,26 @@ import {
   FireOutlined,
   ClockCircleOutlined,
   UserOutlined,
-  EnvironmentOutlined,
+  CalendarOutlined,
+  ArrowRightOutlined,
 } from '@ant-design/icons';
 import type { CurrentShiftData, PaymentSummaryItem, FuelSummaryItem } from '../types';
 import { PAYMENT_METHOD_CONFIG, AUTO_REFRESH_INTERVAL } from '../constants';
 import { currentShiftData as mockCurrentShiftData } from '../../../../mock/shiftHandovers';
+import { getCurrentShiftSchedule, getNextShiftSchedule } from '../../../../mock/shiftSchedules';
 import { RequirementTag } from '../../../../components/RequirementTag';
 
-const { Text } = Typography;
+const { Title, Text } = Typography;
+
+interface LayoutContext {
+  selectedStationId: string;
+  selectedStation?: { id: string; name: string };
+}
 
 const ShiftSummary: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { selectedStationId } = useOutletContext<LayoutContext>();
 
   // 状态
   const [shiftData, setShiftData] = useState<CurrentShiftData>(mockCurrentShiftData);
@@ -44,6 +55,10 @@ const ShiftSummary: React.FC = () => {
     return localStorage.getItem('shiftSummary_masked') === 'true';
   });
   const [lastUpdated, setLastUpdated] = useState(new Date());
+
+  // Get schedule info
+  const currentSchedule = getCurrentShiftSchedule(selectedStationId);
+  const nextSchedule = getNextShiftSchedule(selectedStationId);
 
   // 刷新数据
   const refreshData = useCallback(async () => {
@@ -108,53 +123,122 @@ const ShiftSummary: React.FC = () => {
         <RequirementTag componentId="shift-summary" module="shift-handover" showDetail />
       </div>
 
-      {/* 班次信息栏 */}
-      <Card size="small" style={{ marginBottom: 16 }}>
-        <Row justify="space-between" align="middle">
-          <Col>
-            <Space size="large">
+      {/* 页面标题与操作 */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <Title level={4} style={{ margin: 0 }}>{t('shiftHandover.overviewTitle')}</Title>
+        <Space>
+          <Tooltip title={masked ? t('shiftHandover.showAmount') : t('shiftHandover.hideAmount')}>
+            <Button
+              icon={masked ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+              onClick={toggleMask}
+            />
+          </Tooltip>
+          <Button icon={<ReloadOutlined />} onClick={refreshData} loading={loading}>
+            {t('common.refresh')}
+          </Button>
+        </Space>
+      </div>
+
+      {/* 当前班次 + 下一班次 信息栏 */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+        <Col xs={24} md={14}>
+          <Card
+            title={
               <Space>
                 <ClockCircleOutlined />
-                <Text strong>{shiftData.shift.name}</Text>
-                <Text type="secondary">
-                  ({shiftData.shift.startTime.split('T')[1]?.slice(0, 5)} -{' '}
-                  {shiftData.shift.endTime.split('T')[1]?.slice(0, 5)})
-                </Text>
+                <span>{t('shiftHandover.currentShiftInfo')}</span>
               </Space>
+            }
+            extra={
               <Space>
-                <UserOutlined />
-                <Text>{shiftData.shift.supervisor}</Text>
+                <Button icon={<DollarOutlined />} onClick={() => navigate('/operations/shift-handover/settlement')}>
+                  {t('shiftHandover.cashSettlement')}
+                </Button>
+                <Button type="primary" icon={<SwapOutlined />} onClick={() => navigate('/operations/shift-handover/handover')}>
+                  {t('shiftHandover.startHandover')}
+                </Button>
               </Space>
+            }
+          >
+            {currentSchedule ? (
+              <Row gutter={16} align="middle">
+                <Col>
+                  <Tag color="blue" style={{ fontSize: 16, padding: '4px 12px' }}>
+                    {currentSchedule.shiftName}
+                  </Tag>
+                </Col>
+                <Col>
+                  <Text type="secondary">{currentSchedule.shiftStartTime} - {currentSchedule.shiftEndTime}</Text>
+                </Col>
+                <Col>
+                  <Space>
+                    <UserOutlined />
+                    <Text strong>{currentSchedule.employeeName}</Text>
+                  </Space>
+                </Col>
+                <Col>
+                  <Text type="secondary">
+                    {t('shiftHandover.shiftDuration')}: 4{t('shiftHandover.hoursUnit')}30{t('shiftHandover.minutes', '分')}
+                  </Text>
+                </Col>
+              </Row>
+            ) : (
+              <Alert
+                type="warning"
+                message={t('shiftHandover.noScheduleHint')}
+                action={
+                  <Button size="small" type="link" onClick={() => navigate('/operations/shift-handover/schedule')}>
+                    {t('shiftHandover.scheduleGoToSchedule')}
+                  </Button>
+                }
+              />
+            )}
+          </Card>
+        </Col>
+        <Col xs={24} md={10}>
+          <Card
+            title={
               <Space>
-                <EnvironmentOutlined />
-                <Text>{shiftData.station.name}</Text>
+                <ArrowRightOutlined />
+                <span>{t('shiftHandover.nextShiftInfo')}</span>
               </Space>
-            </Space>
-          </Col>
-          <Col>
-            <Space>
-              <Tooltip title={masked ? t('shiftHandover.showAmount') : t('shiftHandover.hideAmount')}>
-                <Button
-                  icon={masked ? <EyeInvisibleOutlined /> : <EyeOutlined />}
-                  onClick={toggleMask}
-                />
-              </Tooltip>
-              <RequirementTag componentId="amount-mask-toggle" module="shift-handover" />
-              <Button icon={<ReloadOutlined />} onClick={refreshData} loading={loading}>
-                {t('common.refresh')}
+            }
+            extra={
+              <Button
+                size="small"
+                icon={<CalendarOutlined />}
+                onClick={() => navigate('/operations/shift-handover/schedule')}
+              >
+                {t('menu.shiftSchedule')}
               </Button>
-              <RequirementTag componentId="data-refresh-button" module="shift-handover" />
-              <Button icon={<DollarOutlined />} onClick={() => navigate('/operations/shift-handover/settlement')}>
-                {t('shiftHandover.cashSettlement')}
-              </Button>
-              <Button type="primary" icon={<SwapOutlined />} onClick={() => navigate('/operations/shift-handover/handover')}>
-                {t('shiftHandover.handover')}
-              </Button>
-              <RequirementTag componentId="start-handover-button" module="shift-handover" />
-            </Space>
-          </Col>
-        </Row>
-      </Card>
+            }
+          >
+            {nextSchedule ? (
+              <Row gutter={16} align="middle">
+                <Col>
+                  <Tag color="green" style={{ fontSize: 14, padding: '2px 8px' }}>
+                    {nextSchedule.shiftName}
+                  </Tag>
+                </Col>
+                <Col>
+                  <Text type="secondary">{nextSchedule.shiftStartTime} - {nextSchedule.shiftEndTime}</Text>
+                </Col>
+                <Col>
+                  <Space>
+                    <UserOutlined />
+                    <Text>{nextSchedule.employeeName}</Text>
+                    <Tag color="cyan">{t('shiftHandover.scheduled')}</Tag>
+                  </Space>
+                </Col>
+              </Row>
+            ) : (
+              <Text type="secondary">{t('shiftHandover.noScheduleHint')}</Text>
+            )}
+          </Card>
+        </Col>
+      </Row>
+
+      <Divider style={{ margin: '8px 0 16px' }} />
 
       {/* 核心指标区 */}
       <Row gutter={[16, 16]}>

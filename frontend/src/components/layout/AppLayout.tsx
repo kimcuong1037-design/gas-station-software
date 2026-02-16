@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layout, Menu, Select, theme, Typography, Breadcrumb } from 'antd';
+import { Layout, Menu, Select, theme, Typography, Breadcrumb, Dropdown, Avatar, Tag, Space, message } from 'antd';
 import {
   HomeOutlined,
   EnvironmentOutlined,
@@ -7,21 +7,39 @@ import {
   ToolOutlined,
   SafetyCertificateOutlined,
   GlobalOutlined,
+  UserOutlined,
+  LogoutOutlined,
+  DashboardOutlined,
+  CalendarOutlined,
+  HistoryOutlined,
+  AuditOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { stations } from '../../mock/stations';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
+
+// Mock current user (demo mode: default as station master)
+const currentUser = {
+  id: 'user-001',
+  name: '张建国',
+  role: 'station_master' as const,
+  avatar: undefined as string | undefined,
+};
 
 const AppLayout: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const [selectedStationId, setSelectedStationId] = useState<string>('station-001');
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
+
+  const selectedStation = stations.find(s => s.id === selectedStationId);
 
   const menuItems = [
     {
@@ -38,6 +56,28 @@ const AppLayout: React.FC = () => {
           key: '/operations/shift-handover',
           icon: <SwapOutlined />,
           label: t('menu.shift'),
+          children: [
+            {
+              key: '/operations/shift-handover',
+              icon: <DashboardOutlined />,
+              label: t('menu.shiftOverview'),
+            },
+            {
+              key: '/operations/shift-handover/schedule',
+              icon: <CalendarOutlined />,
+              label: t('menu.shiftSchedule'),
+            },
+            {
+              key: '/operations/shift-handover/history',
+              icon: <HistoryOutlined />,
+              label: t('menu.shiftHistory'),
+            },
+            {
+              key: '/operations/shift-handover/settlement-review',
+              icon: <AuditOutlined />,
+              label: t('menu.shiftSettlementReview'),
+            },
+          ],
         },
         {
           key: '/operations/equipment',
@@ -60,6 +100,30 @@ const AppLayout: React.FC = () => {
   const handleLanguageChange = (lang: string) => {
     i18n.changeLanguage(lang);
   };
+
+  const handleStationChange = (stationId: string) => {
+    setSelectedStationId(stationId);
+    message.success(`已切换到: ${stations.find(s => s.id === stationId)?.name}`);
+  };
+
+  const handleSignOut = () => {
+    message.info('已退出登录（Demo 模式）');
+  };
+
+  // User dropdown menu
+  const userMenuItems = {
+    items: [
+      {
+        key: 'signout',
+        icon: <LogoutOutlined />,
+        label: t('user.signOut'),
+        onClick: handleSignOut,
+      },
+    ],
+  };
+
+  // Check if on shift-handover pages to show station selector
+  const isShiftHandoverPage = location.pathname.startsWith('/operations/shift-handover');
 
   // 生成当前路径的面包屑
   const getBreadcrumbItems = () => {
@@ -92,9 +156,40 @@ const AppLayout: React.FC = () => {
         onClick: () => navigate('/operations/shift-handover'),
         className: 'breadcrumb-link'
       });
+      // Add sub-page breadcrumbs
+      if (pathSegments.includes('schedule')) {
+        items.push({ title: t('menu.shiftSchedule') as string });
+      } else if (pathSegments.includes('history')) {
+        items.push({ 
+          title: t('menu.shiftHistory') as string,
+          onClick: () => navigate('/operations/shift-handover/history'),
+          className: 'breadcrumb-link'
+        });
+      } else if (pathSegments.includes('settlement-review')) {
+        items.push({ title: t('menu.shiftSettlementReview') as string });
+      } else if (pathSegments.includes('handover')) {
+        items.push({ title: t('shiftHandover.wizardTitle') as string });
+      } else if (pathSegments.includes('detail')) {
+        items.push({ 
+          title: t('menu.shiftHistory') as string,
+          onClick: () => navigate('/operations/shift-handover/history'),
+          className: 'breadcrumb-link'
+        });
+        items.push({ title: t('shiftHandover.detailTitle') as string });
+      }
     }
     
     return items;
+  };
+
+  // Determine which menu keys should be selected/opened
+  const getSelectedKeys = () => {
+    const path = location.pathname;
+    // Exact match for shift-handover root (overview)
+    if (path === '/operations/shift-handover') {
+      return ['/operations/shift-handover'];
+    }
+    return [path];
   };
 
   return (
@@ -104,6 +199,7 @@ const AppLayout: React.FC = () => {
         collapsed={collapsed} 
         onCollapse={setCollapsed}
         theme="light"
+        width={240}
       >
         <div style={{ 
           height: 64, 
@@ -118,8 +214,8 @@ const AppLayout: React.FC = () => {
         </div>
         <Menu
           mode="inline"
-          selectedKeys={[location.pathname]}
-          defaultOpenKeys={['/operations']}
+          selectedKeys={getSelectedKeys()}
+          defaultOpenKeys={['/operations', '/operations/shift-handover']}
           items={menuItems}
           onClick={handleMenuClick}
         />
@@ -132,7 +228,22 @@ const AppLayout: React.FC = () => {
           alignItems: 'center',
           justifyContent: 'space-between',
         }}>
-          <Breadcrumb items={getBreadcrumbItems()} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <Breadcrumb items={getBreadcrumbItems()} />
+            {isShiftHandoverPage && (
+              <Select
+                value={selectedStationId}
+                onChange={handleStationChange}
+                style={{ width: 200 }}
+                options={stations.filter(s => s.status === 'active').map(s => ({
+                  value: s.id,
+                  label: s.name,
+                }))}
+                prefix={<EnvironmentOutlined />}
+                size="small"
+              />
+            )}
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <Select
               value={i18n.language}
@@ -144,6 +255,13 @@ const AppLayout: React.FC = () => {
               ]}
               suffixIcon={<GlobalOutlined />}
             />
+            <Dropdown menu={userMenuItems} placement="bottomRight">
+              <Space style={{ cursor: 'pointer' }}>
+                <Avatar icon={<UserOutlined />} size="small" />
+                <Text>{currentUser.name}</Text>
+                <Tag color="blue">{t(`user.role.${currentUser.role}`)}</Tag>
+              </Space>
+            </Dropdown>
           </div>
         </Header>
         <Content style={{ margin: '16px' }}>
@@ -155,7 +273,7 @@ const AppLayout: React.FC = () => {
               borderRadius: borderRadiusLG,
             }}
           >
-            <Outlet />
+            <Outlet context={{ selectedStationId, selectedStation }} />
           </div>
         </Content>
       </Layout>

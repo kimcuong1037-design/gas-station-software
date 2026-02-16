@@ -1246,6 +1246,56 @@ X-Station-Context: <station_id>  // 当前站点上下文（可选）
 
 ---
 
+#### GET /api/v1/stations/:stationId/schedules/current
+
+获取当前正在进行的班次排班信息。
+
+**响应示例：**
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "id": "...",
+    "shift": { "id": "...", "name": "早班", "startTime": "06:00", "endTime": "14:00" },
+    "employee": { "id": "...", "name": "张建国", "position": "站长" },
+    "scheduleDate": "2026-02-16",
+    "status": "scheduled"
+  }
+}
+```
+
+> 根据服务器当前时间自动匹配正在进行的班次。如果当前时间不在任何班次内，返回 `data: null`。
+
+**权限：** `schedule:list`
+
+---
+
+#### GET /api/v1/stations/:stationId/schedules/next
+
+获取下一个班次的排班信息。
+
+**响应示例：**
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "id": "...",
+    "shift": { "id": "...", "name": "中班", "startTime": "14:00", "endTime": "22:00" },
+    "employee": { "id": "...", "name": "王磊", "position": "班组长" },
+    "scheduleDate": "2026-02-16",
+    "status": "scheduled"
+  }
+}
+```
+
+> 返回当前班次之后的下一个排班。用于站点概况页显示"下一班次"信息。
+
+**权限：** `schedule:list`
+
+---
+
 ### 3.5 员工管理 API
 
 #### GET /api/v1/stations/:stationId/employees
