@@ -226,6 +226,22 @@
   4. **页面内多个筛选维度应共享状态**：统计卡片、Tab 标签、筛选下拉框等多个筛选入口应操作同一个状态变量，确保任何一个入口的操作都会反映到其他入口的视觉状态上
   5. **UI 评审应包含"交互响应完整性"检查**：对页面中所有带有交互暗示（hoverable、cursor:pointer、悬停色变）的元素逐一验证其点击响应是否实现
 
+### 2026-02-18 设备设施管理模块跳过 architecture.md 编写步骤
+
+- **修正内容：** 用户发现 `docs/features/operations/device-ledger/` 目录缺少 `architecture.md` 文件。对比三个功能模块：station 和 shift-handover 都有完整的 5 个文档（requirements.md → user-stories.md → architecture.md → ux-design.md → ui-schema.md），而 device-ledger 只有 4 个，唯独缺少 architecture.md。据此补创了该文件，包含 11 个数据实体、完整的 API 设计（设备台账 CRUD、设施监控、设备连接状态、维保工单全生命周期、保养计划、告警管理）、TypeScript 类型定义、权限矩阵和模拟数据规范
+
+- **原因分析：** AGENT-PLAN.md §3.1 明确定义了模块开发流程：步骤 2（需求分析）→ 步骤 4（架构设计）→ 步骤 6（UX 设计）→ 步骤 8（UI Schema）。device-ledger 模块在完成 requirements.md 和 user-stories.md 后，**直接跳到了 ux-design.md，跳过了步骤 4（架构设计 Agent 输出 architecture.md）和步骤 5（用户确认架构设计）**。根因有三：
+  1. **前端优先心态**：当前阶段重心在前端开发，潜意识地将 architecture 视为"后端才需要"的文档，但实际上 architecture 定义的数据模型和 API 是前端 mock 数据和类型定义（types.ts）的基础
+  2. **流程遵从性不足**：没有严格按照 AGENT-PLAN §3.1 的步骤顺序逐步执行，缺少步骤完成的验证机制
+  3. **依赖关系被忽视**：ux-design 和 ui-schema 本应依赖 architecture 的数据模型定义，实际上前端的 types.ts 是在没有 architecture 文档的情况下编写的，缺少了"设计文档→类型定义"的正向推导链路
+
+- **经验总结：**
+  1. **architecture.md 是必经步骤，不可跳过**：即使当前重心是前端，architecture 定义的数据模型、API 接口和枚举是 types.ts、mock 数据和组件实现的基础。跳过它会导致前端代码"自由发挥"数据结构，后端启动时面临前后端不一致的返工
+  2. **严格遵循 AGENT-PLAN 步骤顺序**：每个模块开发必须按 requirements → user-stories → **architecture** → ux-design → ui-schema → 前端实现的顺序执行，不得跳步。建议在每个模块开发启动时，先列出步骤 checklist 并逐步勾选
+  3. **新模块开发前应做文档完整性对照检查**：与已完成的同类模块（station、shift-handover）对比文档清单，确保每个文档文件都存在
+  4. **architecture 是前后端的桥梁文档**：它不仅服务于后端实现，更是前端 mock 数据、类型定义和 API 调用约定的"唯一真相来源"(Single Source of Truth)
+  5. **后端启动在即，architecture 文档的重要性只会增加**：不久将启动后端开发，如果缺少 architecture 文档，后端 Agent 将无从下手。提前补齐文档是对后续工作的投资
+
 ---
 
 *创建时间：2026-02-07*
