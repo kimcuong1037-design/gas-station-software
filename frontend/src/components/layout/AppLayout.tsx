@@ -103,11 +103,11 @@ const AppLayout: React.FC = () => {
 
   const handleStationChange = (stationId: string) => {
     setSelectedStationId(stationId);
-    message.success(`已切换到: ${stations.find(s => s.id === stationId)?.name}`);
+    message.success(t('station.switchStation') + ': ' + stations.find(s => s.id === stationId)?.name);
   };
 
   const handleSignOut = () => {
-    message.info('已退出登录（Demo 模式）');
+    message.info(t('user.signedOut'));
   };
 
   // User dropdown menu
@@ -209,7 +209,7 @@ const AppLayout: React.FC = () => {
           justifyContent: 'center',
         }}>
           <Text strong style={{ fontSize: collapsed ? 14 : 16 }}>
-            {collapsed ? 'GS' : '加气站管理系统'}
+            {collapsed ? 'GS' : t('app.title')}
           </Text>
         </div>
         <Menu

@@ -1,5 +1,6 @@
 // 交接班管理模块常量定义
 
+import i18n from '../../../locales/i18n';
 import type {
   HandoverStatus,
   SettlementStatus,
@@ -11,6 +12,11 @@ import type {
   PaymentMethod,
   PrecheckResult,
 } from './types';
+
+/** 根据当前语言获取标签 */
+export const getLabel = (config: { label: string; labelEn: string }): string => {
+  return i18n.language?.startsWith('en') ? config.labelEn : config.label;
+};
 
 /** 交接班状态配置 */
 export const HANDOVER_STATUS_CONFIG: Record<HandoverStatus, { label: string; labelEn: string; color: string }> = {

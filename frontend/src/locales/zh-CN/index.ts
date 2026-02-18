@@ -1,5 +1,10 @@
 // 中文翻译
 export default {
+  // 应用
+  app: {
+    title: '加气站管理系统',
+  },
+
   // 通用
   common: {
     save: '保存',
@@ -61,6 +66,7 @@ export default {
   user: {
     signOut: '退出登录',
     signOutConfirm: '确定要退出登录吗？',
+    signedOut: '已退出登录',
     role: {
       station_master: '站长',
       shift_leader: '班长',
@@ -378,6 +384,12 @@ export default {
     // 统计
     pendingReviewCount: '待审核',
     totalDifferenceSum: '差额合计',
+
+    // 接班人选择
+    selectReceiver: '选择接班人',
+    selectReceiverPlaceholder: '请选择接班人',
+    receiverHint: '仅显示当前站点排班表中的人员。如未找到对应人员，请前往「站点管理 → 员工管理」确认该员工已添加至排班表。',
+    receiverRequired: '请选择接班人',
 
     // 排班表
     scheduleTitle: '排班表',

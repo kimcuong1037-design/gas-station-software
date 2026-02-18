@@ -23,6 +23,7 @@ import {
   Tag,
   Divider,
   Result,
+  theme,
 } from 'antd';
 import {
   CheckOutlined,
@@ -34,6 +35,7 @@ import {
 import type { PrecheckItem, PaymentSummaryItem, FuelSummaryItem } from '../types';
 import { PAYMENT_METHOD_CONFIG } from '../constants';
 import { currentShiftData, precheckItems } from '../../../../mock/shiftHandovers';
+import { shiftSchedules } from '../../../../mock/shiftSchedules';
 import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title, Text, Paragraph } = Typography;
@@ -49,6 +51,7 @@ interface SettlementForm {
 const ShiftHandoverWizard: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { token } = theme.useToken();
 
   // 当前步骤
   const [currentStep, setCurrentStep] = useState<number>(0);
@@ -64,6 +67,8 @@ const ShiftHandoverWizard: React.FC = () => {
   const [completed, setCompleted] = useState(false);
   // 生成的交接单号
   const [handoverNo, setHandoverNo] = useState<string>('');
+  // 接班人
+  const [receiverId, setReceiverId] = useState<string | undefined>(undefined);
 
   // 步骤定义
   const steps = [
@@ -82,6 +87,20 @@ const ShiftHandoverWizard: React.FC = () => {
     () => requiredItems.every((item) => checkedItems[item.id]),
     [requiredItems, checkedItems]
   );
+
+  // 获取当前站点排班中的人员作为接班人候选
+  const receiverCandidates = useMemo(() => {
+    const stationId = currentShiftData.station.id;
+    // 获取当前站点所有排班人员（去重）
+    const scheduled = shiftSchedules.filter((s) => s.stationId === stationId);
+    const uniqueEmployees = new Map<string, { id: string; name: string }>();
+    scheduled.forEach((s) => {
+      if (!uniqueEmployees.has(s.employeeId)) {
+        uniqueEmployees.set(s.employeeId, { id: s.employeeId, name: s.employeeName });
+      }
+    });
+    return Array.from(uniqueEmployees.values());
+  }, []);
 
   // 现金支付金额(应缴金额)
   const expectedCashAmount = useMemo(() => {
@@ -130,6 +149,10 @@ const ShiftHandoverWizard: React.FC = () => {
 
   // 提交交接
   const handleSubmit = async () => {
+    if (!receiverId) {
+      message.warning(t('shiftHandover.receiverRequired'));
+      return;
+    }
     try {
       setSubmitting(true);
       // 模拟提交
@@ -151,7 +174,7 @@ const ShiftHandoverWizard: React.FC = () => {
   const handleForceHandover = () => {
     confirm({
       title: t('shiftHandover.forceHandoverTitle'),
-      icon: <WarningOutlined style={{ color: '#faad14' }} />,
+      icon: <WarningOutlined style={{ color: token.colorWarning }} />,
       content: t('shiftHandover.forceHandoverWarning'),
       okText: t('shiftHandover.confirmForce'),
       okButtonProps: { danger: true },
@@ -207,7 +230,7 @@ const ShiftHandoverWizard: React.FC = () => {
             value={currentShiftData.summary.totalAmount}
             precision={2}
             prefix="¥"
-            valueStyle={{ color: '#1890ff' }}
+            valueStyle={{ color: token.colorPrimary }}
           />
         </Col>
         <Col xs={24} sm={8}>
@@ -221,7 +244,7 @@ const ShiftHandoverWizard: React.FC = () => {
           <Statistic
             title={t('shiftHandover.abnormalCount')}
             value={currentShiftData.summary.refundOrders}
-            valueStyle={{ color: currentShiftData.summary.refundOrders > 0 ? '#faad14' : '#52c41a' }}
+            valueStyle={{ color: currentShiftData.summary.refundOrders > 0 ? token.colorWarning : token.colorSuccess }}
           />
         </Col>
       </Row>
@@ -272,7 +295,7 @@ const ShiftHandoverWizard: React.FC = () => {
                 dataIndex: 'fuelTypeName',
                 render: (name: string, record: FuelSummaryItem) => (
                   <Space>
-                    <FireOutlined style={{ color: record.fuelType === 'LNG' ? '#f5222d' : '#1890ff' }} />
+                    <FireOutlined style={{ color: record.fuelType === 'LNG' ? token.colorError : token.colorPrimary }} />
                     {name}
                   </Space>
                 ),
@@ -313,7 +336,7 @@ const ShiftHandoverWizard: React.FC = () => {
             value={expectedCashAmount}
             precision={2}
             prefix="¥"
-            valueStyle={{ color: '#1890ff', fontSize: 28 }}
+            valueStyle={{ color: token.colorPrimary, fontSize: 28 }}
           />
         </Col>
       </Row>
@@ -455,7 +478,7 @@ const ShiftHandoverWizard: React.FC = () => {
               <Statistic
                 title={t('shiftHandover.abnormalCount')}
                 value={currentShiftData.summary.refundOrders}
-                valueStyle={{ color: currentShiftData.summary.refundOrders > 0 ? '#faad14' : '#52c41a' }}
+                valueStyle={{ color: currentShiftData.summary.refundOrders > 0 ? token.colorWarning : token.colorSuccess }}
               />
             </Col>
           </Row>
@@ -487,11 +510,33 @@ const ShiftHandoverWizard: React.FC = () => {
                 precision={2}
                 prefix="¥"
                 valueStyle={{
-                  color: Math.abs(difference) < 0.01 ? '#52c41a' : difference > 0 ? '#1890ff' : '#ff4d4f',
+                  color: Math.abs(difference) < 0.01 ? token.colorSuccess : difference > 0 ? token.colorPrimary : token.colorError,
                 }}
               />
             </Col>
           </Row>
+        </Card>
+
+        <Card size="small" style={{ marginBottom: 16 }}>
+          <Title level={5}>{t('shiftHandover.receivedBy')}</Title>
+          <Form.Item
+            label={t('shiftHandover.selectReceiver')}
+            required
+            style={{ marginBottom: 8 }}
+          >
+            <Select
+              value={receiverId}
+              onChange={setReceiverId}
+              placeholder={t('shiftHandover.selectReceiverPlaceholder')}
+              showSearch
+              optionFilterProp="label"
+              options={receiverCandidates.map((e) => ({ value: e.id, label: e.name }))}
+              style={{ width: '100%' }}
+            />
+          </Form.Item>
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            {t('shiftHandover.receiverHint')}
+          </Text>
         </Card>
 
         <Form.Item label={t('shiftHandover.remarks')}>

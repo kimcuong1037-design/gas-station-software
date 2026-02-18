@@ -18,6 +18,7 @@ import {
   Radio,
   message,
   Descriptions,
+  theme,
 } from 'antd';
 import {
   CheckOutlined,
@@ -27,7 +28,7 @@ import {
 } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import type { CashSettlement, SettlementStatus } from '../types';
-import { SETTLEMENT_STATUS_CONFIG, DIFFERENCE_TYPE_CONFIG } from '../constants';
+import { SETTLEMENT_STATUS_CONFIG, DIFFERENCE_TYPE_CONFIG, getLabel } from '../constants';
 import { pendingSettlements, shiftHandovers } from '../../../../mock/shiftHandovers';
 import { RequirementTag } from '../../../../components/RequirementTag';
 
@@ -42,6 +43,7 @@ interface ReviewForm {
 
 const SettlementReview: React.FC = () => {
   const { t } = useTranslation();
+  const { token } = theme.useToken();
 
   // 筛选条件
   const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null] | null>(null);
@@ -219,13 +221,13 @@ const SettlementReview: React.FC = () => {
       render: (_: unknown, record: CashSettlement) => {
         const config = DIFFERENCE_TYPE_CONFIG[record.differenceType];
         const colorMap: Record<string, string> = {
-          success: '#52c41a',
-          danger: '#ff4d4f',
-          neutral: '#8c8c8c',
+          success: token.colorSuccess,
+          danger: token.colorError,
+          neutral: token.colorTextSecondary,
         };
         return (
           <Text style={{ color: colorMap[config.color] }}>
-            {config.label} ¥{Math.abs(record.difference).toFixed(2)}
+            {getLabel(config)} ¥{Math.abs(record.difference).toFixed(2)}
           </Text>
         );
       },
@@ -255,7 +257,7 @@ const SettlementReview: React.FC = () => {
           warning: 'warning',
           danger: 'error',
         };
-        return <Tag color={colorMap[config.color] || 'default'}>{config.label}</Tag>;
+        return <Tag color={colorMap[config.color] || 'default'}>{getLabel(config)}</Tag>;
       },
     },
     {
@@ -295,7 +297,7 @@ const SettlementReview: React.FC = () => {
               title={t('shiftHandover.pendingReview')}
               value={statistics.pending}
               suffix={t('shiftHandover.recordsUnit')}
-              valueStyle={{ color: statistics.pending > 0 ? '#faad14' : '#52c41a' }}
+              valueStyle={{ color: statistics.pending > 0 ? token.colorWarning : token.colorSuccess }}
             />
           </Card>
         </Col>
@@ -305,7 +307,7 @@ const SettlementReview: React.FC = () => {
               title={t('shiftHandover.approved')}
               value={statistics.approved}
               suffix={t('shiftHandover.recordsUnit')}
-              valueStyle={{ color: '#52c41a' }}
+              valueStyle={{ color: token.colorSuccess }}
             />
           </Card>
         </Col>
@@ -315,7 +317,7 @@ const SettlementReview: React.FC = () => {
               title={t('shiftHandover.rejected')}
               value={statistics.rejected}
               suffix={t('shiftHandover.recordsUnit')}
-              valueStyle={{ color: '#ff4d4f' }}
+              valueStyle={{ color: token.colorError }}
             />
           </Card>
         </Col>
@@ -326,7 +328,7 @@ const SettlementReview: React.FC = () => {
               value={statistics.totalDifference}
               precision={2}
               prefix="¥"
-              valueStyle={{ color: statistics.totalDifference >= 0 ? '#52c41a' : '#ff4d4f' }}
+              valueStyle={{ color: statistics.totalDifference >= 0 ? token.colorSuccess : token.colorError }}
             />
           </Card>
         </Col>
@@ -375,7 +377,7 @@ const SettlementReview: React.FC = () => {
               >
                 {Object.entries(SETTLEMENT_STATUS_CONFIG).map(([key, config]) => (
                   <Select.Option key={key} value={key}>
-                    {config.label}
+                    {getLabel(config)}
                   </Select.Option>
                 ))}
               </Select>
@@ -437,13 +439,13 @@ const SettlementReview: React.FC = () => {
                   style={{
                     color:
                       currentSettlement.differenceType === 'balanced'
-                        ? '#52c41a'
+                        ? token.colorSuccess
                         : currentSettlement.difference > 0
-                        ? '#1890ff'
-                        : '#ff4d4f',
+                        ? token.colorPrimary
+                        : token.colorError,
                   }}
                 >
-                  {DIFFERENCE_TYPE_CONFIG[currentSettlement.differenceType].label} ¥
+                  {getLabel(DIFFERENCE_TYPE_CONFIG[currentSettlement.differenceType])} ¥
                   {Math.abs(currentSettlement.difference).toFixed(2)}
                 </Text>
               </Descriptions.Item>

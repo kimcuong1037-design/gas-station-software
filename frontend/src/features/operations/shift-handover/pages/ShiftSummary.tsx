@@ -17,6 +17,7 @@ import {
   Divider,
   Alert,
   message,
+  theme,
 } from 'antd';
 import {
   ReloadOutlined,
@@ -47,6 +48,7 @@ const ShiftSummary: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { selectedStationId } = useOutletContext<LayoutContext>();
+  const { token } = theme.useToken();
 
   // 状态
   const [shiftData, setShiftData] = useState<CurrentShiftData>(mockCurrentShiftData);
@@ -131,6 +133,7 @@ const ShiftSummary: React.FC = () => {
             <Button
               icon={masked ? <EyeInvisibleOutlined /> : <EyeOutlined />}
               onClick={toggleMask}
+              aria-label={masked ? t('shiftHandover.showAmount') : t('shiftHandover.hideAmount')}
             />
           </Tooltip>
           <Button icon={<ReloadOutlined />} onClick={refreshData} loading={loading}>
@@ -151,7 +154,7 @@ const ShiftSummary: React.FC = () => {
             }
             extra={
               <Space>
-                <Button icon={<DollarOutlined />} onClick={() => navigate('/operations/shift-handover/settlement')}>
+                <Button icon={<DollarOutlined />} onClick={() => navigate('/operations/shift-handover/settlement-review')}>
                   {t('shiftHandover.cashSettlement')}
                 </Button>
                 <Button type="primary" icon={<SwapOutlined />} onClick={() => navigate('/operations/shift-handover/handover')}>
@@ -249,7 +252,7 @@ const ShiftSummary: React.FC = () => {
               value={masked ? '*****' : shiftData.summary.totalAmount}
               precision={2}
               prefix={masked ? '' : '¥'}
-              valueStyle={{ color: '#1890ff', fontSize: 32 }}
+              valueStyle={{ color: token.colorPrimary, fontSize: 32 }}
             />
             {amountChange && (
               <Text type={amountChange.isPositive ? 'success' : 'danger'}>
@@ -268,7 +271,7 @@ const ShiftSummary: React.FC = () => {
             <Statistic
               title={t('shiftHandover.totalOrders')}
               value={shiftData.summary.totalOrders}
-              valueStyle={{ color: '#52c41a', fontSize: 32 }}
+              valueStyle={{ color: token.colorSuccess, fontSize: 32 }}
               suffix={t('shiftHandover.ordersUnit')}
             />
             {ordersChange && (
@@ -293,7 +296,7 @@ const ShiftSummary: React.FC = () => {
               {shiftData.fuelSummary.map((fuel: FuelSummaryItem) => (
                 <div key={fuel.fuelType} style={{ marginBottom: 4 }}>
                   <Space>
-                    <FireOutlined style={{ color: fuel.fuelType === 'LNG' ? '#f5222d' : '#1890ff' }} />
+                    <FireOutlined style={{ color: fuel.fuelType === 'LNG' ? token.colorError : token.colorPrimary }} />
                     <Text strong>{fuel.fuelTypeName}:</Text>
                     <Text>{fuel.quantity.toLocaleString()} {fuel.unit}</Text>
                   </Space>
@@ -360,7 +363,7 @@ const ShiftSummary: React.FC = () => {
                       <Row justify="space-between" align="middle">
                         <Col span={8}>
                           <Space>
-                            <FireOutlined style={{ color: item.fuelType === 'LNG' ? '#f5222d' : '#1890ff' }} />
+                            <FireOutlined style={{ color: item.fuelType === 'LNG' ? token.colorError : token.colorPrimary }} />
                             <Text strong>{item.fuelTypeName}</Text>
                           </Space>
                         </Col>
@@ -385,7 +388,7 @@ const ShiftSummary: React.FC = () => {
 
       {/* 底部状态栏 */}
       <Card size="small" style={{ marginTop: 16 }}>
-        <Row justify="space-between" align="middle">
+        <Row justify="space-between" align="middle" aria-live="polite">
           <Col>
             <Space>
               <Text type="secondary">

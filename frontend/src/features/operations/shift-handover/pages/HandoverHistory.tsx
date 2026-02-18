@@ -14,6 +14,7 @@ import {
   Statistic,
   Typography,
   Tooltip,
+  theme,
 } from 'antd';
 import {
   ExportOutlined,
@@ -39,6 +40,7 @@ const { Text } = Typography;
 const HandoverHistory: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { token } = theme.useToken();
 
   // 筛选状态
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([
@@ -96,13 +98,13 @@ const HandoverHistory: React.FC = () => {
   const getStatusIcon = (status: HandoverStatus) => {
     switch (status) {
       case 'completed':
-        return <CheckCircleOutlined style={{ color: '#52c41a' }} />;
+        return <CheckCircleOutlined style={{ color: token.colorSuccess }} />;
       case 'initiated':
-        return <ClockCircleOutlined style={{ color: '#faad14' }} />;
+        return <ClockCircleOutlined style={{ color: token.colorWarning }} />;
       case 'pending_review':
-        return <ClockCircleOutlined style={{ color: '#1890ff' }} />;
+        return <ClockCircleOutlined style={{ color: token.colorPrimary }} />;
       case 'cancelled':
-        return <CloseCircleOutlined style={{ color: '#d9d9d9' }} />;
+        return <CloseCircleOutlined style={{ color: token.colorTextDisabled }} />;
       default:
         return null;
     }
@@ -132,7 +134,7 @@ const HandoverHistory: React.FC = () => {
       key: 'handoverNo',
       width: 200,
       render: (no: string, record) => (
-        <a onClick={() => navigate(`/operations/shift-handover/history/${record.id}`)}>{no}</a>
+        <Button type="link" style={{ padding: 0 }} onClick={() => navigate(`/operations/shift-handover/detail/${record.id}`)}>{no}</Button>
       ),
     },
     {
@@ -200,7 +202,7 @@ const HandoverHistory: React.FC = () => {
       render: (_, record) => (
         record.issues && record.issues.length > 0 ? (
           <Tooltip title={`${record.issues.length} ${t('shiftHandover.issuesCount')}`}>
-            <WarningOutlined style={{ color: '#faad14' }} />
+            <WarningOutlined style={{ color: token.colorWarning }} />
           </Tooltip>
         ) : null
       ),
@@ -223,7 +225,7 @@ const HandoverHistory: React.FC = () => {
         <Button
           type="link"
           icon={<EyeOutlined />}
-          onClick={() => navigate(`/operations/shift-handover/history/${record.id}`)}
+          onClick={() => navigate(`/operations/shift-handover/detail/${record.id}`)}
         >
           {t('common.detail')}
         </Button>
@@ -354,7 +356,7 @@ const HandoverHistory: React.FC = () => {
               title={t('shiftHandover.issueRecords')}
               value={statistics.withIssues}
               suffix={t('shiftHandover.recordsUnit')}
-              valueStyle={{ color: statistics.withIssues > 0 ? '#faad14' : undefined }}
+              valueStyle={{ color: statistics.withIssues > 0 ? token.colorWarning : undefined }}
             />
           </Col>
         </Row>

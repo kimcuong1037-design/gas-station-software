@@ -20,7 +20,7 @@
 
 | 用途 | 色值 | 说明 |
 |------|------|------|
-| 主色 | `#0078D4` | Microsoft Blue，链接/主操作 |
+| 主色 | `#22A06B` | 清洁能源绿，链接/主操作 |
 | 成功 | `#107C10` | 运营中/正常状态 |
 | 警告 | `#FF8C00` | 暂停/维护中 |
 | 错误 | `#D13438` | 停用/故障 |
@@ -111,7 +111,7 @@ $font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
 ```scss
 // 主按钮
 .btn-primary {
-  background: #0078D4;
+  background: #22A06B;
   border: none;
   border-radius: 4px;
   height: 32px;
@@ -119,7 +119,7 @@ $font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
   font-weight: 500;
   
   &:hover {
-    background: #106EBE;
+    background: #1D8A5B;
   }
 }
 
@@ -136,7 +136,7 @@ $font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
 
 // 文字按钮
 .btn-link {
-  color: #0078D4;
+  color: #22A06B;
   padding: 0;
   font-weight: 400;
 }
@@ -208,8 +208,8 @@ $font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
   }
   
   &:focus {
-    border-color: #0078D4;
-    box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
+    border-color: #22A06B;
+    box-shadow: 0 0 0 2px rgba(34, 160, 107, 0.2);
   }
 }
 ```
@@ -299,7 +299,7 @@ import { ThemeConfig } from 'antd';
 
 export const fluentTheme: ThemeConfig = {
   token: {
-    colorPrimary: '#0078D4',
+    colorPrimary: '#22A06B',
     colorSuccess: '#107C10',
     colorWarning: '#FF8C00',
     colorError: '#D13438',
@@ -342,7 +342,7 @@ export const fluentTheme: ThemeConfig = {
       borderRadiusSM: 4,
     },
     Input: {
-      activeShadow: '0 0 0 2px rgba(0, 120, 212, 0.2)',
+      activeShadow: '0 0 0 2px rgba(34, 160, 107, 0.2)',
     },
   },
 };

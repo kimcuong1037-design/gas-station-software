@@ -1,5 +1,10 @@
 // English translations
 export default {
+  // App
+  app: {
+    title: 'Gas Station Management',
+  },
+
   // Common
   common: {
     save: 'Save',
@@ -61,6 +66,7 @@ export default {
   user: {
     signOut: 'Sign Out',
     signOutConfirm: 'Are you sure to sign out?',
+    signedOut: 'Signed out',
     role: {
       station_master: 'Station Master',
       shift_leader: 'Shift Leader',
@@ -378,6 +384,12 @@ export default {
     // Statistics
     pendingReviewCount: 'Pending Review',
     totalDifferenceSum: 'Total Difference',
+
+    // Receiver selection
+    selectReceiver: 'Select Receiver',
+    selectReceiverPlaceholder: 'Select the person taking over',
+    receiverHint: 'Only employees in this station\'s schedule are shown. If you cannot find the person, go to "Station → Employees" to ensure they are added to the schedule.',
+    receiverRequired: 'Please select a receiver',
 
     // Schedule
     scheduleTitle: 'Shift Schedule',

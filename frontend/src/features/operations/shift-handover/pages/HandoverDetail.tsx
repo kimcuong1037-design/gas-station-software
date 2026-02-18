@@ -15,6 +15,7 @@ import {
   Empty,
   List,
   Progress,
+  theme,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -33,6 +34,7 @@ import {
   ISSUE_TYPE_CONFIG,
   ISSUE_SEVERITY_CONFIG,
   PAYMENT_METHOD_CONFIG,
+  getLabel,
 } from '../constants';
 import { shiftHandovers } from '../../../../mock/shiftHandovers';
 import { RequirementTag } from '../../../../components/RequirementTag';
@@ -43,9 +45,10 @@ const HandoverDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { token } = theme.useToken();
 
-  // 查找交接班记录
-  const handover = shiftHandovers.find((h) => h.id === id);
+  // 查找交接班记录 - 支持按 id 或 handoverNo 查找
+  const handover = shiftHandovers.find((h) => h.id === id || h.handoverNo === id);
 
   if (!handover) {
     return (
@@ -66,13 +69,13 @@ const HandoverDetail: React.FC = () => {
   const getStatusIcon = () => {
     switch (handover.status) {
       case 'completed':
-        return <CheckCircleOutlined style={{ color: '#52c41a' }} />;
+        return <CheckCircleOutlined style={{ color: token.colorSuccess }} />;
       case 'initiated':
-        return <ClockCircleOutlined style={{ color: '#faad14' }} />;
+        return <ClockCircleOutlined style={{ color: token.colorWarning }} />;
       case 'pending_review':
-        return <ClockCircleOutlined style={{ color: '#1890ff' }} />;
+        return <ClockCircleOutlined style={{ color: token.colorPrimary }} />;
       case 'cancelled':
-        return <CloseCircleOutlined style={{ color: '#d9d9d9' }} />;
+        return <CloseCircleOutlined style={{ color: token.colorTextDisabled }} />;
       default:
         return null;
     }
@@ -90,7 +93,7 @@ const HandoverDetail: React.FC = () => {
       width: 100,
       render: (type: string) => {
         const config = ISSUE_TYPE_CONFIG[type as keyof typeof ISSUE_TYPE_CONFIG];
-        return config?.label || type;
+        return config ? getLabel(config) : type;
       },
     },
     {
@@ -106,7 +109,7 @@ const HandoverDetail: React.FC = () => {
           severe: 'error',
           danger: 'error',
         };
-        return <Tag color={colorMap[config?.color] || 'default'}>{config?.label || severity}</Tag>;
+        return <Tag color={colorMap[config?.color] || 'default'}>{config ? getLabel(config) : severity}</Tag>;
       },
     },
     {
@@ -152,7 +155,7 @@ const HandoverDetail: React.FC = () => {
                 {t('shiftHandover.detailTitle')} - {handover.handoverNo}
               </Title>
               <Tag icon={getStatusIcon()} color={statusConfig.color === 'success' ? 'success' : statusConfig.color === 'warning' ? 'warning' : 'default'}>
-                {statusConfig.label}
+                {getLabel(statusConfig)}
               </Tag>
               {handover.isForced && (
                 <Tag color="error">{t('shiftHandover.forcedHandover')}</Tag>
@@ -205,7 +208,7 @@ const HandoverDetail: React.FC = () => {
                 value={handover.summary.totalAmount}
                 precision={2}
                 prefix="¥"
-                valueStyle={{ color: '#1890ff' }}
+                valueStyle={{ color: token.colorPrimary }}
               />
             </Col>
             <Col xs={24} sm={8}>
@@ -241,7 +244,7 @@ const HandoverDetail: React.FC = () => {
                     <List.Item>
                       <Row style={{ width: '100%' }} align="middle" gutter={8}>
                         <Col span={6}>
-                          <Text>{config?.label || item.paymentMethodName}</Text>
+                          <Text>{config ? getLabel(config) : item.paymentMethodName}</Text>
                         </Col>
                         <Col span={6} style={{ textAlign: 'right' }}>
                           <Text strong>¥{item.amount.toLocaleString('zh-CN', { minimumFractionDigits: 2 })}</Text>
@@ -270,7 +273,7 @@ const HandoverDetail: React.FC = () => {
                     <Row style={{ width: '100%' }} align="middle">
                       <Col span={8}>
                         <Space>
-                          <FireOutlined style={{ color: item.fuelType === 'LNG' ? '#f5222d' : '#1890ff' }} />
+                          <FireOutlined style={{ color: item.fuelType === 'LNG' ? token.colorError : token.colorPrimary }} />
                           <Text>{item.fuelTypeName}</Text>
                         </Space>
                       </Col>
@@ -303,13 +306,13 @@ const HandoverDetail: React.FC = () => {
               {(() => {
                 const config = DIFFERENCE_TYPE_CONFIG[handover.settlement!.differenceType];
                 const colorMap: Record<string, string> = {
-                  success: '#52c41a',
-                  danger: '#ff4d4f',
-                  neutral: '#8c8c8c',
+                  success: token.colorSuccess,
+                  danger: token.colorError,
+                  neutral: token.colorTextSecondary,
                 };
                 return (
                   <Text style={{ color: colorMap[config.color] || '#8c8c8c' }}>
-                    {config.label} ¥{Math.abs(handover.settlement!.difference).toLocaleString('zh-CN', { minimumFractionDigits: 2 })}
+                    {getLabel(config)} ¥{Math.abs(handover.settlement!.difference).toLocaleString('zh-CN', { minimumFractionDigits: 2 })}
                   </Text>
                 );
               })()}
@@ -330,7 +333,7 @@ const HandoverDetail: React.FC = () => {
                   warning: 'warning',
                   danger: 'error',
                 };
-                return <Tag color={colorMap[config.color] || 'default'}>{config.label}</Tag>;
+                return <Tag color={colorMap[config.color] || 'default'}>{getLabel(config)}</Tag>;
               })()}
             </Descriptions.Item>
             {handover.settlement.reviewedByName && (
