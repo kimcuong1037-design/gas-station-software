@@ -238,9 +238,9 @@ const AppLayout: React.FC = () => {
         }
       } else if (pathSegments.includes('monitoring')) {
         items.push({ title: t('menu.facilityMonitoring', '设施监控') as string });
-        if (pathSegments.includes('tank')) {
+        if (pathSegments.includes('tanks')) {
           items.push({ title: '储罐监控' });
-        } else if (pathSegments.includes('dispenser')) {
+        } else if (pathSegments.includes('dispensers')) {
           items.push({ title: '加气机状态' });
         }
       } else if (pathSegments.includes('connectivity')) {

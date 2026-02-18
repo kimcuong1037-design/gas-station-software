@@ -7,6 +7,7 @@ import { ArrowLeftOutlined, ReloadOutlined } from '@ant-design/icons';
 import { getTanks } from '../../../../mock/equipments';
 import type { Equipment } from '../types';
 import { getTankLevelColor, AUTO_REFRESH_INTERVAL } from '../constants';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title, Text } = Typography;
 
@@ -48,6 +49,7 @@ const TankMonitoring: React.FC = () => {
           <Title level={4} style={{ margin: 0 }}>
             {t('deviceLedger.monitoring.tankTitle', '储罐监控')}
           </Title>
+          <RequirementTag componentId="monitoring-tank" module="device-ledger" showDetail />
         </Space>
         <Button icon={<ReloadOutlined />} onClick={refreshData}>
           {t('common.refresh', '刷新')}

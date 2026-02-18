@@ -39,6 +39,7 @@ import DeviceStatusTag from '../components/DeviceStatusTag';
 import DeviceTypeTag from '../components/DeviceTypeTag';
 import OrderStatusTag from '../components/OrderStatusTag';
 import UrgencyTag from '../components/UrgencyTag';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title, Text } = Typography;
 
@@ -77,7 +78,7 @@ const EquipmentDetail: React.FC = () => {
   const orderColumns: ColumnsType<MaintenanceOrder> = [
     {
       title: '工单号',
-      dataIndex: 'orderNumber',
+      dataIndex: 'orderNo',
       width: 140,
       render: (num: string, record) => (
         <a onClick={() => navigate(`/operations/device-ledger/maintenance/${record.id}`)}>
@@ -295,6 +296,7 @@ const EquipmentDetail: React.FC = () => {
               <Title level={4} style={{ margin: 0 }}>{equipment.name}</Title>
               <DeviceStatusTag status={equipment.status} />
               <DeviceTypeTag type={equipment.deviceType} />
+              <RequirementTag componentIds={['equipment-detail', 'equipment-photos', 'maintenance-history']} module="device-ledger" showDetail />
             </Space>
             <Space>
               <Button

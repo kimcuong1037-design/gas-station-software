@@ -24,6 +24,7 @@ import type { OrderType, UrgencyLevel } from '../types';
 import { ORDER_TYPE_CONFIG, getLabel } from '../constants';
 import DeviceStatusTag from '../components/DeviceStatusTag';
 import DeviceTypeTag from '../components/DeviceTypeTag';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -77,6 +78,7 @@ const MaintenanceOrderForm: React.FC = () => {
         <Title level={4} style={{ margin: 0 }}>
           {t('deviceLedger.maintenance.createOrder', '创建维保工单')}
         </Title>
+        <RequirementTag componentId="maintenance-create" module="device-ledger" showDetail />
       </Row>
 
       <Form

@@ -29,6 +29,7 @@ import { equipments, getMonitoringStats, getPendingActions, getTanks, getDispens
 import type { Equipment, MonitoringStats, PendingAction } from '../types';
 import { DISPENSER_STATUS_CONFIG, getTankLevelColor, AUTO_REFRESH_INTERVAL, getLabel } from '../constants';
 import FaultReportDrawer from './FaultReportDrawer';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title, Text } = Typography;
 
@@ -98,9 +99,12 @@ const FacilityMonitoringDashboard: React.FC = () => {
     <div style={{ padding: 24 }}>
       {/* 页面头部 */}
       <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>
-          {t('deviceLedger.monitoring.title', '设施监控')}
-        </Title>
+        <Space align="center">
+          <Title level={4} style={{ margin: 0 }}>
+            {t('deviceLedger.monitoring.title', '设施监控')}
+          </Title>
+          <RequirementTag componentId="monitoring-dashboard" module="device-ledger" showDetail />
+        </Space>
         <Space>
           <Text type="secondary">最后更新: {lastUpdated}</Text>
           <Button icon={<ReloadOutlined />} onClick={refreshData}>

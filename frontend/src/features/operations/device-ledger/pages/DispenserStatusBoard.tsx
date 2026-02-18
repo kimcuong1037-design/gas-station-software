@@ -8,6 +8,7 @@ import { getDispensers } from '../../../../mock/equipments';
 import type { DispenserStatus } from '../types';
 import { DISPENSER_STATUS_CONFIG, getLabel } from '../constants';
 import FaultReportDrawer from './FaultReportDrawer';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title, Text } = Typography;
 
@@ -43,6 +44,7 @@ const DispenserStatusBoard: React.FC = () => {
           <Title level={4} style={{ margin: 0 }}>
             {t('deviceLedger.monitoring.dispenserTitle', '加气机状态')}
           </Title>
+          <RequirementTag componentId="monitoring-dispenser" module="device-ledger" showDetail />
         </Space>
       </Row>
 

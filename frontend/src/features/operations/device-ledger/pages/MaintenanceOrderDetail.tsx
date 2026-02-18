@@ -30,6 +30,7 @@ import OrderStatusSteps from '../components/OrderStatusSteps';
 import UrgencyTag from '../components/UrgencyTag';
 import OrderTypeTag from '../components/OrderTypeTag';
 import DeviceTypeTag from '../components/DeviceTypeTag';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -125,6 +126,7 @@ const MaintenanceOrderDetail: React.FC = () => {
               <OrderStatusTag status={order.status} />
               <UrgencyTag level={order.urgency} />
               <OrderTypeTag type={order.orderType} />
+              <RequirementTag componentIds={['maintenance-detail', 'maintenance-status-flow', 'maintenance-record']} module="device-ledger" showDetail />
             </Space>
             <Space>
               {statusActions.map((action) => (

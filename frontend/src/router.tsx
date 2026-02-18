@@ -125,11 +125,11 @@ export const router = createBrowserRouter([
                 element: withSuspense(FacilityMonitoringDashboard),
               },
               {
-                path: 'monitoring/tank',
+                path: 'monitoring/tanks',
                 element: withSuspense(TankMonitoring),
               },
               {
-                path: 'monitoring/dispenser',
+                path: 'monitoring/dispensers',
                 element: withSuspense(DispenserStatusBoard),
               },
               {

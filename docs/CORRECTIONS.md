@@ -184,6 +184,32 @@
   4. **"全修"不如"精修"**：聚焦真正影响用户体验的问题，比试图修复所有发现更高效
   5. **高成本修复应单独讨论**：需要大量代码改造的问题（如设计重构、新增后端依赖）应拔出来与用户单独确认方案
 
+### 2026-02-18 新模块前端实现遗漏 RequirementTag 需求追踪关联
+
+- **修正内容：** 用户发现设备设施管理（device-ledger）模块的11个前端页面全部缺少 `RequirementTag` 组件关联，而站点管理和交接班模块均已正确实现。具体缺陷有两层：(1) `RequirementTag.tsx` 中未导入 `deviceLedgerUserStories`，未注册 `'device-ledger'` 模块；(2) 所有11个页面组件均未导入和使用 `RequirementTag`。据此修复了：
+  - 更新 `RequirementTag.tsx`：导入 `deviceLedgerUserStories`，添加到 `allUserStories` 和 `moduleStories`
+  - 11个页面全部添加 `RequirementTag` 关联，按最精准的页面功能匹配 componentId：
+    - FacilityMonitoringDashboard → `monitoring-dashboard`
+    - TankMonitoring → `monitoring-tank`
+    - DispenserStatusBoard → `monitoring-dispenser`
+    - EquipmentList → `equipment-list` + `equipment-list-search` + `equipment-type-filter` + `equipment-deactivate`
+    - EquipmentForm → `equipment-create` / `equipment-edit`（根据 mode 动态选择）
+    - EquipmentDetail → `equipment-detail` + `equipment-photos` + `maintenance-history`
+    - MaintenanceOrderList → `maintenance-list` + `fault-report`
+    - MaintenanceOrderForm → `maintenance-create`
+    - MaintenanceOrderDetail → `maintenance-detail` + `maintenance-status-flow` + `maintenance-record`
+    - FaultReportDrawer → `fault-report`
+    - DeviceConnectivity → `device-connectivity`
+
+- **原因分析：** 设备设施模块的实现任务量大（11页面、6组件、mock数据、路由、i18n），在实现过程中聚焦于功能完整性（页面渲染、数据展示、交互逻辑），而忽略了"非功能性但对开发流程关键"的需求追踪关联。虽然 `userStoryMapping.ts` 已正确创建（说明 mapping 数据准备充分），但最后一步——将 mapping 注册到 `RequirementTag.tsx` 并在页面中使用——被遗漏。这是典型的"最后一公里"问题：模块的独立数据文件已就绪，与全局组件的集成和逐页添加标记的步骤被跳过。
+
+- **经验总结：**
+  1. **新模块前端实现必须包含 RequirementTag 关联作为标准步骤**：这不是可选的装饰，而是需求追踪和 UI review 的关键基础设施。必须作为模块实现 checklist 的必选项
+  2. **"最后一公里"集成步骤最易遗漏**：模块内部实现完成后，与全局基础设施（RequirementTag、路由、导航菜单、i18n）的集成需要逐一核验。建议在模块实现完成后执行"集成检查清单"
+  3. **应建立模块交付 checklist**：每个新模块完成时必须逐项检查：✅ 路由注册、✅ 导航菜单、✅ i18n 翻译、✅ RequirementTag 注册（RequirementTag.tsx + 每页使用）、✅ userStoryMapping.ts 完整、✅ 构建通过
+  4. **数据准备≠集成完成**：创建了 userStoryMapping.ts 不意味着需求追踪就已生效，还需要在 RequirementTag.tsx 注册模块、在每个页面组件中实际使用
+  5. **参照已有模块做对照检查**：新模块完成后，应与已完成的同类模块（如 station、shift-handover）做结构对比，确保没有遗漏的集成步骤
+
 ---
 
 *创建时间：2026-02-07*

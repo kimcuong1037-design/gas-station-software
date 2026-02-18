@@ -4,6 +4,7 @@ import { Drawer, Form, Select, Input, Button, Space, Radio, message, Popconfirm,
 import { equipments } from '../../../../mock/equipments';
 import type { FaultReportFormData, UrgencyLevel } from '../types';
 import { URGENCY_CONFIG, getLabel, DEVICE_TYPE_CONFIG } from '../constants';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 interface FaultReportDrawerProps {
   open: boolean;
@@ -55,7 +56,7 @@ const FaultReportDrawer: React.FC<FaultReportDrawerProps> = ({ open, onClose, on
 
   return (
     <Drawer
-      title="故障报修"
+      title={<Space>故障报修 <RequirementTag componentId="fault-report" module="device-ledger" showDetail /></Space>}
       width={480}
       open={open}
       onClose={handleClose}

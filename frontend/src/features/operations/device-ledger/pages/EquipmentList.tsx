@@ -29,6 +29,7 @@ import {
 } from '../constants';
 import DeviceStatusTag from '../components/DeviceStatusTag';
 import DeviceTypeTag from '../components/DeviceTypeTag';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title, Text } = Typography;
 
@@ -189,9 +190,12 @@ const EquipmentList: React.FC = () => {
     <div style={{ padding: 24 }}>
       {/* 页面头部 */}
       <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>
-          {t('deviceLedger.equipment.title', '设备台账')}
-        </Title>
+        <Space align="center">
+          <Title level={4} style={{ margin: 0 }}>
+            {t('deviceLedger.equipment.title', '设备台账')}
+          </Title>
+          <RequirementTag componentIds={['equipment-list', 'equipment-list-search', 'equipment-type-filter', 'equipment-deactivate']} module="device-ledger" showDetail />
+        </Space>
         <Space>
           <Button icon={<ExportOutlined />}>{t('common.export', '导出')}</Button>
           <Button

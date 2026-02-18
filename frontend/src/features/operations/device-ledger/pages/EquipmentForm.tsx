@@ -28,6 +28,7 @@ import {
   MAINTENANCE_CYCLE_CONFIG,
   getLabel,
 } from '../constants';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -208,6 +209,7 @@ const EquipmentForm: React.FC<Props> = ({ mode: propMode }) => {
             ? t('deviceLedger.equipment.edit', '编辑设备')
             : t('deviceLedger.equipment.create', '新增设备')}
         </Title>
+        <RequirementTag componentIds={isEdit ? ['equipment-edit'] : ['equipment-create', 'equipment-create-copy']} module="device-ledger" showDetail />
       </Row>
 
       <Form

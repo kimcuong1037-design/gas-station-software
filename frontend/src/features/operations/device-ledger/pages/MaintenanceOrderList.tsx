@@ -31,6 +31,7 @@ import OrderStatusTag from '../components/OrderStatusTag';
 import OrderTypeTag from '../components/OrderTypeTag';
 import UrgencyTag from '../components/UrgencyTag';
 import FaultReportDrawer from './FaultReportDrawer';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title, Text } = Typography;
 
@@ -167,11 +168,20 @@ const MaintenanceOrderList: React.FC = () => {
     <div style={{ padding: 24 }}>
       {/* 页面头部 */}
       <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>
-          {t('deviceLedger.maintenance.title', '维保工单')}
-        </Title>
+        <Space align="center">
+          <Title level={4} style={{ margin: 0 }}>
+            {t('deviceLedger.maintenance.title', '维保工单')}
+          </Title>
+          <RequirementTag componentIds={['maintenance-list', 'fault-report']} module="device-ledger" showDetail />
+        </Space>
         <Space>
           <Button icon={<ExportOutlined />}>{t('common.export', '导出')}</Button>
+          <Button
+            icon={<PlusOutlined />}
+            onClick={() => navigate('/operations/device-ledger/maintenance/create')}
+          >
+            {t('deviceLedger.maintenance.createOrder', '新建工单')}
+          </Button>
           <Button
             type="primary"
             icon={<PlusOutlined />}

@@ -4,17 +4,20 @@ import { LinkOutlined, CheckCircleOutlined, ClockCircleOutlined, ExclamationCirc
 import type { UserStoryMapping } from '../features/operations/station/userStoryMapping';
 import { stationUserStories } from '../features/operations/station/userStoryMapping';
 import { shiftHandoverUserStories } from '../features/operations/shift-handover/userStoryMapping';
+import { deviceLedgerUserStories } from '../features/operations/device-ledger/userStoryMapping';
 
 // 合并所有模块的 User Story 映射
 const allUserStories: Record<string, UserStoryMapping> = {
   ...stationUserStories,
   ...shiftHandoverUserStories,
+  ...deviceLedgerUserStories,
 };
 
 // 模块映射表，用于按模块筛选
 const moduleStories = {
   station: stationUserStories,
   'shift-handover': shiftHandoverUserStories,
+  'device-ledger': deviceLedgerUserStories,
   all: allUserStories,
 } as const;
 

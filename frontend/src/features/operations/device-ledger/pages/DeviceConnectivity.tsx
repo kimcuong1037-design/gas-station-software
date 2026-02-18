@@ -27,6 +27,7 @@ import { equipments } from '../../../../mock/equipments';
 import type { Equipment, ConnectionStatus } from '../types';
 import { CONNECTION_STATUS_CONFIG, getLabel } from '../constants';
 import DeviceTypeTag from '../components/DeviceTypeTag';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title, Text } = Typography;
 
@@ -174,6 +175,7 @@ const DeviceConnectivity: React.FC = () => {
           <Title level={4} style={{ margin: 0 }}>
             {t('deviceLedger.connectivity.title', '设备连接')}
           </Title>
+          <RequirementTag componentId="device-connectivity" module="device-ledger" showDetail />
         </Space>
         <Button icon={<SyncOutlined />}>刷新状态</Button>
       </Row>
