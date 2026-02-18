@@ -13,6 +13,10 @@ import {
   CalendarOutlined,
   HistoryOutlined,
   AuditOutlined,
+  MonitorOutlined,
+  DatabaseOutlined,
+  FileProtectOutlined,
+  ApiOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
@@ -80,9 +84,31 @@ const AppLayout: React.FC = () => {
           ],
         },
         {
-          key: '/operations/equipment',
+          key: '/operations/device-ledger',
           icon: <ToolOutlined />,
-          label: t('menu.equipment'),
+          label: t('menu.deviceLedger', '设备设施'),
+          children: [
+            {
+              key: '/operations/device-ledger',
+              icon: <MonitorOutlined />,
+              label: t('menu.facilityMonitoring', '设施监控'),
+            },
+            {
+              key: '/operations/device-ledger/equipment',
+              icon: <DatabaseOutlined />,
+              label: t('menu.equipmentLedger', '设备台账'),
+            },
+            {
+              key: '/operations/device-ledger/maintenance',
+              icon: <FileProtectOutlined />,
+              label: t('menu.maintenanceOrders', '维保工单'),
+            },
+            {
+              key: '/operations/device-ledger/connectivity',
+              icon: <ApiOutlined />,
+              label: t('menu.deviceConnectivity', '设备连接'),
+            },
+          ],
         },
         {
           key: '/operations/inspection',
@@ -122,8 +148,10 @@ const AppLayout: React.FC = () => {
     ],
   };
 
-  // Check if on shift-handover pages to show station selector
+  // Check if on shift-handover or device-ledger pages to show station selector
   const isShiftHandoverPage = location.pathname.startsWith('/operations/shift-handover');
+  const isDeviceLedgerPage = location.pathname.startsWith('/operations/device-ledger');
+  const showStationSelector = isShiftHandoverPage || isDeviceLedgerPage;
 
   // 生成当前路径的面包屑
   const getBreadcrumbItems = () => {
@@ -178,6 +206,47 @@ const AppLayout: React.FC = () => {
         items.push({ title: t('shiftHandover.detailTitle') as string });
       }
     }
+    if (pathSegments.includes('device-ledger')) {
+      items.push({ 
+        title: t('menu.deviceLedger', '设备设施') as string,
+        onClick: () => navigate('/operations/device-ledger'),
+        className: 'breadcrumb-link'
+      });
+      if (pathSegments.includes('equipment')) {
+        items.push({ 
+          title: t('menu.equipmentLedger', '设备台账') as string,
+          onClick: () => navigate('/operations/device-ledger/equipment'),
+          className: 'breadcrumb-link'
+        });
+        if (pathSegments.includes('create')) {
+          items.push({ title: '新增设备' });
+        } else if (pathSegments.includes('edit')) {
+          items.push({ title: '编辑设备' });
+        } else if (pathSegments.some(seg => seg.startsWith('equip-'))) {
+          items.push({ title: '设备详情' });
+        }
+      } else if (pathSegments.includes('maintenance')) {
+        items.push({ 
+          title: t('menu.maintenanceOrders', '维保工单') as string,
+          onClick: () => navigate('/operations/device-ledger/maintenance'),
+          className: 'breadcrumb-link'
+        });
+        if (pathSegments.includes('create')) {
+          items.push({ title: '创建工单' });
+        } else if (pathSegments.some(seg => seg.startsWith('order-'))) {
+          items.push({ title: '工单详情' });
+        }
+      } else if (pathSegments.includes('monitoring')) {
+        items.push({ title: t('menu.facilityMonitoring', '设施监控') as string });
+        if (pathSegments.includes('tank')) {
+          items.push({ title: '储罐监控' });
+        } else if (pathSegments.includes('dispenser')) {
+          items.push({ title: '加气机状态' });
+        }
+      } else if (pathSegments.includes('connectivity')) {
+        items.push({ title: t('menu.deviceConnectivity', '设备连接') as string });
+      }
+    }
     
     return items;
   };
@@ -215,7 +284,7 @@ const AppLayout: React.FC = () => {
         <Menu
           mode="inline"
           selectedKeys={getSelectedKeys()}
-          defaultOpenKeys={['/operations', '/operations/shift-handover']}
+          defaultOpenKeys={['/operations', '/operations/shift-handover', '/operations/device-ledger']}
           items={menuItems}
           onClick={handleMenuClick}
         />
@@ -230,7 +299,7 @@ const AppLayout: React.FC = () => {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <Breadcrumb items={getBreadcrumbItems()} />
-            {isShiftHandoverPage && (
+            {showStationSelector && (
               <Select
                 value={selectedStationId}
                 onChange={handleStationChange}

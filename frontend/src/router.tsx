@@ -18,6 +18,18 @@ const HandoverDetail = lazy(() => import('./features/operations/shift-handover/p
 const ShiftHandoverWizard = lazy(() => import('./features/operations/shift-handover/pages/ShiftHandoverWizard'));
 const SettlementReview = lazy(() => import('./features/operations/shift-handover/pages/SettlementReview'));
 
+// Device Ledger pages
+const FacilityMonitoringDashboard = lazy(() => import('./features/operations/device-ledger/pages/FacilityMonitoringDashboard'));
+const TankMonitoring = lazy(() => import('./features/operations/device-ledger/pages/TankMonitoring'));
+const DispenserStatusBoard = lazy(() => import('./features/operations/device-ledger/pages/DispenserStatusBoard'));
+const EquipmentList = lazy(() => import('./features/operations/device-ledger/pages/EquipmentList'));
+const EquipmentDetail = lazy(() => import('./features/operations/device-ledger/pages/EquipmentDetail'));
+const EquipmentForm = lazy(() => import('./features/operations/device-ledger/pages/EquipmentForm'));
+const MaintenanceOrderList = lazy(() => import('./features/operations/device-ledger/pages/MaintenanceOrderList'));
+const MaintenanceOrderForm = lazy(() => import('./features/operations/device-ledger/pages/MaintenanceOrderForm'));
+const MaintenanceOrderDetail = lazy(() => import('./features/operations/device-ledger/pages/MaintenanceOrderDetail'));
+const DeviceConnectivity = lazy(() => import('./features/operations/device-ledger/pages/DeviceConnectivity'));
+
 // Loading component
 const PageLoading = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 200 }}>
@@ -100,9 +112,73 @@ export const router = createBrowserRouter([
               },
             ],
           },
+          // Device Ledger routes
+          {
+            path: 'device-ledger',
+            children: [
+              {
+                index: true,
+                element: withSuspense(FacilityMonitoringDashboard),
+              },
+              {
+                path: 'monitoring',
+                element: withSuspense(FacilityMonitoringDashboard),
+              },
+              {
+                path: 'monitoring/tank',
+                element: withSuspense(TankMonitoring),
+              },
+              {
+                path: 'monitoring/dispenser',
+                element: withSuspense(DispenserStatusBoard),
+              },
+              {
+                path: 'equipment',
+                children: [
+                  {
+                    index: true,
+                    element: withSuspense(EquipmentList),
+                  },
+                  {
+                    path: 'create',
+                    element: withSuspense(EquipmentForm),
+                  },
+                  {
+                    path: ':id',
+                    element: withSuspense(EquipmentDetail),
+                  },
+                  {
+                    path: ':id/edit',
+                    element: withSuspense(EquipmentForm),
+                  },
+                ],
+              },
+              {
+                path: 'maintenance',
+                children: [
+                  {
+                    index: true,
+                    element: withSuspense(MaintenanceOrderList),
+                  },
+                  {
+                    path: 'create',
+                    element: withSuspense(MaintenanceOrderForm),
+                  },
+                  {
+                    path: ':id',
+                    element: withSuspense(MaintenanceOrderDetail),
+                  },
+                ],
+              },
+              {
+                path: 'connectivity',
+                element: withSuspense(DeviceConnectivity),
+              },
+            ],
+          },
           {
             path: 'equipment',
-            element: <div>设备管理 - 待开发</div>,
+            element: <Navigate to="/operations/device-ledger/equipment" replace />,
           },
           {
             path: 'inspection',

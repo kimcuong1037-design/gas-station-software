@@ -17,3 +17,22 @@ export {
   getCurrentShiftData,
   default as shiftHandoversData,
 } from './shiftHandovers';
+export {
+  equipments,
+  getEquipmentByStation,
+  getEquipmentByType,
+  getTanks,
+  getDispensers,
+  getMonitoringStats,
+  getPendingActions,
+  default as equipmentsData,
+} from './equipments';
+export {
+  maintenanceOrders,
+  maintenancePlans,
+  getOrdersByDevice,
+  getOrdersByStatus,
+  getOrderStats,
+  mockEmployees,
+  default as maintenanceOrdersData,
+} from './maintenanceOrders';

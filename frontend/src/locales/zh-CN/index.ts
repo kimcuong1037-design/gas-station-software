@@ -416,4 +416,60 @@ export default {
     noScheduleHint: '暂无排班信息，请先创建排班',
     scheduled: '已排班',
   },
+
+  // 设备设施管理模块
+  deviceLedger: {
+    // 设施监控
+    monitoring: {
+      title: '设施监控',
+      totalDevices: '设备总数',
+      onlineRate: '在线率',
+      alarms: '告警数',
+      pendingMaintenance: '待维保',
+      tankSection: '储罐状态',
+      dispenserSection: '加气机状态',
+      pendingActions: '待处理事项',
+      autoRefresh: '自动刷新中',
+      tankDetail: '储罐监控',
+      dispenserDetail: '加气机状态板',
+      level: '液位',
+      pressure: '压力',
+      temperature: '温度',
+      trend: '趋势图',
+    },
+    // 设备台账
+    equipment: {
+      title: '设备台账',
+      add: '新增设备',
+      edit: '编辑设备',
+      create: '新增设备',
+      detail: '设备详情',
+      deviceCode: '设备编号',
+      name: '名称',
+      type: '类型',
+      model: '型号',
+      status: '状态',
+      installDate: '安装日期',
+      nextMaintenance: '下次维保',
+    },
+    // 维保工单
+    maintenance: {
+      title: '维保工单',
+      report: '故障报修',
+      createOrder: '创建维保工单',
+      submit: '提交工单',
+      orderNumber: '工单号',
+      type: '类型',
+      device: '关联设备',
+      urgency: '紧急程度',
+      status: '状态',
+      assignee: '处理人',
+      createdAt: '创建时间',
+      description: '描述',
+    },
+    // 设备连接
+    connectivity: {
+      title: '设备连接',
+    },
+  },
 };
