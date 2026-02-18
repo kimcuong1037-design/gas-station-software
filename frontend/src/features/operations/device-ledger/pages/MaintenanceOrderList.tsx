@@ -195,13 +195,18 @@ const MaintenanceOrderList: React.FC = () => {
       {/* 统计卡片 */}
       <Row gutter={16} style={{ marginBottom: 16 }}>
         {[
-          { label: '待处理', value: stats.pending, color: '#faad14' },
-          { label: '处理中', value: stats.processing, color: '#1677ff' },
-          { label: '待审核', value: stats.pending_review, color: '#722ed1' },
-          { label: '已完成', value: stats.completed, color: '#52c41a' },
+          { label: '待处理', value: stats.pending, color: '#faad14', statusKey: 'pending' },
+          { label: '处理中', value: stats.processing, color: '#1677ff', statusKey: 'processing' },
+          { label: '待审核', value: stats.pending_review, color: '#722ed1', statusKey: 'pending_review' },
+          { label: '已完成', value: stats.completed, color: '#52c41a', statusKey: 'completed' },
         ].map((item) => (
           <Col span={6} key={item.label}>
-            <Card size="small" hoverable>
+            <Card
+              size="small"
+              hoverable
+              onClick={() => { setStatusTab(item.statusKey); setCurrentPage(1); }}
+              style={statusTab === item.statusKey ? { borderColor: item.color, borderWidth: 2 } : undefined}
+            >
               <Text type="secondary">{item.label}</Text>
               <div>
                 <Title level={3} style={{ margin: 0, color: item.color }}>
