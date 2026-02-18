@@ -51,8 +51,20 @@
 - 使用外部工具（如 `create-vite`、`npm init`）时，必须检查其是否会删除现有文件，并在交互式提示中选择保留现有文件的选项
 - 此原则适用于整个项目生命周期
 
+## 原则八：关键文档修改须用户审批后提交
+
+- 以下类型的文档修改，**必须在 commit 前获得用户明确 approve**：
+  - **计划类**：PLAN.md、PLAN-CN.md、ROADMAP.md、PROGRESS.md
+  - **架构类**：architecture.md（任何模块）
+  - **需求类**：requirements.md、user-stories.md（任何模块）
+  - **Skills 定义**：docs/skills/ 下的所有 Skill 文件
+  - **协作规范**：CONSTITUTION.md、STANDARDS.md、AGENT-PLAN.md
+- 工作流程：完成修改 → 向用户展示变更内容 → 用户 approve → 执行 git commit
+- 纯前端代码修改（组件、样式、i18n、mock 数据等）不受此限制，可直接提交
+- 此原则旨在确保项目方向性决策始终由用户把控
+
 ---
 
 *创建时间：2026-02-07*
-*最后更新：2026-02-15*
-*版本：1.1*
+*最后更新：2026-02-18*
+*版本：1.2*
