@@ -12,7 +12,7 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Shift Handover pages
 const ShiftSummary = lazy(() => import('./features/operations/shift-handover/pages/ShiftSummary'));
-const ShiftSchedule = lazy(() => import('./features/operations/shift-handover/pages/ShiftSchedule'));
+// ShiftSchedule moved to station module as ShiftSchedulePanel
 const HandoverHistory = lazy(() => import('./features/operations/shift-handover/pages/HandoverHistory'));
 const HandoverDetail = lazy(() => import('./features/operations/shift-handover/pages/HandoverDetail'));
 const ShiftHandoverWizard = lazy(() => import('./features/operations/shift-handover/pages/ShiftHandoverWizard'));
@@ -29,6 +29,22 @@ const MaintenanceOrderList = lazy(() => import('./features/operations/device-led
 const MaintenanceOrderForm = lazy(() => import('./features/operations/device-ledger/pages/MaintenanceOrderForm'));
 const MaintenanceOrderDetail = lazy(() => import('./features/operations/device-ledger/pages/MaintenanceOrderDetail'));
 const DeviceConnectivity = lazy(() => import('./features/operations/device-ledger/pages/DeviceConnectivity'));
+
+// Inspection pages
+const InspectionHome = lazy(() => import('./features/operations/inspection/pages/InspectionHome'));
+const InspectionTaskList = lazy(() => import('./features/operations/inspection/pages/InspectionTaskList'));
+const InspectionTaskExecution = lazy(() => import('./features/operations/inspection/pages/InspectionTaskExecution'));
+const InspectionTaskForm = lazy(() => import('./features/operations/inspection/pages/InspectionTaskForm'));
+const InspectionPlanList = lazy(() => import('./features/operations/inspection/pages/InspectionPlanList'));
+const InspectionPlanForm = lazy(() => import('./features/operations/inspection/pages/InspectionPlanForm'));
+const InspectionPlanDetail = lazy(() => import('./features/operations/inspection/pages/InspectionPlanDetail'));
+const CheckItemList = lazy(() => import('./features/operations/inspection/pages/CheckItemList'));
+const IssueRecordList = lazy(() => import('./features/operations/inspection/pages/IssueRecordList'));
+const IssueRecordDetail = lazy(() => import('./features/operations/inspection/pages/IssueRecordDetail'));
+const InspectionLogList = lazy(() => import('./features/operations/inspection/pages/InspectionLogList'));
+const InspectionLogDetail = lazy(() => import('./features/operations/inspection/pages/InspectionLogDetail'));
+const InspectionAnalytics = lazy(() => import('./features/operations/inspection/pages/InspectionAnalytics'));
+const InspectionReportDetail = lazy(() => import('./features/operations/inspection/pages/InspectionReportDetail'));
 
 // Loading component
 const PageLoading = () => (
@@ -91,8 +107,9 @@ export const router = createBrowserRouter([
                 element: withSuspense(ShiftSummary),
               },
               {
+                // Redirect old schedule route to station module
                 path: 'schedule',
-                element: withSuspense(ShiftSchedule),
+                element: <Navigate to="/operations/station" replace />,
               },
               {
                 path: 'handover',
@@ -182,7 +199,93 @@ export const router = createBrowserRouter([
           },
           {
             path: 'inspection',
-            element: <div>巡检管理 - 待开发</div>,
+            children: [
+              {
+                index: true,
+                element: withSuspense(InspectionHome),
+              },
+              {
+                path: 'tasks',
+                children: [
+                  {
+                    index: true,
+                    element: withSuspense(InspectionTaskList),
+                  },
+                  {
+                    path: 'create',
+                    element: withSuspense(InspectionTaskForm),
+                  },
+                  {
+                    path: ':id',
+                    element: withSuspense(InspectionTaskExecution),
+                  },
+                ],
+              },
+              {
+                path: 'plans',
+                children: [
+                  {
+                    index: true,
+                    element: withSuspense(InspectionPlanList),
+                  },
+                  {
+                    path: 'create',
+                    element: withSuspense(InspectionPlanForm),
+                  },
+                  {
+                    path: ':id',
+                    element: withSuspense(InspectionPlanDetail),
+                  },
+                  {
+                    path: ':id/edit',
+                    element: withSuspense(InspectionPlanForm),
+                  },
+                ],
+              },
+              {
+                path: 'check-items',
+                element: withSuspense(CheckItemList),
+              },
+              {
+                path: 'issues',
+                children: [
+                  {
+                    index: true,
+                    element: withSuspense(IssueRecordList),
+                  },
+                  {
+                    path: ':id',
+                    element: withSuspense(IssueRecordDetail),
+                  },
+                ],
+              },
+              {
+                path: 'logs',
+                children: [
+                  {
+                    index: true,
+                    element: withSuspense(InspectionLogList),
+                  },
+                  {
+                    path: ':id',
+                    element: withSuspense(InspectionLogDetail),
+                  },
+                ],
+              },
+              {
+                path: 'analytics',
+                children: [
+                  {
+                    index: true,
+                    element: withSuspense(InspectionAnalytics),
+                  },
+                  {
+                    path: 'reports/:id',
+                    element: withSuspense(InspectionReportDetail),
+                  },
+                ],
+              },
+            ],
           },
         ],
       },

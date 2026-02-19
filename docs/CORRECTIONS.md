@@ -244,5 +244,50 @@
 
 ---
 
+### 2026-02-19 巡检模块前端审查：4项系统性问题
+
+- **修正内容：**
+
+  用户审查巡检模块前端实现后，提出4项系统性问题：
+
+  1. **计划-任务关系不清晰**：任务列表缺少计划编号（planNo）列，任务列表与计划列表作为独立侧边栏入口时缺乏父子关系的直观感知。修正：合并为同一页面的双 Tab（"安检任务"/"安检计划"），任务表格增加"计划编号"列。
+  2. **不支持任务创建**：原设计仅支持从计划"下发任务"（一键自动生成），缺少手动新增具体任务的完整流程。修正：新增 US-004-B 用户故事，将"下发任务"Modal 替换为"新增任务"表单页，支持选择检查项子集、设置截止日期、分配执行人。
+  3. **任务模型定义不完整**：InspectionTask 未定义自己的 `checkItemIds` 字段，隐式依赖通过 `plan_id` 反查计划获取检查项。修正：architecture.md 为 InspectionTask 增加 `check_item_ids JSONB NOT NULL` 字段，types.ts 增加 `checkItemIds: string[]`。
+  4. **状态-详情交叉验证异常**：已完成任务（如 IT-HZXH-0218-002）显示"已完成"但执行页显示 0/0 进度（因 `logs: []` 为空）。修正：为所有已完成任务补充完整的 InspectionLog 数据（task-003: 9条，task-006: 9条），为待执行任务预创建 pending 状态的 log 记录。
+
+  涉及修改的文件：
+  - `docs/features/operations/inspection/user-stories.md` — 修改 US-004 AC3（下发→新增）、新增 US-004-B 用户故事、修改 US-006（增加 planNo、双 Tab、数据一致性规则）、修改 US-008（明确 checkItemIds 来源、预创建日志、数据完整性）
+  - `docs/features/operations/inspection/architecture.md` — InspectionTask 增加 `check_item_ids` 字段、增加任务创建规则和数据一致性约束表
+  - `docs/features/operations/inspection/ux-design.md` — 任务 0 增加双 Tab 和"新增任务"入口、任务 2 从"下发任务"改为"新增任务"完整流程
+  - `docs/features/operations/inspection/ui-schema.md` — 新增 P00 Tab 容器页、P01 增加 planNo 列和"新增任务"按钮、P05 从 Modal 改为导航
+  - `frontend/src/features/operations/inspection/types.ts` — InspectionTask 增加 `checkItemIds: string[]`
+  - `frontend/src/mock/inspections.ts` — 所有任务增加 checkItemIds 字段、为 task-003/task-006 补充完整 logs、为 task-002 预创建 pending logs
+  - `frontend/src/features/operations/inspection/pages/InspectionHome.tsx` — 新建双 Tab 容器页
+  - `frontend/src/features/operations/inspection/pages/InspectionTaskList.tsx` — 增加 planNo 列、移除独立页面 padding 和标题
+  - `frontend/src/features/operations/inspection/pages/InspectionPlanDetail.tsx` — "下发任务"Modal 替换为"新增任务"导航按钮
+  - `frontend/src/router.tsx` — 新增 InspectionHome 路由
+  - `frontend/src/components/layout/AppLayout.tsx` — 合并侧边栏入口
+
+- **原因分析：**
+
+  4项问题的**共同根因**是"任务"（Task）这一核心概念在需求分析阶段**定义不充分**，导致数据模型、UX 设计和前端实现逐层传递了同一个模糊定义：
+
+  1. **需求层面**：原始需求文档 F008 仅写"从安检计划中生成并下发"，将任务视为计划的自动衍生物，而非可独立管理的实体。这导致 user-stories 中缺少"手动新增任务"这一关键用户行为。
+  2. **架构层面**：InspectionTask 没有自己的 `check_item_ids`，依赖隐式继承（通过 plan_id 反查），导致任务本身不是一个"自包含"的可执行单元。当执行页需要渲染检查项列表时，找不到任务自身的明确数据源。
+  3. **数据层面**：Mock 数据中"任务创建时预生成 InspectionLog"的规则在任何文档中都未被定义，导致已完成任务的 `logs` 为空数组，与 `checkedItems: 9` 的计数产生矛盾。
+  4. **UX 层面**：将计划和任务作为独立的侧边栏入口，忽视了它们的父子关系，增加了用户在两个独立列表间建立关联的认知负担。
+
+  总结：**"任务"概念的模糊定义**在需求→故事→架构→设计→编码→Mock数据 的链路中被逐层"放大"，最终在运行时让用户看到了 4 种不同维度的质量问题。
+
+- **经验总结：**
+
+  1. **核心实体必须在 architecture 阶段完整定义**：每个核心实体（如 Task）需要明确：(a) 它自身携带哪些数据？(b) 它和父实体的继承/引用关系是什么？(c) 创建时需要同步执行哪些副作用（如预创建关联记录）？这些不能依赖"隐式约定"。
+  2. **"生命周期完整性"应作为验收标准**：每个实体的 Mock 数据必须能覆盖从"创建→执行中→已完成"的完整生命周期。已完成状态的记录必须有能够支撑该状态的完整详情数据，而非仅设置状态字段。
+  3. **状态-详情交叉验证应作为 Mock 数据的检查点**：在生成 Mock 数据后，应对每条记录执行"状态 ↔ 详情一致性"检查：已完成记录是否有完整日志？执行中记录是否有部分日志？计数器（checkedItems/totalItems）是否与实际日志数量一致？
+  4. **父子关系实体应在 UX 层面明确关联展示**：当两个实体存在强依赖关系（计划→任务）时，应优先考虑在同一视图中展示（如 Tab 合并），而非作为独立的导航入口，以降低用户建立关联关系的认知成本。
+  5. **需求文档中的"生成"一词需要追问细节**：当需求说"生成任务"时，需要追问：生成什么？包含哪些数据？谁来触发？可否手动调整？这种追问能在最早阶段发现概念模糊问题。
+
+---
+
 *创建时间：2026-02-07*
-*最后更新：2026-02-18*
+*最后更新：2026-02-19*

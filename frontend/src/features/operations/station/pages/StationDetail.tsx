@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Card,
@@ -31,6 +31,8 @@ import {
   ToolOutlined,
   ReloadOutlined,
   PlusOutlined,
+  CalendarOutlined,
+  UnorderedListOutlined,
 } from '@ant-design/icons';
 import { RequirementTag } from '../../../../components/RequirementTag';
 import type { ColumnsType } from 'antd/es/table';
@@ -39,6 +41,7 @@ import { stations } from '../../../../mock/stations';
 import { getNozzlesByStation } from '../../../../mock/nozzles';
 import { getShiftsByStation } from '../../../../mock/shifts';
 import { getEmployeesByStation } from '../../../../mock/employees';
+import ShiftSchedulePanel from '../components/ShiftSchedulePanel';
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
@@ -64,7 +67,11 @@ const StationDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState('basic');
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'basic';
+  const initialSubTab = searchParams.get('subTab') || 'definitions';
+  const [activeTab, setActiveTab] = useState(initialTab);
+  const [shiftSubTab, setShiftSubTab] = useState(initialSubTab);
 
   // 查找站点数据
   const station = useMemo(() => {
@@ -661,23 +668,58 @@ const StationDetail: React.FC = () => {
             } 
             key="shift"
           >
-            <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
-              <Col>
-                <Title level={5} style={{ marginBottom: 0 }}>
-                  {t('station.shift.list')}
-                </Title>
-              </Col>
-              <Col>
-                <Button type="primary" icon={<PlusOutlined />}>
-                  {t('station.shift.add')}
-                </Button>
-              </Col>
-            </Row>
-            <Table
-              columns={shiftColumns}
-              dataSource={shifts}
-              rowKey="id"
-              pagination={false}
+            <Tabs
+              activeKey={shiftSubTab}
+              onChange={setShiftSubTab}
+              size="small"
+              type="card"
+              items={[
+                {
+                  key: 'definitions',
+                  label: (
+                    <Space size={4}>
+                      <UnorderedListOutlined />
+                      {t('station.shift.definitionsTab')}
+                    </Space>
+                  ),
+                  children: (
+                    <>
+                      <Row justify="space-between" align="middle" style={{ marginBottom: 16, marginTop: 16 }}>
+                        <Col>
+                          <Title level={5} style={{ marginBottom: 0 }}>
+                            {t('station.shift.list')}
+                          </Title>
+                        </Col>
+                        <Col>
+                          <Button type="primary" icon={<PlusOutlined />}>
+                            {t('station.shift.add')}
+                          </Button>
+                        </Col>
+                      </Row>
+                      <Table
+                        columns={shiftColumns}
+                        dataSource={shifts}
+                        rowKey="id"
+                        pagination={false}
+                      />
+                    </>
+                  ),
+                },
+                {
+                  key: 'schedule',
+                  label: (
+                    <Space size={4}>
+                      <CalendarOutlined />
+                      {t('station.shift.scheduleTab')}
+                    </Space>
+                  ),
+                  children: (
+                    <div style={{ marginTop: 16 }}>
+                      {id && <ShiftSchedulePanel stationId={id} />}
+                    </div>
+                  ),
+                },
+              ]}
             />
           </TabPane>
 

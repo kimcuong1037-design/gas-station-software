@@ -10,13 +10,17 @@ import {
   UserOutlined,
   LogoutOutlined,
   DashboardOutlined,
-  CalendarOutlined,
   HistoryOutlined,
   AuditOutlined,
   MonitorOutlined,
   DatabaseOutlined,
   FileProtectOutlined,
   ApiOutlined,
+  ScheduleOutlined,
+  CheckSquareOutlined,
+  BugOutlined,
+  FileTextOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
@@ -66,11 +70,7 @@ const AppLayout: React.FC = () => {
               icon: <DashboardOutlined />,
               label: t('menu.shiftOverview'),
             },
-            {
-              key: '/operations/shift-handover/schedule',
-              icon: <CalendarOutlined />,
-              label: t('menu.shiftSchedule'),
-            },
+
             {
               key: '/operations/shift-handover/history',
               icon: <HistoryOutlined />,
@@ -114,6 +114,33 @@ const AppLayout: React.FC = () => {
           key: '/operations/inspection',
           icon: <SafetyCertificateOutlined />,
           label: t('menu.inspection'),
+          children: [
+            {
+              key: '/operations/inspection',
+              icon: <ScheduleOutlined />,
+              label: t('menu.inspectionTasks', '安检任务'),
+            },
+            {
+              key: '/operations/inspection/check-items',
+              icon: <CheckSquareOutlined />,
+              label: t('menu.inspectionCheckItems', '检查项目'),
+            },
+            {
+              key: '/operations/inspection/issues',
+              icon: <BugOutlined />,
+              label: t('menu.inspectionIssues', '问题记录'),
+            },
+            {
+              key: '/operations/inspection/logs',
+              icon: <FileTextOutlined />,
+              label: t('menu.inspectionLogs', '巡检日志'),
+            },
+            {
+              key: '/operations/inspection/analytics',
+              icon: <BarChartOutlined />,
+              label: t('menu.inspectionAnalytics', '统计报表'),
+            },
+          ],
         },
       ],
     },
@@ -148,10 +175,11 @@ const AppLayout: React.FC = () => {
     ],
   };
 
-  // Check if on shift-handover or device-ledger pages to show station selector
+  // Check if on shift-handover, device-ledger, or inspection pages to show station selector
   const isShiftHandoverPage = location.pathname.startsWith('/operations/shift-handover');
   const isDeviceLedgerPage = location.pathname.startsWith('/operations/device-ledger');
-  const showStationSelector = isShiftHandoverPage || isDeviceLedgerPage;
+  const isInspectionPage = location.pathname.startsWith('/operations/inspection');
+  const showStationSelector = isShiftHandoverPage || isDeviceLedgerPage || isInspectionPage;
 
   // 生成当前路径的面包屑
   const getBreadcrumbItems = () => {
@@ -185,9 +213,7 @@ const AppLayout: React.FC = () => {
         className: 'breadcrumb-link'
       });
       // Add sub-page breadcrumbs
-      if (pathSegments.includes('schedule')) {
-        items.push({ title: t('menu.shiftSchedule') as string });
-      } else if (pathSegments.includes('history')) {
+      if (pathSegments.includes('history')) {
         items.push({ 
           title: t('menu.shiftHistory') as string,
           onClick: () => navigate('/operations/shift-handover/history'),
@@ -247,6 +273,65 @@ const AppLayout: React.FC = () => {
         items.push({ title: t('menu.deviceConnectivity', '设备连接') as string });
       }
     }
+    if (pathSegments.includes('inspection')) {
+      items.push({ 
+        title: t('menu.inspection') as string,
+        onClick: () => navigate('/operations/inspection/tasks'),
+        className: 'breadcrumb-link'
+      });
+      if (pathSegments.includes('tasks')) {
+        items.push({ 
+          title: t('menu.inspectionTasks', '安检任务') as string,
+          onClick: () => navigate('/operations/inspection/tasks'),
+          className: 'breadcrumb-link'
+        });
+        if (pathSegments.some(seg => seg.startsWith('task-'))) {
+          items.push({ title: '任务执行' });
+        }
+      } else if (pathSegments.includes('plans')) {
+        items.push({ 
+          title: t('menu.inspectionPlans', '安检计划') as string,
+          onClick: () => navigate('/operations/inspection/plans'),
+          className: 'breadcrumb-link'
+        });
+        if (pathSegments.includes('create')) {
+          items.push({ title: '新建计划' });
+        } else if (pathSegments.includes('edit')) {
+          items.push({ title: '编辑计划' });
+        } else if (pathSegments.some(seg => seg.startsWith('plan-'))) {
+          items.push({ title: '计划详情' });
+        }
+      } else if (pathSegments.includes('check-items')) {
+        items.push({ title: t('menu.inspectionCheckItems', '检查项目') as string });
+      } else if (pathSegments.includes('issues')) {
+        items.push({ 
+          title: t('menu.inspectionIssues', '问题记录') as string,
+          onClick: () => navigate('/operations/inspection/issues'),
+          className: 'breadcrumb-link'
+        });
+        if (pathSegments.some(seg => seg.startsWith('issue-'))) {
+          items.push({ title: '问题详情' });
+        }
+      } else if (pathSegments.includes('logs')) {
+        items.push({ 
+          title: t('menu.inspectionLogs', '巡检日志') as string,
+          onClick: () => navigate('/operations/inspection/logs'),
+          className: 'breadcrumb-link'
+        });
+        if (pathSegments.some(seg => seg.startsWith('log-'))) {
+          items.push({ title: '日志详情' });
+        }
+      } else if (pathSegments.includes('analytics')) {
+        items.push({ 
+          title: t('menu.inspectionAnalytics', '统计报表') as string,
+          onClick: () => navigate('/operations/inspection/analytics'),
+          className: 'breadcrumb-link'
+        });
+        if (pathSegments.includes('reports') && pathSegments.some(seg => seg.startsWith('report-'))) {
+          items.push({ title: '报表详情' });
+        }
+      }
+    }
     
     return items;
   };
@@ -284,7 +369,7 @@ const AppLayout: React.FC = () => {
         <Menu
           mode="inline"
           selectedKeys={getSelectedKeys()}
-          defaultOpenKeys={['/operations', '/operations/shift-handover', '/operations/device-ledger']}
+          defaultOpenKeys={['/operations', '/operations/shift-handover', '/operations/device-ledger', '/operations/inspection']}
           items={menuItems}
           onClick={handleMenuClick}
         />

@@ -59,7 +59,18 @@ export default {
     shiftHistory: '交接历史',
     shiftSettlementReview: '解缴审核',
     equipment: '设备管理',
-    inspection: '巡检管理',
+    inspection: '巡检/安检管理',
+    inspectionTasks: '安检任务',
+    inspectionPlans: '安检计划',
+    inspectionCheckItems: '检查项目',
+    inspectionIssues: '问题记录',
+    inspectionLogs: '巡检日志',
+    inspectionAnalytics: '统计报表',
+    deviceLedger: '设备设施',
+    facilityMonitoring: '设施监控',
+    equipmentLedger: '设备台账',
+    maintenanceOrders: '维保工单',
+    deviceConnectivity: '设备连接',
   },
 
   // 用户身份
@@ -177,6 +188,39 @@ export default {
       nextStep: '下一步',
     },
     
+    // 班次定义
+    shift: {
+      title: '班次',
+      name: '班次名称',
+      list: '班次列表',
+      add: '新增班次',
+      startTime: '开始时间',
+      endTime: '结束时间',
+      supervisor: '负责人',
+      definitionsTab: '班次定义',
+      scheduleTab: '排班日历',
+    },
+
+    // 排班日历（周视图）
+    schedule: {
+      title: '排班表',
+      shift: '班次',
+      date: '日期',
+      employee: '值班人员',
+      addSchedule: '新增排班',
+      editSchedule: '编辑排班',
+      saveSuccess: '排班保存成功',
+      thisWeek: '本周',
+      prevWeek: '上一周',
+      nextWeek: '下一周',
+    },
+
+    // 站点照片
+    photo: {
+      title: '站点照片',
+      upload: '上传照片',
+    },
+
     // 详情页
     detailPage: {
       stationInfo: '站点信息',
@@ -470,6 +514,354 @@ export default {
     // 设备连接
     connectivity: {
       title: '设备连接',
+    },
+  },
+
+  // 巡检/安检管理模块
+  inspection: {
+    // 页面标题
+    title: '巡检/安检管理',
+    taskTitle: '安检任务',
+    planTitle: '安检计划',
+    checkItemTitle: '检查项目',
+    issueTitle: '问题记录',
+    logTitle: '巡检日志',
+    analyticsTitle: '统计报表',
+
+    // 计划状态
+    planStatus: {
+      pending: '待执行',
+      active: '执行中',
+      completed: '已完成',
+      cancelled: '已取消',
+    },
+
+    // 任务状态
+    taskStatus: {
+      pending: '待执行',
+      inProgress: '执行中',
+      completed: '已完成',
+      overdue: '已逾期',
+      cancelled: '已取消',
+    },
+
+    // 检查结果
+    checkResult: {
+      normal: '正常',
+      abnormal: '异常',
+      skipped: '跳过',
+      notChecked: '未检查',
+    },
+
+    // 问题严重程度
+    severity: {
+      critical: '严重',
+      major: '重要',
+      minor: '一般',
+      suggestion: '建议',
+    },
+
+    // 问题状态
+    issueStatus: {
+      pending: '待处理',
+      processing: '处理中',
+      pendingReview: '待审核',
+      resolved: '已解决',
+      closed: '已关闭',
+    },
+
+    // 检查周期
+    cycleType: {
+      daily: '每日',
+      weekly: '每周',
+      monthly: '每月',
+      quarterly: '每季度',
+      custom: '自定义',
+    },
+
+    // 检查项分类
+    category: {
+      safety_equipment: '安全设备',
+      fire_protection: '消防设施',
+      electrical: '电气设施',
+      pressure_vessel: '压力容器',
+      environmental: '环保设施',
+      general_facility: '通用设施',
+    },
+
+    // 任务列表
+    task: {
+      totalTasks: '总任务数',
+      pendingTasks: '待执行',
+      overdueTasks: '已逾期',
+      todayCompleted: '今日完成',
+      pendingIssues: '待处理问题',
+      taskNo: '任务编号',
+      planName: '关联计划',
+      assignee: '执行人',
+      scheduledTime: '计划时间',
+      deadlineTime: '截止时间',
+      completedAt: '完成时间',
+      progress: '进度',
+      assign: '指派',
+      assignTo: '指派给',
+      selectAssignee: '请选择执行人',
+      assignSuccess: '指派成功',
+      noTasks: '暂无安检任务',
+      noTasksHint: '请先创建安检计划并生成任务',
+      goToPlans: '前往创建计划',
+      overdue: '已逾期',
+      dueSoon: '即将到期',
+    },
+
+    // 任务执行
+    execution: {
+      backToList: '返回列表',
+      taskInfo: '任务信息',
+      allNormal: '全部正常',
+      allNormalConfirm: '确认将所有未检查项标记为正常？',
+      submitTask: '提交任务',
+      submitConfirm: '确认提交？未检查的项目将标记为跳过。',
+      submitSuccess: '任务提交成功',
+      saveProgress: '保存进度',
+      saveSuccess: '进度已保存',
+      checkedCount: '已检查 {{checked}}/{{total}}',
+      normalCount: '正常',
+      abnormalCount: '异常',
+      remark: '备注',
+      remarkPlaceholder: '请输入异常说明',
+      guideTip: '点击「正常」或「异常」按钮记录检查结果',
+    },
+
+    // 计划列表
+    plan: {
+      createPlan: '新建计划',
+      planNo: '计划编号',
+      name: '计划名称',
+      cycle: '执行周期',
+      station: '适用站点',
+      checkItemCount: '检查项数量',
+      estimatedTasks: '预计任务数',
+      createdBy: '创建人',
+      createdAt: '创建时间',
+      startDate: '开始日期',
+      endDate: '结束日期',
+      editPlan: '编辑计划',
+      cancelPlan: '取消计划',
+      cancelConfirm: '确定取消该计划？取消后不再生成新任务。',
+      cancelSuccess: '计划已取消',
+      dispatch: '派发任务',
+      dispatchSuccess: '任务派发成功',
+      noPlan: '暂无安检计划',
+      noPlanHint: '点击右上角按钮创建您的第一个安检计划',
+    },
+
+    // 计划表单
+    planForm: {
+      create: '新建安检计划',
+      edit: '编辑安检计划',
+      basicInfo: '基本信息',
+      selectCheckItems: '选择检查项',
+      namePlaceholder: '请输入计划名称',
+      stationPlaceholder: '请选择适用站点',
+      cyclePlaceholder: '请选择执行周期',
+      selectedItems: '已选检查项',
+      availableItems: '可选检查项',
+      noItemsSelected: '请至少选择一个检查项',
+      saveSuccess: '计划保存成功',
+      confirmLeave: '确定要离开吗？未保存的数据将丢失',
+    },
+
+    // 计划详情
+    planDetail: {
+      backToList: '返回列表',
+      planInfo: '计划信息',
+      associatedTasks: '关联任务',
+      noTasks: '暂无关联任务',
+      viewTask: '查看任务',
+    },
+
+    // 检查项目
+    checkItem: {
+      addItem: '新增检查项',
+      editItem: '编辑检查项',
+      manageTags: '管理标签',
+      name: '项目名称',
+      category: '分类',
+      description: '检查标准',
+      station: '适用站点',
+      equipment: '关联设备',
+      tags: '标签',
+      status: '状态',
+      active: '启用',
+      inactive: '停用',
+      deactivate: '停用',
+      activate: '启用',
+      deactivateConfirm: '确定停用该检查项？停用后计划中将跳过此项。',
+      activateConfirm: '确定启用该检查项？',
+      deactivateSuccess: '检查项已停用',
+      activateSuccess: '检查项已启用',
+      noItems: '暂无检查项目',
+      noItemsHint: '点击右上角按钮添加您的第一个检查项',
+      namePlaceholder: '请输入检查项名称',
+      descriptionPlaceholder: '请输入检查标准或描述',
+      categoryPlaceholder: '请选择分类',
+      stationPlaceholder: '请选择适用站点',
+      equipmentPlaceholder: '请选择关联设备',
+      tagPlaceholder: '请选择标签',
+      saveSuccess: '检查项保存成功',
+    },
+
+    // 标签管理
+    tag: {
+      title: '标签管理',
+      name: '标签名称',
+      color: '标签颜色',
+      addTag: '新增标签',
+      editTag: '编辑标签',
+      deleteTag: '删除标签',
+      deleteConfirm: '确定删除该标签？',
+      deleteSuccess: '标签已删除',
+      saveSuccess: '标签已保存',
+      namePlaceholder: '请输入标签名称',
+    },
+
+    // 问题记录
+    issue: {
+      reportIssue: '上报问题',
+      issueNo: '问题编号',
+      title: '问题标题',
+      severity: '严重程度',
+      status: '处理状态',
+      source: '来源',
+      fromInspection: '巡检发现',
+      fromManual: '手动上报',
+      reportedBy: '上报人',
+      reportedAt: '上报时间',
+      assignedTo: '处理人',
+      dueDate: '处理期限',
+      resolvedAt: '解决时间',
+      description: '问题描述',
+      descriptionPlaceholder: '请详细描述问题情况',
+      titlePlaceholder: '请输入问题标题',
+      urgent: '紧急',
+      noIssues: '暂无问题记录',
+      noIssuesHint: '巡检执行发现异常时将自动生成问题记录',
+    },
+
+    // 问题详情
+    issueDetail: {
+      backToList: '返回列表',
+      issueInfo: '问题信息',
+      timeline: '处理时间线',
+      assignHandler: '指派处理人',
+      startProcessing: '开始处理',
+      submitResult: '提交处理结果',
+      reviewResult: '审核结果',
+      closeIssue: '关闭问题',
+      selectHandler: '请选择处理人',
+      assignSuccess: '处理人已指派',
+      startSuccess: '已开始处理',
+      resultPlaceholder: '请描述处理结果',
+      submitResultSuccess: '处理结果已提交',
+      reviewApprove: '审核通过',
+      reviewReject: '审核驳回',
+      rejectReason: '驳回原因',
+      rejectReasonPlaceholder: '请填写驳回原因',
+      reviewSuccess: '审核已完成',
+      closeConfirm: '确定关闭此问题？',
+      closeSuccess: '问题已关闭',
+    },
+
+    // 问题上报抽屉
+    issueReport: {
+      title: '上报问题',
+      selectSeverity: '选择严重程度',
+      relatedCheckItem: '关联检查项',
+      relatedTask: '关联任务',
+      submitSuccess: '问题上报成功',
+    },
+
+    // 巡检日志
+    log: {
+      executor: '执行人',
+      taskNo: '关联任务',
+      checkItem: '检查项',
+      executedAt: '执行时间',
+      result: '检查结果',
+      remark: '备注',
+      photos: '现场照片',
+      noLogs: '暂无巡检执行记录',
+      noLogsHint: '完成巡检任务后，日志将自动生成',
+    },
+
+    // 日志详情
+    logDetail: {
+      backToList: '返回列表',
+      logInfo: '日志详情',
+      noPhotos: '暂无现场照片',
+    },
+
+    // 统计报表
+    analytics: {
+      dailyTab: '巡检日报',
+      stationTab: '站点报表',
+      statisticsTab: '安检统计',
+      reportsTab: '检查报表',
+
+      // 日报
+      dailyDate: '选择日期',
+      plannedTasks: '计划任务数',
+      completedTasks: '完成任务数',
+      completionRate: '完成率',
+      abnormalItems: '异常项数',
+      executorDetail: '执行人明细',
+      abnormalDetail: '异常明细',
+      assignedTasks: '分配任务',
+      normalItems: '正常项',
+
+      // 站点报表
+      timeRange: '时间范围',
+      today: '今日',
+      thisWeek: '本周',
+      thisMonth: '本月',
+      custom: '自定义',
+      stationName: '站点名称',
+      totalTasks: '总任务数',
+      abnormalCount: '异常数',
+      issueCount: '问题数',
+      rectificationRate: '整改率',
+
+      // 安检统计
+      overallCompletionRate: '总体完成率',
+      overallAbnormalRate: '总体异常率',
+      pendingIssueCount: '待处理问题',
+      monthlyInspectionCount: '本月巡检次数',
+      byTime: '按时间',
+      byStation: '按站点',
+      byCheckItem: '按检查项目',
+
+      // 检查报表
+      reportType: {
+        completion: '完成率报表',
+        abnormal: '异常分析报表',
+        rectification: '整改跟踪报表',
+        compliance: '合规报表',
+      },
+      generateReport: '生成报表',
+      generateSuccess: '报表生成成功',
+      reportHistory: '历史报表',
+      viewReport: '查看报表',
+      generatedAt: '生成时间',
+      generatedBy: '生成人',
+    },
+
+    // 报表详情
+    reportDetail: {
+      backToAnalytics: '返回统计报表',
+      reportInfo: '报表信息',
+      exportReport: '导出报表',
+      reportContent: '报表内容',
     },
   },
 };

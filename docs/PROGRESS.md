@@ -1,11 +1,11 @@
 
 # 高层进度说明
 
-截至 2026-02-18 晚，项目整体进展约为 45%。
+截至 2026-02-19，项目整体进展约为 50%。
 
-- 阶段 1（基础运营）：模块 1.1 站点管理 ✅ (4.15)、模块 1.2 交接班管理 ✅ (3.55, P1=0)、模块 1.3 设备设施管理 ✅ (3.35, P1=0)
+- 阶段 1（基础运营）：模块 1.1 站点管理 ✅ (4.15)、模块 1.2 交接班管理 ✅ (3.55, P1=0)、模块 1.3 设备设施管理 ✅ (3.35, P1=0)、模块 1.4 巡检/安检管理 🟡 (3.10, P1=3)
 - 模块 1.2 和 1.3 均已完成 UI 评估两轮，P1 问题全部修复，剩余 P2 问题待后续迭代。
-- 模块 1.4 巡检/安检管理尚未启动。
+- 模块 1.4 巡检/安检管理已完成需求→用户故事→UX设计→UI Schema→前端开发→UI 评估 v1→P1 全部修复。待 P2 修复后二评。
 - 阶段 2 及后续模块尚未启动。
 
 # 项目进展追踪（Progress Tracker）
@@ -20,6 +20,46 @@
 ---
 
 ## 进展记录
+
+### 2026-02-20（模块 1.4 巡检/安检管理 - P2 修复 + UI 评估 v2）
+
+#### 计划
+- [ ] 修复 P2 问题（优先级：P2-高 → P2-中 → P2-低）
+  - P2-1: i18n 全面未使用（代价高，可分批）
+  - P2-2: 无 ARIA 无障碍属性
+  - P2-3: 硬编码颜色值 20+ 处
+  - P2-4 ~ P2-12: 菜单不一致、Badge、文件拆分等
+- [ ] 完成 P2 修复后执行 UI 评估 v2（目标分数 ≥ 3.5）
+- [ ] 若 v2 达标（P1=0），模块 1.4 标记 ✅ 完成
+- [ ] 更新 ROADMAP.md 和 PROGRESS.md
+
+---
+
+### 2026-02-19（模块 1.4 巡检/安检管理 - UI 评估 v1 + P1 修复）
+
+#### UI 评估阶段
+- [基础运营/巡检安检管理] 完成 UI 评估 v1 — **总分 3.10/5.0**（🟡 修复后可发布）
+  - 评估范围：17 个页面/抽屉组件 + 7 个共享 Tag 组件 + Mock 数据 + 路由 + i18n
+  - P1 问题 3 项：
+    - P1-1: InspectionTaskExecution "登记问题→" Link 导航到不存在路由 `/issues/create`，应为打开 IssueReportDrawer 抽屉
+    - P1-2: InspectionPlanForm 需要 `mode` prop 但 router 未传递，导致创建/编辑功能受损
+    - P1-3: IssueRecordDetail 关联设备链接缺少 `equipment/` 路径段
+  - P2 问题 12 项：i18n 95% 未使用、无 ARIA 属性、硬编码颜色 20+ 处等
+  - 输出：`docs/ui-evaluation-report-inspection-v1.md`
+
+#### UX 改进
+- InspectionTaskList 新增"新增任务"按钮（PlusOutlined），支持从任务列表直接创建任务
+- InspectionTaskForm 重写：支持无 planId 进入，新增计划选择器下拉框（仅显示 pending/in_progress 计划），切换计划自动重置检查项和执行人
+
+#### P1 修复（3/3 ✅）
+- **P1-1** ✅: InspectionTaskExecution — 将 `<Link>` 替换为 `onClick` 打开 `IssueReportDrawer`，传入 taskId/checkItemId/equipmentId 预填参数
+- **P1-2** ✅: InspectionPlanForm — 移除 `mode` prop，改为通过 `useParams()` 中 `id` 参数自动判断 create/edit 模式
+- **P1-3** ✅: IssueRecordDetail — 修正设备链接路径，添加 `equipment/` 路径段
+- 附带修复：AppLayout 移除未使用的 `CalendarOutlined` 导入
+- 编译验证：✅ 零错误通过
+- **下一步：** P2 修复 → 二评
+
+---
 
 ### 2026-02-18（模块 1.3 设备设施管理 - 全流程完成）
 
@@ -154,12 +194,11 @@
 - **相关 commits：** `1fc87d6` (文档), `921a3f4` (UI Schema), `98c450f` (前端), `d7a016e` (评估v1), `9b800d3` (P1修复+评估v2), `2604dba` (补充修复)
 
 ### 模块 1.4 巡检/安检管理
-- **状态：** 未启动 ← **明天从这里开始**
-- **前置：** 模块 1.3 已完成 ✅
-- **参照流程：** AGENT-PLAN Step 2-14（需求分析 → 用户故事 → UX 设计 → UI Schema → 前端开发 → UI 评估）
-- **注意事项：**
-  - 参照模块 1.2/1.3 经验，UX 设计和 UI Schema 需用户确认后再提交（CONSTITUTION 原则 8）
-  - 前端开发后立即进行 UI 评估，P1 问题优先分类再修复（CORRECTIONS 经验）
+- **已完成：** 需求 → 用户故事 → UX 设计 → UI Schema → 前端开发 → UI 评估 v1
+- **当前状态：** v1 评分 3.10/5.0，P1=3，P2=12
+- **P1 问题：** (1) 登记问题导航断裂（Link→应为 Drawer）(2) PlanForm mode prop 未传递 (3) 设备链接路径缺 equipment/ 段
+- **下一步：** P1 修复 → 二评
+- **输出：** `docs/ui-evaluation-report-inspection-v1.md`
 
 ### 项目整体
 - 阶段 1 剩余：模块 1.4 全流程

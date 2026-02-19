@@ -190,7 +190,7 @@ const ShiftSummary: React.FC = () => {
                 type="warning"
                 message={t('shiftHandover.noScheduleHint')}
                 action={
-                  <Button size="small" type="link" onClick={() => navigate('/operations/shift-handover/schedule')}>
+                  <Button size="small" type="link" onClick={() => navigate(`/operations/station/${selectedStationId}?tab=shift&subTab=schedule`)}>
                     {t('shiftHandover.scheduleGoToSchedule')}
                   </Button>
                 }
@@ -210,7 +210,7 @@ const ShiftSummary: React.FC = () => {
               <Button
                 size="small"
                 icon={<CalendarOutlined />}
-                onClick={() => navigate('/operations/shift-handover/schedule')}
+                onClick={() => navigate(`/operations/station/${selectedStationId}?tab=shift&subTab=schedule`)}
               >
                 {t('menu.shiftSchedule')}
               </Button>

@@ -59,7 +59,18 @@ export default {
     shiftHistory: 'History',
     shiftSettlementReview: 'Settlement Review',
     equipment: 'Equipment',
-    inspection: 'Inspection',
+    inspection: 'Inspection Management',
+    inspectionTasks: 'Inspection Tasks',
+    inspectionPlans: 'Inspection Plans',
+    inspectionCheckItems: 'Check Items',
+    inspectionIssues: 'Issue Records',
+    inspectionLogs: 'Inspection Logs',
+    inspectionAnalytics: 'Analytics & Reports',
+    deviceLedger: 'Device & Facility',
+    facilityMonitoring: 'Facility Monitoring',
+    equipmentLedger: 'Equipment Ledger',
+    maintenanceOrders: 'Maintenance Orders',
+    deviceConnectivity: 'Device Connectivity',
   },
 
   // User identity
@@ -177,6 +188,39 @@ export default {
       nextStep: 'Next',
     },
     
+    // Shift definitions
+    shift: {
+      title: 'Shifts',
+      name: 'Shift Name',
+      list: 'Shift List',
+      add: 'Add Shift',
+      startTime: 'Start Time',
+      endTime: 'End Time',
+      supervisor: 'Supervisor',
+      definitionsTab: 'Shift Definitions',
+      scheduleTab: 'Schedule Calendar',
+    },
+
+    // Schedule (weekly calendar)
+    schedule: {
+      title: 'Schedule',
+      shift: 'Shift',
+      date: 'Date',
+      employee: 'Employee',
+      addSchedule: 'Add Schedule',
+      editSchedule: 'Edit Schedule',
+      saveSuccess: 'Schedule saved successfully',
+      thisWeek: 'This Week',
+      prevWeek: 'Previous Week',
+      nextWeek: 'Next Week',
+    },
+
+    // Station photos
+    photo: {
+      title: 'Station Photos',
+      upload: 'Upload Photo',
+    },
+
     // Detail page
     detailPage: {
       stationInfo: 'Station Info',
@@ -466,6 +510,354 @@ export default {
     },
     connectivity: {
       title: 'Device Connectivity',
+    },
+  },
+
+  // Inspection Management Module
+  inspection: {
+    // Page titles
+    title: 'Inspection Management',
+    taskTitle: 'Inspection Tasks',
+    planTitle: 'Inspection Plans',
+    checkItemTitle: 'Check Items',
+    issueTitle: 'Issue Records',
+    logTitle: 'Inspection Logs',
+    analyticsTitle: 'Analytics & Reports',
+
+    // Plan status
+    planStatus: {
+      pending: 'Pending',
+      active: 'Active',
+      completed: 'Completed',
+      cancelled: 'Cancelled',
+    },
+
+    // Task status
+    taskStatus: {
+      pending: 'Pending',
+      inProgress: 'In Progress',
+      completed: 'Completed',
+      overdue: 'Overdue',
+      cancelled: 'Cancelled',
+    },
+
+    // Check result
+    checkResult: {
+      normal: 'Normal',
+      abnormal: 'Abnormal',
+      skipped: 'Skipped',
+      notChecked: 'Not Checked',
+    },
+
+    // Issue severity
+    severity: {
+      critical: 'Critical',
+      major: 'Major',
+      minor: 'Minor',
+      suggestion: 'Suggestion',
+    },
+
+    // Issue status
+    issueStatus: {
+      pending: 'Pending',
+      processing: 'Processing',
+      pendingReview: 'Pending Review',
+      resolved: 'Resolved',
+      closed: 'Closed',
+    },
+
+    // Cycle type
+    cycleType: {
+      daily: 'Daily',
+      weekly: 'Weekly',
+      monthly: 'Monthly',
+      quarterly: 'Quarterly',
+      custom: 'Custom',
+    },
+
+    // Check item category
+    category: {
+      safety_equipment: 'Safety Equipment',
+      fire_protection: 'Fire Protection',
+      electrical: 'Electrical',
+      pressure_vessel: 'Pressure Vessel',
+      environmental: 'Environmental',
+      general_facility: 'General Facility',
+    },
+
+    // Task list
+    task: {
+      totalTasks: 'Total Tasks',
+      pendingTasks: 'Pending',
+      overdueTasks: 'Overdue',
+      todayCompleted: 'Today Completed',
+      pendingIssues: 'Pending Issues',
+      taskNo: 'Task No.',
+      planName: 'Plan',
+      assignee: 'Assignee',
+      scheduledTime: 'Scheduled Time',
+      deadlineTime: 'Deadline',
+      completedAt: 'Completed At',
+      progress: 'Progress',
+      assign: 'Assign',
+      assignTo: 'Assign To',
+      selectAssignee: 'Select Assignee',
+      assignSuccess: 'Assigned successfully',
+      noTasks: 'No inspection tasks',
+      noTasksHint: 'Please create inspection plans to generate tasks',
+      goToPlans: 'Go to Plans',
+      overdue: 'Overdue',
+      dueSoon: 'Due Soon',
+    },
+
+    // Task execution
+    execution: {
+      backToList: 'Back to List',
+      taskInfo: 'Task Info',
+      allNormal: 'All Normal',
+      allNormalConfirm: 'Mark all unchecked items as normal?',
+      submitTask: 'Submit Task',
+      submitConfirm: 'Confirm submit? Unchecked items will be marked as skipped.',
+      submitSuccess: 'Task submitted successfully',
+      saveProgress: 'Save Progress',
+      saveSuccess: 'Progress saved',
+      checkedCount: 'Checked {{checked}}/{{total}}',
+      normalCount: 'Normal',
+      abnormalCount: 'Abnormal',
+      remark: 'Remark',
+      remarkPlaceholder: 'Enter abnormality description',
+      guideTip: 'Click "Normal" or "Abnormal" to record check result',
+    },
+
+    // Plan list
+    plan: {
+      createPlan: 'Create Plan',
+      planNo: 'Plan No.',
+      name: 'Plan Name',
+      cycle: 'Cycle',
+      station: 'Station',
+      checkItemCount: 'Check Items',
+      estimatedTasks: 'Estimated Tasks',
+      createdBy: 'Created By',
+      createdAt: 'Created At',
+      startDate: 'Start Date',
+      endDate: 'End Date',
+      editPlan: 'Edit Plan',
+      cancelPlan: 'Cancel Plan',
+      cancelConfirm: 'Cancel this plan? No new tasks will be generated.',
+      cancelSuccess: 'Plan cancelled',
+      dispatch: 'Dispatch Tasks',
+      dispatchSuccess: 'Tasks dispatched successfully',
+      noPlan: 'No inspection plans',
+      noPlanHint: 'Click the button above to create your first plan',
+    },
+
+    // Plan form
+    planForm: {
+      create: 'Create Inspection Plan',
+      edit: 'Edit Inspection Plan',
+      basicInfo: 'Basic Info',
+      selectCheckItems: 'Select Check Items',
+      namePlaceholder: 'Enter plan name',
+      stationPlaceholder: 'Select station',
+      cyclePlaceholder: 'Select cycle',
+      selectedItems: 'Selected Items',
+      availableItems: 'Available Items',
+      noItemsSelected: 'Select at least one check item',
+      saveSuccess: 'Plan saved successfully',
+      confirmLeave: 'Leave this page? Unsaved data will be lost',
+    },
+
+    // Plan detail
+    planDetail: {
+      backToList: 'Back to List',
+      planInfo: 'Plan Info',
+      associatedTasks: 'Associated Tasks',
+      noTasks: 'No associated tasks',
+      viewTask: 'View Task',
+    },
+
+    // Check items
+    checkItem: {
+      addItem: 'Add Check Item',
+      editItem: 'Edit Check Item',
+      manageTags: 'Manage Tags',
+      name: 'Name',
+      category: 'Category',
+      description: 'Check Standard',
+      station: 'Station',
+      equipment: 'Equipment',
+      tags: 'Tags',
+      status: 'Status',
+      active: 'Active',
+      inactive: 'Inactive',
+      deactivate: 'Deactivate',
+      activate: 'Activate',
+      deactivateConfirm: 'Deactivate this check item? It will be skipped in plans.',
+      activateConfirm: 'Activate this check item?',
+      deactivateSuccess: 'Check item deactivated',
+      activateSuccess: 'Check item activated',
+      noItems: 'No check items',
+      noItemsHint: 'Click the button above to add your first check item',
+      namePlaceholder: 'Enter check item name',
+      descriptionPlaceholder: 'Enter check standard or description',
+      categoryPlaceholder: 'Select category',
+      stationPlaceholder: 'Select station',
+      equipmentPlaceholder: 'Select equipment',
+      tagPlaceholder: 'Select tags',
+      saveSuccess: 'Check item saved',
+    },
+
+    // Tag management
+    tag: {
+      title: 'Tag Management',
+      name: 'Tag Name',
+      color: 'Tag Color',
+      addTag: 'Add Tag',
+      editTag: 'Edit Tag',
+      deleteTag: 'Delete Tag',
+      deleteConfirm: 'Delete this tag?',
+      deleteSuccess: 'Tag deleted',
+      saveSuccess: 'Tag saved',
+      namePlaceholder: 'Enter tag name',
+    },
+
+    // Issue records
+    issue: {
+      reportIssue: 'Report Issue',
+      issueNo: 'Issue No.',
+      title: 'Title',
+      severity: 'Severity',
+      status: 'Status',
+      source: 'Source',
+      fromInspection: 'From Inspection',
+      fromManual: 'Manual Report',
+      reportedBy: 'Reported By',
+      reportedAt: 'Reported At',
+      assignedTo: 'Assigned To',
+      dueDate: 'Due Date',
+      resolvedAt: 'Resolved At',
+      description: 'Description',
+      descriptionPlaceholder: 'Describe the issue in detail',
+      titlePlaceholder: 'Enter issue title',
+      urgent: 'Urgent',
+      noIssues: 'No issue records',
+      noIssuesHint: 'Issues will be generated when abnormalities are found during inspection',
+    },
+
+    // Issue detail
+    issueDetail: {
+      backToList: 'Back to List',
+      issueInfo: 'Issue Info',
+      timeline: 'Timeline',
+      assignHandler: 'Assign Handler',
+      startProcessing: 'Start Processing',
+      submitResult: 'Submit Result',
+      reviewResult: 'Review Result',
+      closeIssue: 'Close Issue',
+      selectHandler: 'Select Handler',
+      assignSuccess: 'Handler assigned',
+      startSuccess: 'Processing started',
+      resultPlaceholder: 'Describe the resolution',
+      submitResultSuccess: 'Result submitted',
+      reviewApprove: 'Approve',
+      reviewReject: 'Reject',
+      rejectReason: 'Rejection Reason',
+      rejectReasonPlaceholder: 'Enter rejection reason',
+      reviewSuccess: 'Review completed',
+      closeConfirm: 'Close this issue?',
+      closeSuccess: 'Issue closed',
+    },
+
+    // Issue report drawer
+    issueReport: {
+      title: 'Report Issue',
+      selectSeverity: 'Select Severity',
+      relatedCheckItem: 'Related Check Item',
+      relatedTask: 'Related Task',
+      submitSuccess: 'Issue reported successfully',
+    },
+
+    // Inspection logs
+    log: {
+      executor: 'Executor',
+      taskNo: 'Task',
+      checkItem: 'Check Item',
+      executedAt: 'Executed At',
+      result: 'Result',
+      remark: 'Remark',
+      photos: 'Photos',
+      noLogs: 'No inspection logs',
+      noLogsHint: 'Logs are generated automatically after completing inspection tasks',
+    },
+
+    // Log detail
+    logDetail: {
+      backToList: 'Back to List',
+      logInfo: 'Log Detail',
+      noPhotos: 'No photos',
+    },
+
+    // Analytics
+    analytics: {
+      dailyTab: 'Daily Report',
+      stationTab: 'Station Report',
+      statisticsTab: 'Statistics',
+      reportsTab: 'Reports',
+
+      // Daily
+      dailyDate: 'Select Date',
+      plannedTasks: 'Planned Tasks',
+      completedTasks: 'Completed Tasks',
+      completionRate: 'Completion Rate',
+      abnormalItems: 'Abnormal Items',
+      executorDetail: 'Executor Detail',
+      abnormalDetail: 'Abnormal Detail',
+      assignedTasks: 'Assigned Tasks',
+      normalItems: 'Normal Items',
+
+      // Station report
+      timeRange: 'Time Range',
+      today: 'Today',
+      thisWeek: 'This Week',
+      thisMonth: 'This Month',
+      custom: 'Custom',
+      stationName: 'Station Name',
+      totalTasks: 'Total Tasks',
+      abnormalCount: 'Abnormal Count',
+      issueCount: 'Issues',
+      rectificationRate: 'Rectification Rate',
+
+      // Statistics
+      overallCompletionRate: 'Overall Completion Rate',
+      overallAbnormalRate: 'Overall Abnormal Rate',
+      pendingIssueCount: 'Pending Issues',
+      monthlyInspectionCount: 'Monthly Inspections',
+      byTime: 'By Time',
+      byStation: 'By Station',
+      byCheckItem: 'By Check Item',
+
+      // Reports
+      reportType: {
+        completion: 'Completion Report',
+        abnormal: 'Abnormal Analysis',
+        rectification: 'Rectification Tracking',
+        compliance: 'Compliance Report',
+      },
+      generateReport: 'Generate Report',
+      generateSuccess: 'Report generated',
+      reportHistory: 'Report History',
+      viewReport: 'View Report',
+      generatedAt: 'Generated At',
+      generatedBy: 'Generated By',
+    },
+
+    // Report detail
+    reportDetail: {
+      backToAnalytics: 'Back to Analytics',
+      reportInfo: 'Report Info',
+      exportReport: 'Export Report',
+      reportContent: 'Report Content',
     },
   },
 };
