@@ -10,6 +10,7 @@ import type { DailyReportData, StationReportData, InspectionReport } from '../ty
 import { REPORT_TYPE_CONFIG, CATEGORY_CONFIG, getLabel } from '../constants';
 import ResultTag from '../components/ResultTag';
 import CategoryTag from '../components/CategoryTag';
+import { RequirementTag } from '../../../../components/RequirementTag';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -507,7 +508,10 @@ const InspectionAnalytics: React.FC = () => {
   return (
     <div data-testid="inspection-analytics">
       <Card>
-        <Title level={4} style={{ marginBottom: 16 }}>巡检统计分析</Title>
+        <Space align="center" style={{ marginBottom: 16 }}>
+          <Title level={4} style={{ margin: 0 }}>巡检统计分析</Title>
+          <RequirementTag componentIds={['daily-report', 'station-report', 'station-report-drill', 'station-report-trend', 'statistics', 'statistics-chart', 'report-generate']} module="inspection" showDetail />
+        </Space>
         <Tabs
           activeKey={activeTab}
           onChange={handleTabChange}

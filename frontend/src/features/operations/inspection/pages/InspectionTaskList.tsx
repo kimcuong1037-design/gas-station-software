@@ -302,7 +302,7 @@ const InspectionTaskList: React.FC = () => {
           </Button>
         </Col>
         <Col>
-          <RequirementTag componentIds={['inspection-task-list']} module="all" showDetail />
+          <RequirementTag componentIds={['task-list', 'task-assign']} module="inspection" showDetail />
         </Col>
       </Row>
 

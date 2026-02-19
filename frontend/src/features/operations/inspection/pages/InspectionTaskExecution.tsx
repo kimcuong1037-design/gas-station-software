@@ -9,6 +9,7 @@ import { CATEGORY_CONFIG, STORAGE_KEYS } from '../constants';
 import TaskStatusTag from '../components/TaskStatusTag';
 import ResultTag from '../components/ResultTag';
 import IssueReportDrawer from './IssueReportDrawer';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -428,6 +429,7 @@ const InspectionTaskExecution: React.FC = () => {
           <Title level={4} style={{ margin: 0 }}>
             执行巡检
           </Title>
+          <RequirementTag componentIds={['task-execution', 'task-batch-normal']} module="inspection" showDetail />
         </Space>
       </div>
 

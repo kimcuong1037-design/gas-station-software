@@ -8,6 +8,7 @@ import { employees } from '../../../../mock/employees';
 import { SEVERITY_CONFIG } from '../constants';
 import IssueStatusTag from '../components/IssueStatusTag';
 import SeverityTag from '../components/SeverityTag';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -157,6 +158,7 @@ const IssueRecordDetail: React.FC = () => {
           <Title level={4} style={{ margin: 0 }}>问题详情 {record.issueNo}</Title>
           <IssueStatusTag status={record.status} />
           <SeverityTag severity={record.severity} />
+          <RequirementTag componentIds={['issue-detail', 'issue-workflow', 'issue-photos']} module="inspection" showDetail />
         </Space>
         {renderActions()}
       </div>

@@ -5,6 +5,7 @@ import { inspectionTags } from '../../../../mock/inspections';
 import { equipments } from '../../../../mock/equipments';
 import type { CheckItem } from '../types';
 import { CATEGORY_CONFIG, getLabel } from '../constants';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 interface CheckItemFormDrawerProps {
   open: boolean;
@@ -84,7 +85,12 @@ const CheckItemFormDrawer: React.FC<CheckItemFormDrawerProps> = ({
   return (
     <Drawer
       data-testid="check-item-form-drawer"
-      title={isEdit ? '编辑检查项目' : '新增检查项目'}
+      title={
+        <Space>
+          {isEdit ? '编辑检查项目' : '新增检查项目'}
+          <RequirementTag componentIds={['check-item-crud']} module="inspection" showDetail />
+        </Space>
+      }
       placement="right"
       width={520}
       open={open}

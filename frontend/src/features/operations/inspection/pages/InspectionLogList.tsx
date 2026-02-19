@@ -8,6 +8,7 @@ import { inspectionLogs, checkItems } from '../../../../mock/inspections';
 import type { InspectionLog, CheckResult } from '../types';
 import { DEFAULT_PAGE_SIZE } from '../constants';
 import ResultTag from '../components/ResultTag';
+import { RequirementTag } from '../../../../components/RequirementTag';
 import dayjs from 'dayjs';
 
 const { Title, Text, Link } = Typography;
@@ -160,7 +161,10 @@ const InspectionLogList: React.FC = () => {
     <div data-testid="inspection-log-list">
       <Card>
         <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Title level={4} style={{ margin: 0 }}>巡检日志</Title>
+          <Space align="center">
+            <Title level={4} style={{ margin: 0 }}>巡检日志</Title>
+            <RequirementTag componentIds={['log-list']} module="inspection" showDetail />
+          </Space>
         </div>
 
         {/* Filters */}

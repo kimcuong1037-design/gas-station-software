@@ -10,6 +10,7 @@ import { DEFAULT_PAGE_SIZE } from '../constants';
 import IssueStatusTag from '../components/IssueStatusTag';
 import SeverityTag from '../components/SeverityTag';
 import IssueReportDrawer from './IssueReportDrawer';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title, Text, Link } = Typography;
 
@@ -193,7 +194,10 @@ const IssueRecordList: React.FC = () => {
     <div data-testid="issue-record-list" style={{ padding: 24 }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>问题记录</Title>
+        <Space align="center">
+          <Title level={4} style={{ margin: 0 }}>问题记录</Title>
+          <RequirementTag componentIds={['issue-list', 'issue-escalation']} module="inspection" showDetail />
+        </Space>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => setDrawerOpen(true)}>
           新增问题
         </Button>

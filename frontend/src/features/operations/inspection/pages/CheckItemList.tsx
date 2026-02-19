@@ -9,6 +9,7 @@ import { CATEGORY_CONFIG, CHECK_ITEM_STATUS_CONFIG, DEFAULT_PAGE_SIZE, getLabel 
 import CategoryTag from '../components/CategoryTag';
 import CheckItemFormDrawer from './CheckItemFormDrawer';
 import TagManagementDrawer from './TagManagementDrawer';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title, Text } = Typography;
 
@@ -222,9 +223,12 @@ const CheckItemList: React.FC = () => {
       <Card>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <Title level={4} style={{ margin: 0 }}>
-            检查项目管理
-          </Title>
+          <Space align="center">
+            <Title level={4} style={{ margin: 0 }}>
+              检查项目管理
+            </Title>
+            <RequirementTag componentIds={['check-item-list', 'check-item-crud', 'check-item-deactivate']} module="inspection" showDetail />
+          </Space>
           <Space>
             <Button icon={<TagsOutlined />} onClick={() => setTagDrawerOpen(true)}>
               管理标签 🏷

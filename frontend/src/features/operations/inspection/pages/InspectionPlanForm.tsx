@@ -7,6 +7,7 @@ import { inspectionPlans, checkItems } from '../../../../mock/inspections';
 import type { CycleType, CheckItemCategory } from '../types';
 import { CYCLE_TYPE_CONFIG, CATEGORY_CONFIG, estimateTaskCount, getLabel } from '../constants';
 import CategoryTag from '../components/CategoryTag';
+import { RequirementTag } from '../../../../components/RequirementTag';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -182,6 +183,7 @@ const InspectionPlanForm: React.FC = () => {
           <Button icon={<ArrowLeftOutlined />} type="text" onClick={handleBack} />
         )}
         <Title level={4} style={{ margin: 0 }}>{pageTitle}</Title>
+        <RequirementTag componentIds={['plan-create', 'plan-edit']} module="inspection" showDetail />
       </Space>
 
       <Form

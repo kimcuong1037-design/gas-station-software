@@ -45,6 +45,12 @@ export const inspectionUserStories: Record<string, UserStoryMapping> = {
   // ============================================================
   // Epic 2: 安检任务执行
   // ============================================================
+  'task-create': {
+    us: ['US-004-B'],
+    desc: '新增安检任务（从计划详情或任务列表创建）',
+    priority: 'MVP',
+    status: 'implemented',
+  },
   'task-list': {
     us: ['US-006'],
     desc: '安检任务列表，统计卡片+状态Tab+逾期高亮',
@@ -186,6 +192,12 @@ export const inspectionUserStories: Record<string, UserStoryMapping> = {
     desc: '整改照片上传/查看',
     priority: 'MVP+',
     status: 'implemented',
+  },
+  'issue-escalation': {
+    us: ['US-020-B'],
+    desc: '问题超期自动升级提醒',
+    priority: 'MVP+',
+    status: 'planned',
   },
 
   // ============================================================

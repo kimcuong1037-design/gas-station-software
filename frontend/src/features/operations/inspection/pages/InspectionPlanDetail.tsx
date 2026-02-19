@@ -10,6 +10,7 @@ import type { InspectionTask } from '../types';
 import PlanStatusTag from '../components/PlanStatusTag';
 import CycleTypeTag from '../components/CycleTypeTag';
 import TaskStatusTag from '../components/TaskStatusTag';
+import { RequirementTag } from '../../../../components/RequirementTag';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -210,6 +211,7 @@ const InspectionPlanDetail: React.FC = () => {
           onClick={() => navigate('/operations/inspection/plans')}
         />
         <Title level={4} style={{ margin: 0 }}>安检计划详情</Title>
+        <RequirementTag componentIds={['plan-detail', 'plan-dispatch']} module="inspection" showDetail />
       </Space>
 
       {/* 计划信息 */}

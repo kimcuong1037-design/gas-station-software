@@ -28,6 +28,7 @@ import { CATEGORY_CONFIG, getLabel } from '../constants';
 import CycleTypeTag from '../components/CycleTypeTag';
 import PlanStatusTag from '../components/PlanStatusTag';
 import CategoryTag from '../components/CategoryTag';
+import { RequirementTag } from '../../../../components/RequirementTag';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -207,6 +208,7 @@ const InspectionTaskForm: React.FC = () => {
         <Title level={4} style={{ margin: 0 }}>
           新增安检任务
         </Title>
+        <RequirementTag componentIds={['task-create', 'plan-dispatch']} module="inspection" showDetail />
       </Space>
 
       {/* 关联计划 */}

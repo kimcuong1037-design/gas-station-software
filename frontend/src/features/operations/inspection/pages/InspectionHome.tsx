@@ -15,7 +15,7 @@ const InspectionHome: React.FC = () => {
       <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
         <Space align="center">
           <Title level={4} style={{ margin: 0 }}>巡检/安检管理</Title>
-          <RequirementTag componentIds={['inspection-home']} module="all" showDetail />
+          <RequirementTag componentIds={['plan-list', 'task-list']} module="inspection" showDetail />
         </Space>
       </Row>
 

@@ -4,6 +4,7 @@ import { Drawer, Table, Button, Input, Space, Popconfirm, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { inspectionTags } from '../../../../mock/inspections';
 import type { InspectionTag } from '../types';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 interface TagManagementDrawerProps {
   open: boolean;
@@ -184,7 +185,12 @@ const TagManagementDrawer: React.FC<TagManagementDrawerProps> = ({ open, onClose
 
   return (
     <Drawer
-      title="管理标签"
+      title={
+        <Space>
+          管理标签
+          <RequirementTag componentIds={['tag-management', 'tag-sort']} module="inspection" showDetail />
+        </Space>
+      }
       placement="right"
       width={480}
       open={open}

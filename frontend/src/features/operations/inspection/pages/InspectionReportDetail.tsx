@@ -5,6 +5,7 @@ import { Card, Typography, Button, Descriptions, Table, Tag, Space, Empty } from
 import { ArrowLeftOutlined, ExportOutlined } from '@ant-design/icons';
 import { inspectionReports } from '../../../../mock/inspections';
 import { REPORT_TYPE_CONFIG, getLabel } from '../constants';
+import { RequirementTag } from '../../../../components/RequirementTag';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -101,6 +102,7 @@ const InspectionReportDetail: React.FC = () => {
                 返回
               </Button>
               <Title level={4} style={{ margin: 0 }}>{report.name}</Title>
+              <RequirementTag componentIds={['report-generate', 'report-export', 'report-scheduled']} module="inspection" showDetail />
             </Space>
             <Button icon={<ExportOutlined />} disabled>
               导出

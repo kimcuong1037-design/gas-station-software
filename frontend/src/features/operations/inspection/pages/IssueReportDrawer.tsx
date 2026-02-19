@@ -5,6 +5,7 @@ import { inspectionTasks, checkItems } from '../../../../mock/inspections';
 import { equipments } from '../../../../mock/equipments';
 import type { IssueSeverity } from '../types';
 import { SEVERITY_CONFIG, DEFAULT_ISSUE_DUE_DAYS } from '../constants';
+import { RequirementTag } from '../../../../components/RequirementTag';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
@@ -89,7 +90,12 @@ const IssueReportDrawer: React.FC<IssueReportDrawerProps> = ({ open, onClose, pr
   return (
     <Drawer
       data-testid="issue-report-drawer"
-      title="登记问题"
+      title={
+        <Space>
+          登记问题
+          <RequirementTag componentIds={['issue-report']} module="inspection" showDetail />
+        </Space>
+      }
       placement="right"
       width={520}
       open={open}

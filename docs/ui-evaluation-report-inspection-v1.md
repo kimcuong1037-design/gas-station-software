@@ -18,6 +18,7 @@
 |------|---------|
 | **总分** | **3.10 / 5.0** |
 | **评定** | 🟡 修复后可发布 |
+| **User Story 覆盖率** | **100%**（33/33 个 US 在前端页面通过 RequirementTag 标注） |
 | **路由一致性** | ❌ 2 处导航目标指向不存在或错误路由 |
 | **用户流程完整性** | ⚠️ 核心流程"执行巡检→登记问题"断裂 |
 | **P1 问题** | **3 项** |
@@ -347,7 +348,79 @@
 
 ---
 
-## 10. 总结与下一步
+## 10. User Story 前端覆盖率分析
+
+### 10.1 覆盖率指标
+
+| 指标 | 数值 |
+|------|------|
+| **user-stories.md 中定义的 US 总数** | 33 |
+| **userStoryMapping.ts 中映射的 US 数** | 33 (100%) |
+| **前端页面 RequirementTag 覆盖的 US 数** | **33 (100%)** |
+| **覆盖率** | **100%** |
+
+### 10.2 各 Epic 覆盖明细
+
+| Epic | US IDs | 总数 | 已覆盖 | 覆盖率 | 说明 |
+|------|--------|------|--------|--------|------|
+| Epic 1: 安检计划管理 | US-001 ~ US-005 | 5 | 5 | 100% | InspectionPlanList、InspectionPlanForm、InspectionPlanDetail |
+| Epic 2: 安检任务管理 | US-004-B, US-006 ~ US-009-A | 5 | 5 | 100% | InspectionTaskList、InspectionTaskForm、InspectionTaskExecution |
+| Epic 3: 检查项目与标签 | US-009 ~ US-012-A | 5 | 5 | 100% | CheckItemList、CheckItemFormDrawer、TagManagementDrawer |
+| Epic 4: 巡检日志 | US-013 ~ US-014-A | 3 | 3 | 100% | InspectionLogList、InspectionLogDetail |
+| Epic 5: 日报与站点报表 | US-015 ~ US-016-B | 4 | 4 | 100% | InspectionAnalytics |
+| Epic 6: 问题记录管理 | US-017 ~ US-020-B | 6 | 6 | 100% | IssueRecordList、IssueRecordDetail、IssueReportDrawer |
+| Epic 7: 统计与报表 | US-021 ~ US-022-B | 5 | 5 | 100% | InspectionAnalytics、InspectionReportDetail |
+
+### 10.3 页面 → User Story 映射表
+
+| 页面组件 | RequirementTag componentIds | 关联 US IDs | 实现状态 |
+|---------|---------------------------|-------------|---------|
+| InspectionHome | `plan-list`, `task-list` | US-001, US-006 | ✅ implemented |
+| InspectionPlanList | `plan-list` | US-001 | ✅ implemented |
+| InspectionPlanForm | `plan-create`, `plan-edit` | US-002, US-003 | ✅ implemented |
+| InspectionPlanDetail | `plan-detail`, `plan-dispatch` | US-004, US-005 | ✅ implemented |
+| InspectionTaskList | `task-list`, `task-assign` | US-006, US-007 | ✅ implemented |
+| InspectionTaskForm | `task-create`, `plan-dispatch` | US-004-B, US-005 | ✅ implemented |
+| InspectionTaskExecution | `task-execution`, `task-batch-normal` | US-008, US-009-A | ✅ implemented |
+| CheckItemList | `check-item-list`, `check-item-crud`, `check-item-deactivate` | US-009, US-010, US-011 | ✅ implemented |
+| CheckItemFormDrawer | `check-item-crud` | US-010 | ✅ implemented |
+| TagManagementDrawer | `tag-management`, `tag-sort` | US-012, US-012-A | ✅ impl / 🕐 planned |
+| InspectionLogList | `log-list` | US-013 | ✅ implemented |
+| InspectionLogDetail | `log-detail`, `log-photo` | US-014, US-014-A | ✅ implemented |
+| IssueRecordList | `issue-list`, `issue-escalation` | US-017, US-020-B | ✅ impl / 🕐 planned |
+| IssueRecordDetail | `issue-detail`, `issue-workflow`, `issue-photos` | US-019, US-020, US-020-A | ✅ implemented |
+| IssueReportDrawer | `issue-report` | US-018 | ✅ implemented |
+| InspectionAnalytics | `daily-report`, `station-report`, `station-report-drill`, `station-report-trend`, `statistics`, `statistics-chart`, `report-generate` | US-015, US-016, US-016-A, US-016-B, US-021, US-021-A, US-022 | ✅ impl / 🕐 planned |
+| InspectionReportDetail | `report-generate`, `report-export`, `report-scheduled` | US-022, US-022-A, US-022-B | ✅ impl / 🕐 planned |
+
+### 10.4 未完全实现的 User Story 分析
+
+以下 US 已在页面上通过 RequirementTag 标记追踪，但其对应的 UI 功能尚未完全实现（status = `planned`）：
+
+| US ID | 描述 | 优先级 | 所在页面 | 分析 |
+|-------|------|--------|---------|------|
+| US-012-A | 标签拖拽排序 | MVP+ | TagManagementDrawer | 需引入 `dnd-kit` 或 Ant Design DnD 支持，功能独立，实现代价低 |
+| US-016-B | 站点趋势对比图 | MVP+ | InspectionAnalytics | 需引入图表库（ECharts/Recharts），与 US-021-A 可共享基础设施 |
+| US-020-B | 问题超期自动升级提醒 | MVP+ | IssueRecordList | 前端可通过 mock 超期规则模拟标签显示，实现代价低 |
+| US-021-A | 统计趋势图表 | MVP+ | InspectionAnalytics | 同 US-016-B，需图表库支持 |
+| US-022-A | 报表导出（Excel/PDF） | MVP+ | InspectionReportDetail | 前端可先实现 disabled 按钮占位（已有），完整实现需后端支持 |
+| US-022-B | 定期自动生成报表 | MVP+ | InspectionReportDetail | 纯后端功能，前端仅展示配置入口，可延后 |
+
+**结论**: 全部 6 个未实现的 US 均为 **MVP+** 优先级，不影响 MVP 阶段交付。其中 3 个涉及图表库引入（US-016-B、US-021-A + 基础图表需求），建议统一引入图表库后批量实现。
+
+### 10.5 跨模块覆盖率对比
+
+| 模块 | US 总数 | 映射覆盖 | 页面覆盖 | 覆盖率 | 说明 |
+|------|--------|---------|---------|--------|------|
+| **巡检/安检 (inspection)** | 33 | 33 (100%) | **33 (100%)** | **100%** | 全部 US 均有 RequirementTag 标注 |
+| 设备设施 (device-ledger) | 24 | 24 (100%) | 18 (75.0%) | 75.0% | 6 个 planned MVP+ 未标注 |
+| 交接班 (shift-handover) | 23 | 19 (82.6%) | 14 (60.9%) | 60.9% | 4 个 US 未进入映射，5 个未标注 |
+| 站点管理 (station) | 31 | 31 (100%) | 17 (54.8%) | 54.8% | 14 个 US 有映射但无页面标注 |
+| **全平台合计** | **111** | **107 (96.4%)** | **82 (73.9%)** | **73.9%** | — |
+
+---
+
+## 11. 总结与下一步
 
 ### 修复优先级建议
 

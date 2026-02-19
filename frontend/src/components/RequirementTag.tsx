@@ -5,12 +5,14 @@ import type { UserStoryMapping } from '../features/operations/station/userStoryM
 import { stationUserStories } from '../features/operations/station/userStoryMapping';
 import { shiftHandoverUserStories } from '../features/operations/shift-handover/userStoryMapping';
 import { deviceLedgerUserStories } from '../features/operations/device-ledger/userStoryMapping';
+import { inspectionUserStories } from '../features/operations/inspection/userStoryMapping';
 
 // 合并所有模块的 User Story 映射
 const allUserStories: Record<string, UserStoryMapping> = {
   ...stationUserStories,
   ...shiftHandoverUserStories,
   ...deviceLedgerUserStories,
+  ...inspectionUserStories,
 };
 
 // 模块映射表，用于按模块筛选
@@ -18,6 +20,7 @@ const moduleStories = {
   station: stationUserStories,
   'shift-handover': shiftHandoverUserStories,
   'device-ledger': deviceLedgerUserStories,
+  inspection: inspectionUserStories,
   all: allUserStories,
 } as const;
 

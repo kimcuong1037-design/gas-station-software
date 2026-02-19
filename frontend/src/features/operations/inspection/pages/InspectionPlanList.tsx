@@ -9,6 +9,7 @@ import type { InspectionPlan, PlanStatus, CycleType } from '../types';
 import { DEFAULT_PAGE_SIZE } from '../constants';
 import PlanStatusTag from '../components/PlanStatusTag';
 import CycleTypeTag from '../components/CycleTypeTag';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title, Text } = Typography;
 
@@ -186,7 +187,10 @@ const InspectionPlanList: React.FC = () => {
 
       {/* 页面头部 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>安检计划</Title>
+        <Space align="center">
+          <Title level={4} style={{ margin: 0 }}>安检计划</Title>
+          <RequirementTag componentIds={['plan-list']} module="inspection" showDetail />
+        </Space>
         <Button
           type="primary"
           icon={<PlusOutlined />}

@@ -7,6 +7,7 @@ import { inspectionLogs } from '../../../../mock/inspections';
 
 import ResultTag from '../components/ResultTag';
 import CategoryTag from '../components/CategoryTag';
+import { RequirementTag } from '../../../../components/RequirementTag';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -48,6 +49,7 @@ const InspectionLogDetail: React.FC = () => {
                 返回列表
               </Button>
               <Title level={4} style={{ margin: 0 }}>巡检日志详情</Title>
+              <RequirementTag componentIds={['log-detail', 'log-photo']} module="inspection" showDetail />
             </Space>
           </div>
 
