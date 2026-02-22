@@ -138,9 +138,9 @@ export const shiftHandoverUserStories: Record<string, ShiftHandoverUserStoryMapp
   
   'select-receiver': {
     us: ['US-007'],
-    desc: '选择接班人：确认交接',
+    desc: '选择接班人：在确认步骤通过排班数据筛选接班人候选，下拉搜索选择，提交前校验必填',
     priority: 'MVP',
-    status: 'planned',
+    status: 'implemented',
   },
   
   'issue-annotation': {
@@ -273,5 +273,37 @@ export const shiftHandoverUserStories: Record<string, ShiftHandoverUserStoryMapp
     desc: '打印历史交接单：补打存档',
     priority: 'MVP+',
     status: 'partial',
+  },
+
+  // ==================== Epic 6: 站点上下文与用户身份 ====================
+  // 注：US-020~023 于 2026-02-16 补充至 user-stories.md（CORRECTIONS.md 记录）
+  // 前端已在 AppLayout 和 ShiftSchedule/ShiftSummary 页中实现，此处补全追踪记录
+
+  'user-identity-display': {
+    us: ['US-020'],
+    desc: '右上角用户身份显示：姓名、角色标签、退出登录（Demo 模式）',
+    priority: 'MVP',
+    status: 'implemented',
+  },
+
+  'station-switcher': {
+    us: ['US-021'],
+    desc: '站点切换器：顶部下拉选择当前工作站点，切换后页面数据同步更新',
+    priority: 'MVP',
+    status: 'implemented',
+  },
+
+  'shift-schedule-management': {
+    us: ['US-022'],
+    desc: '排班管理页：创建/查看排班，按班次分配值班人员，支持日历视图',
+    priority: 'MVP',
+    status: 'implemented',
+  },
+
+  'station-overview': {
+    us: ['US-023'],
+    desc: '站点经营概况页：当前班次实时数据、下一排班、今日经营汇总',
+    priority: 'MVP',
+    status: 'implemented',
   },
 };

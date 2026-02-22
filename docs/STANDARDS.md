@@ -235,7 +235,87 @@ features/operations/
 
 ---
 
-## 6. 模拟数据规范
+## 6. API 接口设计规范
+
+### 6.1 路径前缀
+
+**所有 REST API 端点必须使用 `/api/v1/` 前缀。** 这是全局强制规范。
+
+```
+✅ 正确：GET  /api/v1/stations
+✅ 正确：POST /api/v1/stations/:stationId/nozzles
+❌ 错误：GET  /api/stations           （缺少版本号）
+❌ 错误：GET  /stations               （缺少前缀）
+```
+
+**跨模块一致性说明**：
+- Phase 1 中，交接班模块（shift-handover）的 architecture.md 使用了 `/api/` 前缀，与其他模块不一致。
+- 后端实现时统一改为 `/api/v1/`，前端 API 服务层也需同步调整。
+
+### 6.2 URL 命名规范
+
+| 规则 | 示例 |
+|------|------|
+| 资源名用复数 | `/stations`, `/nozzles`, `/orders` |
+| 路径全小写，中划线连接 | `/shift-handovers`, `/inspection-plans` |
+| 嵌套资源用父子路径 | `/stations/:id/nozzles/:nozzleId` |
+| 动作操作用动词后缀 | `POST /inspections/:id/submit`, `POST /handovers/:id/force` |
+| 列表查询用 GET + query params | `GET /stations?status=active&page=1` |
+
+### 6.3 HTTP 方法语义
+
+| 操作 | 方法 | 示例 |
+|------|------|------|
+| 查询列表 | GET | `GET /api/v1/stations` |
+| 查询详情 | GET | `GET /api/v1/stations/:id` |
+| 创建资源 | POST | `POST /api/v1/stations` |
+| 全量更新 | PUT | `PUT /api/v1/stations/:id` |
+| 局部更新 | PATCH | `PATCH /api/v1/stations/:id` |
+| 删除资源 | DELETE | `DELETE /api/v1/stations/:id` |
+| 执行动作 | POST | `POST /api/v1/inspections/:id/submit` |
+
+### 6.4 响应结构规范
+
+**列表接口（分页）：**
+```json
+{
+  "data": [...],
+  "pagination": {
+    "page": 1,
+    "pageSize": 20,
+    "total": 100
+  }
+}
+```
+
+**单体接口：**
+```json
+{
+  "data": { ... }
+}
+```
+
+**错误响应：**
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "站点名称不能为空",
+    "details": [...]
+  }
+}
+```
+
+### 6.5 版本升级策略
+
+- 当前版本：`v1`
+- 破坏性变更时升级到 `/api/v2/`（如字段重命名、删除、类型变更）
+- 非破坏性变更（新增字段）在 `v1` 中直接扩展
+- `v1` 与 `v2` 并行期间，旧版本维护最少 3 个月
+
+---
+
+## 7. 模拟数据规范
 
 - 所有模拟数据存放在 `src/mock/` 目录
 - 使用真实感的中文数据（站点名称、地址、人员姓名）

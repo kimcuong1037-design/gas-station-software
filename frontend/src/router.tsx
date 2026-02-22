@@ -46,6 +46,9 @@ const InspectionLogDetail = lazy(() => import('./features/operations/inspection/
 const InspectionAnalytics = lazy(() => import('./features/operations/inspection/pages/InspectionAnalytics'));
 const InspectionReportDetail = lazy(() => import('./features/operations/inspection/pages/InspectionReportDetail'));
 
+// API Docs page (standalone, no AppLayout)
+const ApiDocs = lazy(() => import('./pages/ApiDocs'));
+
 // Loading component
 const PageLoading = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 200 }}>
@@ -62,6 +65,15 @@ const withSuspense = (Component: React.LazyExoticComponent<React.ComponentType<a
 );
 
 export const router = createBrowserRouter([
+  {
+    // API Docs 独立页面，不包含 AppLayout 导航结构
+    path: '/api-docs',
+    element: (
+      <Suspense fallback={<PageLoading />}>
+        <ApiDocs />
+      </Suspense>
+    ),
+  },
   {
     path: '/',
     element: <AppLayout />,

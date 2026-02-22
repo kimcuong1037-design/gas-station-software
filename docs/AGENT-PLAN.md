@@ -1,8 +1,8 @@
 # Agent 结构计划 (Agent Architecture Plan)
 
 **项目：** 加气站运营管理系统
-**版本：** 1.3
-**更新日期：** 2026-02-15
+**版本：** 1.4
+**更新日期：** 2026-02-22
 
 ---
 
@@ -14,6 +14,7 @@
 - **Skill 驱动**：每个 Agent 的能力由 Skill 文件定义（Prompt 模板 + 流程定义）
 - **关注点分离**：不同阶段的工作由不同专业 Agent 负责
 - **人在回路**：关键决策点需要用户确认，遵循 CONSTITUTION.md 原则
+- **分批执行**：涉及超过 5 个文件的修改任务应拆分为多个子任务，每批完成后执行 `npm run build` 验证，确保质量后再进行下一批
 
 ### 1.2 工作阶段模型
 
@@ -77,11 +78,11 @@
 
 - **SubAgent 类型：** `general-purpose`
 - **负责 Skills：**
-  - `data-model-design` — 数据模型设计
-  - `api-design` — API 接口设计
-  - `workflow-design` — 业务流程设计
+  - `data-model-design` — 综合架构设计（含数据模型、API 设计、聚合接口分析、权限矩阵、数据完整性约束）
+  - `workflow-design` — 业务流程设计（复杂流程模块按需启用）
 - **输入：** User Story、业务规则
-- **输出：** 数据模型定义、API 接口文档、流程图描述
+- **输出：** architecture.md（数据模型 + API 端点 + 权限矩阵 + 数据完整性约束）
+- **阻断性规则：** architecture.md 是进入前端实现的硬门禁，文件不存在时流程停止
 
 #### Agent 3：UI 设计 Agent (UI Designer)
 
@@ -140,7 +141,12 @@
   - `business-logic` — 业务逻辑实现
 - **输入：** API 设计文档、数据模型
 - **输出：** API 代码、数据库迁移脚本、业务逻辑代码
-- **备注：** MVP 阶段暂不启用，待后端开发阶段激活
+- **启用时机：** Phase 2 开始启用（Phase 1 模块 API 实现）
+- **Phase 2 特别注意事项：**
+  1. **API 合同优先**：后端开发第一步是验证 architecture.md 的 API 设计是否完整，而非直接写代码
+  2. **前后端类型共享**：考虑建立 `shared/types/` 目录存放公共类型定义，前后端共享引用
+  3. **device-ledger 类型核验**：该模块 architecture.md 为事后补创，后端实现时必须对比前端 types.ts 逐字段核验一致性
+  4. **时序数据策略**：`EquipmentMonitoringLog` 是时序数据，需在后端初始化时确定存储策略（TimescaleDB / 分区归档 / 独立时序库）
 
 #### Agent 7：质量保障 Agent (QA Engineer)
 
@@ -170,6 +176,16 @@
 以"站点管理"模块为例：
 
 ```
+步骤 0: Orchestrator 文档完整性预检
+         → 检查目标模块文档目录是否存在
+         → 输出"文档完整性 checklist"：
+           ☐ requirements（需求来源已确认）
+           ☐ user-stories.md
+           ☐ architecture.md
+           ☐ ux-design.md
+           ☐ ui-schema.md
+         → 标记当前阶段（哪些已存在、从哪一步开始）
+         ↓
 步骤 1: Orchestrator 确定目标模块
          ↓
 步骤 2: 需求分析 Agent
@@ -181,12 +197,17 @@
 步骤 3: [用户确认 User Story]
          ↓
 步骤 4: 架构设计 Agent
+         → 执行"实体三问"分析（每个核心实体）
          → 设计数据模型（Station, Nozzle, Employee 等）
-         → 设计 API 接口
+         → 设计 API 接口（含聚合接口前置分析）
+         → 定义数据完整性约束
          → 绘制业务流程
          → 输出: docs/features/operations/station/architecture.md
          ↓
 步骤 5: [用户确认架构设计]
+         ⛔ 阻断性验证：architecture.md 必须存在且包含
+            全部必要章节（实体三问、API 端点、权限矩阵、
+            数据完整性约束），否则禁止进入步骤 6
          ↓
 步骤 6: UI 设计 Agent (UX 设计)
          → 分析用户角色和核心任务流程
@@ -237,6 +258,16 @@
           │  12h: 所有 P1 问题已解决且 P2 基本解决 → 退出循环    │
           └─────────────────────────────────────────────────────┘
           ↓ (评估通过)
+步骤 12i: 模块交付 Checklist（Orchestrator 执行）
+          → 逐项验证模块集成完整性：
+            ☐ 路由注册（router.tsx 中已添加模块路由）
+            ☐ 导航菜单（AppLayout 侧边栏已添加入口）
+            ☐ i18n 翻译完整（中英文 key 无遗漏）
+            ☐ RequirementTag 已关联（所有页面组件标注需求来源）
+            ☐ userStoryMapping.ts 已更新（覆盖所有 User Story）
+            ☐ npm run build 编译通过
+          → 有遗漏项则修复后重新验证
+          ↓ (交付验证通过)
 步骤 13: 质量保障 Agent
           → 代码审查
           → 编写测试
@@ -279,37 +310,36 @@ docs/skills/
 ├── README.md                          # Skills 总览与使用说明
 │
 ├── analysis/                          # 需求分析类 Skills
-│   ├── requirement-decomposition.md   # 需求拆解
-│   ├── user-story-writing.md          # User Story 编写
-│   └── glossary-management.md         # 术语表维护
+│   ├── requirement-decomposition.md   # ✅ 需求拆解
+│   ├── user-story-writing.md          # ✅ User Story 编写
+│   └── glossary-management.md         # ☐ 术语表维护
 │
 ├── architecture/                      # 架构设计类 Skills
-│   ├── data-model-design.md           # 数据模型设计
-│   ├── api-design.md                  # API 接口设计
-│   └── workflow-design.md             # 业务流程设计
+│   ├── data-model-design.md           # ✅ 综合架构设计（数据模型 + API + 权限 + 约束）
+│   └── workflow-design.md             # ☐ 业务流程设计（复杂流程模块按需）
 │
 ├── ui/                                # UI 设计类 Skills
-│   ├── ux-design.md                   # 用户体验设计（流程优化、交互效率）
-│   ├── ui-schema-design.md            # UI Schema 编写
-│   ├── ui-eval.md                     # UI 评估（六大维度质量评审）
-│   ├── page-layout-design.md          # 页面布局设计
-│   └── component-specification.md     # 组件规格定义
+│   ├── ux-design.md                   # ✅ 用户体验设计（流程优化、交互效率）
+│   ├── ui-schema-design.md            # ✅ UI Schema 编写
+│   ├── ui-eval.md                     # ✅ UI 评估（六大维度质量评审）
+│   ├── page-layout-design.md          # ☐ 页面布局设计
+│   └── component-specification.md     # ☐ 组件规格定义
 │
 ├── frontend/                          # 前端工程类 Skills
-│   ├── react-component-development.md # React 组件开发
-│   ├── i18n-integration.md            # 国际化集成
-│   ├── mock-data-creation.md          # 模拟数据创建
-│   └── chart-visualization.md         # 图表可视化实现
+│   ├── react-component-development.md # ☐ React 组件开发
+│   ├── i18n-integration.md            # ☐ 国际化集成
+│   ├── mock-data-creation.md          # ☐ 模拟数据创建
+│   └── chart-visualization.md         # ☐ 图表可视化实现
 │
 ├── backend/                           # 后端工程类 Skills
-│   ├── api-implementation.md          # API 实现
-│   ├── database-migration.md          # 数据库迁移
-│   └── business-logic.md              # 业务逻辑实现
+│   ├── api-implementation.md          # ☐ API 实现
+│   ├── database-migration.md          # ☐ 数据库迁移
+│   └── business-logic.md              # ☐ 业务逻辑实现
 │
 └── quality/                           # 质量保障类 Skills
-    ├── code-review.md                 # 代码审查
-    ├── test-writing.md                # 测试编写
-    └── accessibility-check.md         # 可访问性检查
+    ├── code-review.md                 # ☐ 代码审查
+    ├── test-writing.md                # ☐ 测试编写
+    └── accessibility-check.md         # ☐ 可访问性检查
 ```
 
 ---
@@ -361,21 +391,20 @@ docs/skills/
 
 需要优先创建的 Skills（按开发流程顺序）：
 
-| 优先级 | Skill | 原因 |
-|--------|-------|------|
-| P0 | `requirement-decomposition` | 所有模块开发的起点 |
-| P0 | `user-story-writing` | 需求确认的载体 |
-| P0 | `ux-design` | 用户体验设计，ui-schema-design 的前置输入 |
-| P0 | `ui-schema-design` | 前端开发的直接输入 |
-| P1 | `data-model-design` | 模拟数据和组件的基础 |
-| P1 | `mock-data-creation` | MVP 阶段的数据来源 |
-| P1 | `react-component-development` | 核心编码 Skill |
-| P1 | `i18n-integration` | 贯穿所有页面 |
-| P1 | `ui-eval` | 前端实现后的质量门禁 |
-| P2 | `workflow-design` | 复杂业务流程需要 |
-| P2 | `api-design` | 后端阶段需要 |
-| P2 | `chart-visualization` | 数据分析模块需要 |
-| P3 | 其余 Skills | 按需创建 |
+| 优先级 | Skill | 原因 | 状态 |
+|--------|-------|------|------|
+| P0 | `requirement-decomposition` | 所有模块开发的起点 | ✅ 已创建 |
+| P0 | `user-story-writing` | 需求确认的载体 | ✅ 已创建 |
+| P0 | `data-model-design` | 架构门禁：前端实现的前置条件（含实体三问 + 聚合接口分析） | ✅ 已创建 v1.1 |
+| P0 | `ux-design` | 用户体验设计，ui-schema-design 的前置输入 | ✅ 已创建 |
+| P0 | `ui-schema-design` | 前端开发的直接输入 | ✅ 已创建 |
+| P0 | `ui-eval` | 前端实现后的质量门禁（Phase 1 验证为关键环节） | ✅ 已创建 |
+| P1 | `mock-data-creation` | MVP 阶段的数据来源 | ☐ 待创建 |
+| P1 | `react-component-development` | 核心编码 Skill | ☐ 待创建 |
+| P1 | `i18n-integration` | 贯穿所有页面 | ☐ 待创建 |
+| P2 | `workflow-design` | 复杂业务流程需要 | ☐ 待创建 |
+| P2 | `chart-visualization` | 数据分析模块需要 | ☐ 待创建 |
+| P3 | 其余 Skills | 按需创建 | ☐ |
 
 ### 6.2 后续演进
 
@@ -386,5 +415,5 @@ docs/skills/
 ---
 
 *创建时间：2026-02-07*
-*最后更新：2026-02-15*
-*版本：1.2*
+*最后更新：2026-02-22*
+*版本：1.4*

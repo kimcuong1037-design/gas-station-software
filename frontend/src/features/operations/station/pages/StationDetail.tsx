@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -18,6 +18,11 @@ import {
   message,
   Empty,
   Alert,
+  Modal,
+  Form,
+  Input,
+  InputNumber,
+  Select,
 } from 'antd';
 import {
   EditOutlined,
@@ -41,6 +46,7 @@ import { stations } from '../../../../mock/stations';
 import { getNozzlesByStation } from '../../../../mock/nozzles';
 import { getShiftsByStation } from '../../../../mock/shifts';
 import { getEmployeesByStation } from '../../../../mock/employees';
+import { fuelTypes } from '../../../../mock/fuelTypes';
 import ShiftSchedulePanel from '../components/ShiftSchedulePanel';
 
 const { Title, Text } = Typography;
@@ -73,14 +79,23 @@ const StationDetail: React.FC = () => {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [shiftSubTab, setShiftSubTab] = useState(initialSubTab);
 
+  // 枪配置本地 CRUD 状态
+  const [localNozzles, setLocalNozzles] = useState<Nozzle[]>([]);
+  const [nozzleFormOpen, setNozzleFormOpen] = useState(false);
+  const [editingNozzle, setEditingNozzle] = useState<Nozzle | null>(null);
+  const [priceFormOpen, setPriceFormOpen] = useState(false);
+  const [pricingNozzle, setPricingNozzle] = useState<Nozzle | null>(null);
+  const [nozzleForm] = Form.useForm();
+  const [priceForm] = Form.useForm();
+
   // 查找站点数据
   const station = useMemo(() => {
     return stations.find((s) => s.id === id);
   }, [id]);
 
-  // 获取枪配置
-  const nozzles = useMemo(() => {
-    return id ? getNozzlesByStation(id) : [];
+  // 初始化枪配置（当站点 ID 变化时重置）
+  useEffect(() => {
+    setLocalNozzles(id ? getNozzlesByStation(id) : []);
   }, [id]);
 
   // 获取班次
@@ -94,7 +109,7 @@ const StationDetail: React.FC = () => {
   }, [id]);
 
   // 故障枪统计
-  const errorNozzles = nozzles.filter((n) => n.deviceStatus === 'error');
+  const errorNozzles = localNozzles.filter((n) => n.deviceStatus === 'error');
 
   if (!station) {
     return (
@@ -195,18 +210,98 @@ const StationDetail: React.FC = () => {
       key: 'actions',
       width: 150,
       align: 'center',
-      render: () => (
+      render: (_: unknown, record: Nozzle) => (
         <Space size="small">
-          <Button type="link" size="small">
+          <Button type="link" size="small" onClick={() => handleSetPrice(record)}>
             {t('station.nozzle.setPrice')}
           </Button>
-          <Button type="link" size="small">
+          <Button type="link" size="small" onClick={() => handleEditNozzle(record)}>
             {t('common.edit')}
           </Button>
         </Space>
       ),
     },
   ];
+
+  // ===== 枪配置 CRUD 处理函数 =====
+
+  const handleAddNozzle = () => {
+    setEditingNozzle(null);
+    nozzleForm.resetFields();
+    setNozzleFormOpen(true);
+  };
+
+  const handleEditNozzle = (nozzle: Nozzle) => {
+    setEditingNozzle(nozzle);
+    nozzleForm.setFieldsValue({
+      nozzleNo: nozzle.nozzleNo,
+      fuelTypeId: nozzle.fuelTypeId,
+      dispenserNo: nozzle.dispenserNo || '',
+      status: nozzle.status,
+    });
+    setNozzleFormOpen(true);
+  };
+
+  const handleNozzleModalOk = async () => {
+    try {
+      const values = await nozzleForm.validateFields();
+      const fuelType = fuelTypes.find((f) => f.id === values.fuelTypeId);
+      if (editingNozzle) {
+        setLocalNozzles((prev) =>
+          prev.map((n) =>
+            n.id === editingNozzle.id
+              ? { ...n, ...values, fuelType, updatedAt: new Date().toISOString() }
+              : n
+          )
+        );
+        message.success(t('station.nozzle.edit') + ' ' + t('common.success'));
+      } else {
+        const newNozzle: Nozzle = {
+          id: `nozzle-${Date.now()}`,
+          stationId: id!,
+          nozzleNo: values.nozzleNo,
+          fuelTypeId: values.fuelTypeId,
+          fuelType,
+          unitPrice: 0,
+          dispenserNo: values.dispenserNo || undefined,
+          deviceStatus: 'offline',
+          fuelingStatus: 'idle',
+          status: values.status || 'active',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        setLocalNozzles((prev) => [...prev, newNozzle]);
+        message.success(t('station.nozzle.add') + ' ' + t('common.success'));
+      }
+      setNozzleFormOpen(false);
+    } catch {
+      // form validation failed, keep modal open
+    }
+  };
+
+  const handleSetPrice = (nozzle: Nozzle) => {
+    setPricingNozzle(nozzle);
+    priceForm.setFieldsValue({ unitPrice: nozzle.unitPrice });
+    setPriceFormOpen(true);
+  };
+
+  const handlePriceModalOk = async () => {
+    if (!pricingNozzle) return;
+    try {
+      const values = await priceForm.validateFields();
+      setLocalNozzles((prev) =>
+        prev.map((n) =>
+          n.id === pricingNozzle.id
+            ? { ...n, unitPrice: values.unitPrice, updatedAt: new Date().toISOString() }
+            : n
+        )
+      );
+      message.success(t('common.success'));
+      setPriceFormOpen(false);
+    } catch {
+      // form validation failed
+    }
+  };
 
   // 班次列表列定义
   const shiftColumns: ColumnsType<Shift> = [
@@ -307,8 +402,8 @@ const StationDetail: React.FC = () => {
   // 枪配置看板渲染 - 按加注岛分组
   const renderNozzleBoard = () => {
     // 按 dispenserNo 分组
-    const groupedNozzles = nozzles.reduce(
-      (acc, nozzle) => {
+    const groupedNozzles = localNozzles.reduce(
+      (acc: Record<string, Nozzle[]>, nozzle: Nozzle) => {
         const key = nozzle.dispenserNo || '未分配';
         if (!acc[key]) {
           acc[key] = [];
@@ -339,16 +434,16 @@ const StationDetail: React.FC = () => {
         <div style={{ marginBottom: 16 }}>
           <Space size="large">
             <Text>
-              <span role="img" aria-label={t('station.nozzle.statusIdle')}>🟢</span> {t('station.nozzle.statusIdle')}: {nozzles.filter((n) => n.deviceStatus === 'online' && n.fuelingStatus === 'idle').length}
+              <span role="img" aria-label={t('station.nozzle.statusIdle')}>🟢</span> {t('station.nozzle.statusIdle')}: {localNozzles.filter((n) => n.deviceStatus === 'online' && n.fuelingStatus === 'idle').length}
             </Text>
             <Text>
-              <span role="img" aria-label={t('station.nozzle.statusFueling')}>🔵</span> {t('station.nozzle.statusFueling')}: {nozzles.filter((n) => n.fuelingStatus === 'fueling').length}
+              <span role="img" aria-label={t('station.nozzle.statusFueling')}>🔵</span> {t('station.nozzle.statusFueling')}: {localNozzles.filter((n) => n.fuelingStatus === 'fueling').length}
             </Text>
             <Text>
-              <span role="img" aria-label={t('station.device.offline')}>⚪</span> {t('station.device.offline')}: {nozzles.filter((n) => n.deviceStatus === 'offline').length}
+              <span role="img" aria-label={t('station.device.offline')}>⚪</span> {t('station.device.offline')}: {localNozzles.filter((n) => n.deviceStatus === 'offline').length}
             </Text>
             <Text>
-              <span role="img" aria-label={t('station.device.error')}>🔴</span> {t('station.device.error')}: {nozzles.filter((n) => n.deviceStatus === 'error').length}
+              <span role="img" aria-label={t('station.device.error')}>🔴</span> {t('station.device.error')}: {localNozzles.filter((n) => n.deviceStatus === 'error').length}
             </Text>
           </Space>
         </div>
@@ -554,7 +649,7 @@ const StationDetail: React.FC = () => {
                 <Card>
                   <Statistic
                     title={t('station.nozzle.title')}
-                    value={station.nozzleCount || nozzles.length}
+                    value={station.nozzleCount || localNozzles.length}
                     prefix={<ToolOutlined />}
                   />
                   <Button
@@ -636,7 +731,7 @@ const StationDetail: React.FC = () => {
               <Col>
                 <Space>
                   <Button icon={<ReloadOutlined />}>{t('station.detailPage.refreshStatus')}</Button>
-                  <Button type="primary" icon={<PlusOutlined />}>
+                  <Button type="primary" icon={<PlusOutlined />} onClick={handleAddNozzle}>
                     {t('station.nozzle.add')}
                   </Button>
                 </Space>
@@ -650,7 +745,7 @@ const StationDetail: React.FC = () => {
             <Card title={t('station.detailPage.nozzleConfig')} style={{ marginTop: 16 }}>
               <Table
                 columns={nozzleColumns}
-                dataSource={nozzles}
+                dataSource={localNozzles}
                 rowKey="id"
                 size="small"
                 pagination={false}
@@ -781,6 +876,80 @@ const StationDetail: React.FC = () => {
           </TabPane>
         </Tabs>
       </Card>
+
+      {/* 新增/编辑枪配置 Modal */}
+      <Modal
+        title={editingNozzle ? t('station.nozzle.edit') : t('station.nozzle.add')}
+        open={nozzleFormOpen}
+        onOk={handleNozzleModalOk}
+        onCancel={() => setNozzleFormOpen(false)}
+        okText={t('common.save')}
+        cancelText={t('common.cancel')}
+        destroyOnHidden
+      >
+        <Form form={nozzleForm} layout="vertical" style={{ marginTop: 16 }}>
+          <Form.Item
+            name="nozzleNo"
+            label={t('station.nozzle.code')}
+            rules={[{ required: true, message: t('common.required') }]}
+          >
+            <Input placeholder="如 01、02" />
+          </Form.Item>
+          <Form.Item
+            name="fuelTypeId"
+            label={t('station.nozzle.fuelType')}
+            rules={[{ required: true, message: t('common.required') }]}
+          >
+            <Select
+              options={fuelTypes.filter((f) => f.status === 'active').map((f) => ({
+                value: f.id,
+                label: f.name,
+              }))}
+              placeholder={t('station.nozzle.fuelType')}
+            />
+          </Form.Item>
+          <Form.Item name="dispenserNo" label={t('station.nozzle.dispenser')}>
+            <Input placeholder="如 D01、D02" />
+          </Form.Item>
+          <Form.Item name="status" label={t('station.nozzle.status')} initialValue="active">
+            <Select
+              options={[
+                { value: 'active', label: t('common.enabled') },
+                { value: 'inactive', label: t('common.disabled') },
+              ]}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* 设置单价 Modal */}
+      <Modal
+        title={`${t('station.nozzle.setPrice')}${pricingNozzle ? ` — ${t('station.nozzle.code')}${pricingNozzle.nozzleNo}` : ''}`}
+        open={priceFormOpen}
+        onOk={handlePriceModalOk}
+        onCancel={() => setPriceFormOpen(false)}
+        okText={t('common.save')}
+        cancelText={t('common.cancel')}
+        destroyOnHidden
+      >
+        <Form form={priceForm} layout="vertical" style={{ marginTop: 16 }}>
+          <Form.Item
+            name="unitPrice"
+            label={`${t('station.nozzle.unitPrice')}${pricingNozzle?.fuelType?.unit ? ` (¥ / ${pricingNozzle.fuelType.unit})` : ' (¥)'}`}
+            rules={[
+              { required: true, message: t('common.required') },
+              { type: 'number', min: 0, message: '单价不能为负数' },
+            ]}
+          >
+            <InputNumber
+              style={{ width: '100%' }}
+              precision={2}
+              min={0}
+              prefix="¥"
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

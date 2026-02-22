@@ -17,9 +17,8 @@ skills/
 │   └── glossary-management.md         # 术语表维护
 │
 ├── architecture/                      # 架构设计类
-│   ├── data-model-design.md           # 数据模型设计
-│   ├── api-design.md                  # API 接口设计
-│   └── workflow-design.md             # 业务流程设计
+│   ├── data-model-design.md           # 综合架构设计（数据模型 + API + 权限 + 约束）
+│   └── workflow-design.md             # 业务流程设计（复杂流程模块按需）
 │
 ├── ui/                                # UI 设计类
 │   ├── ux-design.md                   # 用户体验设计
@@ -60,18 +59,18 @@ skills/
 |--------|-----------|------|
 | P0 | analysis/requirement-decomposition.md | ✅ 已创建 |
 | P0 | analysis/user-story-writing.md | ✅ 已创建 |
+| P0 | architecture/data-model-design.md | ✅ 已创建（v1.1，含实体三问 + 聚合接口分析） |
 | P0 | ui/ux-design.md | ✅ 已创建 |
 | P0 | ui/ui-schema-design.md | ✅ 已创建 |
-| P1 | architecture/data-model-design.md | ☐ 待创建 |
+| P0 | ui/ui-eval.md | ✅ 已创建 |
 | P1 | frontend/mock-data-creation.md | ☐ 待创建 |
 | P1 | frontend/react-component-development.md | ☐ 待创建 |
 | P1 | frontend/i18n-integration.md | ☐ 待创建 |
 | P2 | architecture/workflow-design.md | ☐ 待创建 |
-| P2 | architecture/api-design.md | ☐ 待创建 |
 | P2 | frontend/chart-visualization.md | ☐ 待创建 |
 | P3 | 其余 Skills | ☐ 按需创建 |
 
 ---
 
 *创建时间：2026-02-07*
-*最后更新：2026-02-15*
+*最后更新：2026-02-22*
