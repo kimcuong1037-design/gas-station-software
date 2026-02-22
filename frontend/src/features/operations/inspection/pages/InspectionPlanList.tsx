@@ -148,7 +148,7 @@ const InspectionPlanList: React.FC = () => {
               编辑
             </Button>
           )}
-          {(record.status === 'pending' || record.status === 'in_progress') && (
+          {record.status === 'pending' && (
             <Dropdown
               menu={{
                 items: [
@@ -180,11 +180,6 @@ const InspectionPlanList: React.FC = () => {
 
   return (
     <div data-testid="inspection-plan-list">
-      {/* Breadcrumb */}
-      <Text type="secondary" style={{ fontSize: 13, marginBottom: 8, display: 'block' }}>
-        首页 / 基础运营 / 巡检/安检管理 / 安检计划
-      </Text>
-
       {/* 页面头部 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <Space align="center">

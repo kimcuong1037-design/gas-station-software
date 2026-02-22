@@ -25,6 +25,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { stations } from '../../mock/stations';
+import { issueRecords } from '../../mock/inspections';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
@@ -128,7 +129,16 @@ const AppLayout: React.FC = () => {
             {
               key: '/operations/inspection/issues',
               icon: <BugOutlined />,
-              label: t('menu.inspectionIssues', '问题记录'),
+              label: (
+                <span>
+                  {t('menu.inspectionIssues', '问题记录')}
+                  {issueRecords.filter(i => ['pending', 'processing'].includes(i.status)).length > 0 && (
+                    <span style={{ marginLeft: 8, display: 'inline-block', minWidth: 18, height: 18, lineHeight: '18px', borderRadius: 9, background: '#ff4d4f', color: '#fff', fontSize: 11, textAlign: 'center', padding: '0 5px' }}>
+                      {issueRecords.filter(i => ['pending', 'processing'].includes(i.status)).length}
+                    </span>
+                  )}
+                </span>
+              ),
             },
             {
               key: '/operations/inspection/logs',
@@ -276,7 +286,7 @@ const AppLayout: React.FC = () => {
     if (pathSegments.includes('inspection')) {
       items.push({ 
         title: t('menu.inspection') as string,
-        onClick: () => navigate('/operations/inspection/tasks'),
+        onClick: () => navigate('/operations/inspection'),
         className: 'breadcrumb-link'
       });
       if (pathSegments.includes('tasks')) {

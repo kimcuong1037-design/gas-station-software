@@ -118,8 +118,7 @@ const InspectionPlanForm: React.FC = () => {
       const planName = values.name;
       if (mode === 'create') {
         message.success(`安检计划「${planName}」创建成功`);
-        // Navigate to plan detail (mock: use first plan id)
-        navigate('/operations/inspection/plans/plan-003');
+        navigate('/operations/inspection/plans');
       } else {
         message.success(`安检计划「${planName}」更新成功`);
         navigate(`/operations/inspection/plans/${id}`);

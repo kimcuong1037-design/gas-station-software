@@ -131,7 +131,7 @@ const InspectionReportDetail: React.FC = () => {
               <Table
                 rowKey="key"
                 columns={content.columns}
-                dataSource={content.data as any[]}
+                dataSource={content.data as Record<string, unknown>[]}
                 pagination={false}
                 size="small"
               />

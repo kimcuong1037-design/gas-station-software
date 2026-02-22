@@ -1,11 +1,10 @@
 
 # 高层进度说明
 
-截至 2026-02-19，项目整体进展约为 50%。
+截至 2026-02-22，项目整体进展约为 55%。
 
-- 阶段 1（基础运营）：模块 1.1 站点管理 ✅ (4.15)、模块 1.2 交接班管理 ✅ (3.55, P1=0)、模块 1.3 设备设施管理 ✅ (3.35, P1=0)、模块 1.4 巡检/安检管理 🟡 (3.10, P1=3)
-- 模块 1.2 和 1.3 均已完成 UI 评估两轮，P1 问题全部修复，剩余 P2 问题待后续迭代。
-- 模块 1.4 巡检/安检管理已完成需求→用户故事→UX设计→UI Schema→前端开发→UI 评估 v1→P1 全部修复。待 P2 修复后二评。
+- 阶段 1（基础运营）：模块 1.1 站点管理 ✅ (4.15)、模块 1.2 交接班管理 ✅ (3.55, P1=0)、模块 1.3 设备设施管理 ✅ (3.35, P1=0)、模块 1.4 巡检/安检管理 ✅ (3.45, P1=0)
+- 阶段 1 全部 4 个模块完成。
 - 阶段 2 及后续模块尚未启动。
 
 # 项目进展追踪（Progress Tracker）
@@ -20,6 +19,49 @@
 ---
 
 ## 进展记录
+
+### 2026-02-22（模块 1.4 巡检/安检管理 - P2 修复）
+
+#### P2 修复（8/8 ✅，跳过 4 项低性价比）
+- **P2-4** ✅: AppLayout — 面包屑"巡检/安检管理"导航从 `/inspection/tasks` 改为 `/inspection`，与菜单 key 一致
+- **P2-5** ✅: AppLayout — "问题记录"菜单项添加红色 Badge（显示 pending+processing 问题数量）
+- **P2-7** ✅: InspectionReportDetail — `as any[]` 改为 `as Record<string, unknown>[]`，消除宽泛类型断言
+- **P2-8** ✅: IssueRecordDetail — `navigate(-1)` 改为 `navigate('/operations/inspection/issues')`，明确返回路径
+- **P2-9** ✅: InspectionPlanForm — 创建成功后从硬编码 `plan-003` 改为跳转计划列表页
+- **P2-10** ✅: InspectionTaskList — 新增 `DatePicker.RangePicker` 截止日期筛选器，支持按日期范围筛选任务
+- **P2-11** ✅: InspectionPlanList — "取消计划"操作从 `pending || in_progress` 收窄为仅 `pending` 状态
+- **P2-12** ✅: InspectionPlanList — 移除组件内硬编码面包屑，统一由 AppLayout 管理
+
+#### 跳过的 P2 问题（低性价比，留待专项迭代）
+- P2-1: i18n 全量替换（~90 min，所有模块统一处理）
+- P2-2: ARIA 无障碍属性（Demo 阶段优先级低）
+- P2-3: 硬编码颜色值（所有模块统一处理）
+- P2-6: InspectionAnalytics 文件拆分（不影响功能）
+
+#### 影响文件（6 个）
+- `AppLayout.tsx` — 面包屑导航 + 问题记录 Badge + import issueRecords
+- `InspectionTaskList.tsx` — DatePicker.RangePicker + dayjs 导入 + dateRange state
+- `InspectionPlanList.tsx` — 取消条件收窄 + 移除重复面包屑
+- `InspectionPlanForm.tsx` — 创建成功跳转改为列表页
+- `IssueRecordDetail.tsx` — navigate(-1) → 明确路径
+- `InspectionReportDetail.tsx` — 类型断言优化
+
+#### 构建验证：✅ `npm run build` 通过，零 TypeScript 错误
+
+#### UI 评估 v2
+- [基础运营/巡检安检管理] 完成 UI 评估 v2 — **总分 3.45/5.0**（v1: 3.10 → v2: 3.45, +0.35）
+  - P1 问题：3 → **0**（v1 已全部修复，v2 验证通过）
+  - P2 问题：12 → **6**（8 项已修复，2 项新发现，4 项经用户确认跳过）
+  - 路由一致性：24/26 → **26/26 ✅ 全部通过**
+  - 用户流程完整性：11/13 → **13/13 ✅ 全部通过**
+  - 功能正确性：2.8 → **3.8**（+1.0，最大提升维度）
+  - 输出：`docs/ui-evaluation-report-inspection-v2.md`
+- **模块 1.4 标记 ✅ 完成**
+- **阶段 1 基础运营全部完成** ✅
+
+#### 下一步：启动阶段 2 能源交易规划
+
+---
 
 ### 2026-02-20（模块 1.4 巡检/安检管理 - P2 修复 + UI 评估 v2）
 
@@ -194,10 +236,9 @@
 - **相关 commits：** `1fc87d6` (文档), `921a3f4` (UI Schema), `98c450f` (前端), `d7a016e` (评估v1), `9b800d3` (P1修复+评估v2), `2604dba` (补充修复)
 
 ### 模块 1.4 巡检/安检管理
-- **已完成：** 需求 → 用户故事 → UX 设计 → UI Schema → 前端开发 → UI 评估 v1
-- **当前状态：** v1 评分 3.10/5.0，P1=3，P2=12
-- **P1 问题：** (1) 登记问题导航断裂（Link→应为 Drawer）(2) PlanForm mode prop 未传递 (3) 设备链接路径缺 equipment/ 段
-- **下一步：** P1 修复 → 二评
+- **已完成：** 需求 → 用户故事 → UX 设计 → UI Schema → 前端开发 → UI 评估 v1 → P1 修复 → P2 修复 → UI 评估 v2 ✅
+- **当前状态：** v2 评分 3.45/5.0，P1=0，P2=6（非阻塞）
+- **遗留 P2：** i18n 缺失、ARIA 属性缺位、硬编码颜色、文件拆分 → 留待后续迭代
 - **输出：** `docs/ui-evaluation-report-inspection-v1.md`
 
 ### 项目整体

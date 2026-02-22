@@ -1,8 +1,10 @@
 // P01: 安检任务列表页
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Row, Col, Typography, Button, Input, Select, Table, Space, Tabs, Modal, Form, Tag, message, Badge } from 'antd';
+import { Card, Row, Col, Typography, Button, Input, Select, Table, Space, Tabs, Modal, Form, Tag, message, Badge, DatePicker } from 'antd';
 import { CalendarOutlined, CheckCircleOutlined, PieChartOutlined, WarningOutlined, BugOutlined, SearchOutlined, PlusOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
+import type { Dayjs } from 'dayjs';
 import type { ColumnsType } from 'antd/es/table';
 import { inspectionTasks, getTaskStats } from '../../../../mock/inspections';
 import { employees } from '../../../../mock/employees';
@@ -78,6 +80,7 @@ const InspectionTaskList: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('all');
   const [keyword, setKeyword] = useState('');
   const [assigneeFilter, setAssigneeFilter] = useState<string | undefined>(undefined);
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
@@ -112,6 +115,11 @@ const InspectionTaskList: React.FC = () => {
       if (activeTab !== 'all' && t.status !== activeTab) return false;
       // assignee
       if (assigneeFilter && t.assignee?.id !== assigneeFilter) return false;
+      // date range
+      if (dateRange) {
+        const due = dayjs(t.dueDate);
+        if (due.isBefore(dateRange[0], 'day') || due.isAfter(dateRange[1], 'day')) return false;
+      }
       // keyword
       if (keyword) {
         const kw = keyword.toLowerCase();
@@ -138,7 +146,7 @@ const InspectionTaskList: React.FC = () => {
 
       return a.dueDate.localeCompare(b.dueDate);
     });
-  }, [activeTab, keyword, assigneeFilter]);
+  }, [activeTab, keyword, assigneeFilter, dateRange]);
 
   // -- handlers --
   const handleStatClick = (type: string) => {
@@ -391,6 +399,15 @@ const InspectionTaskList: React.FC = () => {
               allowClear
               style={{ width: 150 }}
               options={assigneeOptions}
+            />
+          </Col>
+          <Col>
+            <DatePicker.RangePicker
+              value={dateRange}
+              onChange={(dates) => { setDateRange(dates as [Dayjs, Dayjs] | null); setCurrentPage(1); }}
+              placeholder={['截止日期起', '截止日期止']}
+              allowClear
+              style={{ width: 260 }}
             />
           </Col>
           <Col flex="auto" />

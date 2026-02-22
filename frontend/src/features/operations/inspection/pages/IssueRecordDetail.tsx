@@ -59,7 +59,7 @@ const IssueRecordDetail: React.FC = () => {
   if (!record) {
     return (
       <div style={{ padding: 24 }}>
-        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)} style={{ marginBottom: 16 }}>
+        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/operations/inspection/issues')} style={{ marginBottom: 16 }}>
           返回
         </Button>
         <Empty description="问题记录不存在" />
