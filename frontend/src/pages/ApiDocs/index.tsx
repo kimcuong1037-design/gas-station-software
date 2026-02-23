@@ -422,6 +422,7 @@ export default function ApiDocs() {
           top: 0,
           zIndex: 100,
           boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+          lineHeight: 'normal',
         }}
       >
         <ApiOutlined style={{ fontSize: 24, color: '#1677ff' }} />
