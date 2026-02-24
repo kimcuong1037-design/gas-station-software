@@ -1,8 +1,8 @@
 # Agent 结构计划 (Agent Architecture Plan)
 
 **项目：** 加气站运营管理系统
-**版本：** 1.4
-**更新日期：** 2026-02-22
+**版本：** 1.5
+**更新日期：** 2026-02-24
 
 ---
 
@@ -78,10 +78,10 @@
 
 - **SubAgent 类型：** `general-purpose`
 - **负责 Skills：**
-  - `data-model-design` — 综合架构设计（含数据模型、API 设计、聚合接口分析、权限矩阵、数据完整性约束）
+  - `data-model-design` — 综合架构设计（含数据模型、API 设计、聚合接口分析、权限矩阵、数据完整性约束、PostgreSQL Schema 草案、跨模块 ERD 更新）
   - `workflow-design` — 业务流程设计（复杂流程模块按需启用）
-- **输入：** User Story、业务规则
-- **输出：** architecture.md（数据模型 + API 端点 + 权限矩阵 + 数据完整性约束）
+- **输入：** User Story、业务规则、`cross-module-erd.md`（已有跨模块实体关系）
+- **输出：** architecture.md（数据模型 + API 端点 + 权限矩阵 + 数据完整性约束 + PostgreSQL Schema 草案）、更新后的 `cross-module-erd.md`
 - **阻断性规则：** architecture.md 是进入前端实现的硬门禁，文件不存在时流程停止
 
 #### Agent 3：UI 设计 Agent (UI Designer)
@@ -139,7 +139,7 @@
   - `api-implementation` — API 实现
   - `database-migration` — 数据库迁移
   - `business-logic` — 业务逻辑实现
-- **输入：** API 设计文档、数据模型
+- **输入：** API 设计文档、数据模型、PostgreSQL Schema 草案（architecture.md §DB Schema）、`cross-module-erd.md`
 - **输出：** API 代码、数据库迁移脚本、业务逻辑代码
 - **启用时机：** Phase 2 开始启用（Phase 1 模块 API 实现）
 - **Phase 2 特别注意事项：**
@@ -202,12 +202,15 @@
          → 设计 API 接口（含聚合接口前置分析）
          → 定义数据完整性约束
          → 绘制业务流程
+         → 生成 PostgreSQL Schema 草案（ENUM 类型 + CREATE TABLE + 索引 + 约束）
+         → 更新 docs/cross-module-erd.md（新增实体、跨模块 FK、迁移层级）
          → 输出: docs/features/operations/station/architecture.md
          ↓
 步骤 5: [用户确认架构设计]
          ⛔ 阻断性验证：architecture.md 必须存在且包含
             全部必要章节（实体三问、API 端点、权限矩阵、
-            数据完整性约束），否则禁止进入步骤 6
+            数据完整性约束、PostgreSQL Schema 草案），否则禁止进入步骤 6
+         ⛔ cross-module-erd.md 必须已更新（新模块实体已纳入）
          ↓
 步骤 6: UI 设计 Agent (UX 设计)
          → 分析用户角色和核心任务流程
@@ -265,6 +268,9 @@
             ☐ i18n 翻译完整（中英文 key 无遗漏）
             ☐ RequirementTag 已关联（所有页面组件标注需求来源）
             ☐ userStoryMapping.ts 已更新（覆盖所有 User Story）
+            ☐ PostgreSQL Schema 草案已包含在 architecture.md 中
+            ☐ cross-module-erd.md 已更新（新模块实体 + 跨模块 FK）
+            ☐ API Docs 页面数据同步更新（apiData.ts）
             ☐ npm run build 编译通过
           → 有遗漏项则修复后重新验证
           ↓ (交付验证通过)
@@ -395,7 +401,7 @@ docs/skills/
 |--------|-------|------|------|
 | P0 | `requirement-decomposition` | 所有模块开发的起点 | ✅ 已创建 |
 | P0 | `user-story-writing` | 需求确认的载体 | ✅ 已创建 |
-| P0 | `data-model-design` | 架构门禁：前端实现的前置条件（含实体三问 + 聚合接口分析） | ✅ 已创建 v1.1 |
+| P0 | `data-model-design` | 架构门禁：前端实现的前置条件（含实体三问 + 聚合接口分析 + PostgreSQL Schema + 跨模块 ERD） | ✅ 已创建 v1.2 |
 | P0 | `ux-design` | 用户体验设计，ui-schema-design 的前置输入 | ✅ 已创建 |
 | P0 | `ui-schema-design` | 前端开发的直接输入 | ✅ 已创建 |
 | P0 | `ui-eval` | 前端实现后的质量门禁（Phase 1 验证为关键环节） | ✅ 已创建 |
@@ -415,5 +421,5 @@ docs/skills/
 ---
 
 *创建时间：2026-02-07*
-*最后更新：2026-02-22*
-*版本：1.4*
+*最后更新：2026-02-24*
+*版本：1.5*

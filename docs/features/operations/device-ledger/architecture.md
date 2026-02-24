@@ -1774,5 +1774,386 @@ export interface PendingAction {
 
 ---
 
+## 8. Database Schema (PostgreSQL)
+
+> 后端启动时可直接使用的数据库表定义草案。基于 Section 1 数据模型生成。
+> 跨模块外键（Station, Employee/User）使用 UUID 类型但不添加 FK 约束，由应用层保证一致性。
+
+```sql
+-- ============================================================
+-- 设备设施管理模块 — PostgreSQL Database Schema
+-- 基于 architecture.md Section 1 数据模型 + Section 3 枚举定义
+-- ============================================================
+
+BEGIN;
+
+-- ============================================================
+-- ENUM TYPES (Section 3)
+-- ============================================================
+
+-- 3.1 设备状态
+CREATE TYPE device_status AS ENUM (
+  'active',              -- 正常运行
+  'fault',               -- 故障
+  'pending_maintenance', -- 待维保
+  'inactive'             -- 已停用
+);
+
+-- 3.2 设备类型
+CREATE TYPE device_type AS ENUM (
+  'tank',            -- 储罐
+  'dispenser',       -- 加气机
+  'pump',            -- 泵
+  'valve',           -- 阀门
+  'sensor',          -- 传感器
+  'fire_equipment',  -- 消防设备
+  'electrical'       -- 电气设备
+);
+
+-- 3.3 工单状态
+CREATE TYPE order_status AS ENUM (
+  'pending',         -- 待处理
+  'processing',      -- 处理中
+  'pending_review',  -- 待验收
+  'completed',       -- 已完成
+  'closed'           -- 已关闭
+);
+
+-- 3.4 工单类型
+CREATE TYPE order_type AS ENUM (
+  'maintenance',  -- 保养
+  'repair',       -- 维修
+  'report'        -- 报修
+);
+
+-- 3.5 紧急程度
+CREATE TYPE urgency_level AS ENUM (
+  'low',     -- 低
+  'medium',  -- 中
+  'high',    -- 高
+  'urgent'   -- 紧急
+);
+
+-- 3.6 维保频率
+CREATE TYPE maintenance_cycle AS ENUM (
+  'daily',        -- 日检
+  'weekly',       -- 周检
+  'monthly',      -- 月检
+  'quarterly',    -- 季检
+  'semi_annual',  -- 半年检
+  'annual'        -- 年检
+);
+
+-- 3.7 加气机/枪状态
+CREATE TYPE dispenser_status AS ENUM (
+  'idle',     -- 空闲
+  'fueling',  -- 加注中
+  'fault',    -- 故障
+  'offline'   -- 离线
+);
+
+-- 3.8 连接状态
+CREATE TYPE connection_status AS ENUM (
+  'connected',     -- 已连接
+  'disconnected',  -- 已断开
+  'unstable'       -- 不稳定
+);
+
+-- 3.9 告警级别
+CREATE TYPE alarm_level AS ENUM (
+  'info',      -- 信息
+  'warning',   -- 警告
+  'critical'   -- 严重
+);
+
+-- 3.10 告警状态
+CREATE TYPE alarm_status AS ENUM (
+  'unhandled',     -- 未处理
+  'acknowledged',  -- 已确认
+  'resolved'       -- 已解决
+);
+
+-- 3.11 告警类型
+CREATE TYPE alarm_type AS ENUM (
+  'level_low',              -- 液位过低
+  'pressure_high',          -- 压力过高
+  'temperature_abnormal',   -- 温度异常
+  'gas_leak',               -- 气体泄漏
+  'device_offline',         -- 设备离线
+  'other'                   -- 其他
+);
+
+-- 3.12 存储介质
+CREATE TYPE storage_medium AS ENUM (
+  'LNG',    -- 液化天然气
+  'CNG',    -- 压缩天然气
+  'LPG',    -- 液化石油气
+  'other'   -- 其他
+);
+
+-- 3.13 工单记录操作类型
+CREATE TYPE record_action AS ENUM (
+  'created',           -- 创建工单
+  'started',           -- 开始处理
+  'submitted_review',  -- 提交验收
+  'approved',          -- 验收通过
+  'rejected',          -- 退回处理
+  'closed',            -- 关闭工单
+  'record_added'       -- 添加处理记录
+);
+
+-- ============================================================
+-- TABLES (dependency order)
+-- ============================================================
+
+-- 1.1 Equipment（设备台账）
+CREATE TABLE equipment (
+  id                    UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  device_code           VARCHAR(32) NOT NULL,
+  name                  VARCHAR(100) NOT NULL,
+  device_type           device_type NOT NULL,
+  model                 VARCHAR(100),
+  manufacturer          VARCHAR(100),
+  serial_number         VARCHAR(100),
+  station_id            UUID        NOT NULL,    -- FK → Station（跨模块，应用层保证一致性）
+  location              VARCHAR(255),
+  install_date          DATE,
+  status                device_status NOT NULL DEFAULT 'active',
+  maintenance_cycle     maintenance_cycle,
+  last_maintenance_date DATE,
+  next_maintenance_date DATE,
+  specification         TEXT,
+  remark                TEXT,
+  type_specific_fields  JSONB,
+  created_at            TIMESTAMP   NOT NULL DEFAULT NOW(),
+  updated_at            TIMESTAMP   NOT NULL DEFAULT NOW(),
+  created_by            UUID,                    -- FK → User（跨模块，应用层保证一致性）
+  updated_by            UUID,                    -- FK → User（跨模块，应用层保证一致性）
+
+  CONSTRAINT uq_equipment_device_code UNIQUE (device_code)
+);
+
+CREATE INDEX idx_equipment_code       ON equipment (device_code);
+CREATE INDEX idx_equipment_name       ON equipment (name);
+CREATE INDEX idx_equipment_station    ON equipment (station_id);
+CREATE INDEX idx_equipment_type       ON equipment (device_type);
+CREATE INDEX idx_equipment_status     ON equipment (status);
+CREATE INDEX idx_equipment_next_maint ON equipment (next_maintenance_date);
+
+COMMENT ON TABLE equipment IS '设备台账 — 记录每台设备的完整档案信息，核心实体';
+
+-- 1.3 EquipmentPhoto（设备照片）
+CREATE TABLE equipment_photo (
+  id            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  equipment_id  UUID         NOT NULL REFERENCES equipment (id) ON DELETE CASCADE,
+  file_url      VARCHAR(500) NOT NULL,
+  file_name     VARCHAR(255) NOT NULL,
+  file_size     INTEGER,
+  mime_type     VARCHAR(50),
+  sort_order    INTEGER      NOT NULL DEFAULT 0,
+  uploaded_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
+  uploaded_by   UUID                             -- FK → User（跨模块，应用层保证一致性）
+);
+
+CREATE INDEX idx_equip_photo_equipment ON equipment_photo (equipment_id);
+
+COMMENT ON TABLE equipment_photo IS '设备照片 — 每台设备最多 10 张，格式 JPG/PNG，单张 ≤ 5 MB';
+
+-- 1.4 EquipmentMonitoring（设备实时监控数据）
+CREATE TABLE equipment_monitoring (
+  id                    UUID              PRIMARY KEY DEFAULT gen_random_uuid(),
+  equipment_id          UUID              NOT NULL REFERENCES equipment (id) ON DELETE CASCADE,
+  level_percent         DECIMAL(5,2),
+  level_volume          DECIMAL(10,2),
+  pressure              DECIMAL(8,4),
+  temperature           DECIMAL(8,2),
+  dispenser_status      dispenser_status,
+  daily_volume          DECIMAL(10,2),
+  sensor_value          DECIMAL(10,4),
+  sensor_unit           VARCHAR(20),
+  connection_status     connection_status NOT NULL DEFAULT 'disconnected',
+  last_communication_at TIMESTAMP,
+  nozzle_data           JSONB,
+  extra_data            JSONB,
+  updated_at            TIMESTAMP         NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT uq_monitoring_equipment UNIQUE (equipment_id)
+);
+
+-- UNIQUE index already implied by the UNIQUE constraint; add explicit one for clarity
+CREATE UNIQUE INDEX idx_monitoring_equipment  ON equipment_monitoring (equipment_id);
+CREATE INDEX idx_monitoring_connection        ON equipment_monitoring (connection_status);
+
+COMMENT ON TABLE equipment_monitoring IS '设备实时监控数据 — 每台设备一条记录（1:1），持续高频更新';
+
+-- 1.5 EquipmentMonitoringLog（设备监控历史日志）
+CREATE TABLE equipment_monitoring_log (
+  id             UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
+  equipment_id   UUID          NOT NULL REFERENCES equipment (id) ON DELETE CASCADE,
+  level_percent  DECIMAL(5,2),
+  level_volume   DECIMAL(10,2),
+  pressure       DECIMAL(8,4),
+  temperature    DECIMAL(8,2),
+  sensor_value   DECIMAL(10,4),
+  recorded_at    TIMESTAMP     NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_monitoring_log_equip_time ON equipment_monitoring_log (equipment_id, recorded_at);
+CREATE INDEX idx_monitoring_log_time       ON equipment_monitoring_log (recorded_at);
+
+COMMENT ON TABLE equipment_monitoring_log IS
+  '设备监控历史日志 — 定时快照用于趋势图。'
+  '此表为时间序列数据，适合使用 TimescaleDB 按 recorded_at 进行 hypertable 分区 '
+  '(SELECT create_hypertable(''equipment_monitoring_log'', ''recorded_at''))。'
+  '数据保留策略：5 min 粒度保留 7 天，1 h 聚合保留 90 天，1 天聚合永久保留。';
+
+-- 1.6 MaintenanceOrder（维保工单）
+CREATE TABLE maintenance_order (
+  id                 UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_no           VARCHAR(32)   NOT NULL,
+  equipment_id       UUID          NOT NULL REFERENCES equipment (id) ON DELETE RESTRICT,
+  station_id         UUID          NOT NULL,    -- FK → Station（跨模块，应用层保证一致性）
+  order_type         order_type    NOT NULL,
+  urgency            urgency_level NOT NULL DEFAULT 'medium',
+  status             order_status  NOT NULL DEFAULT 'pending',
+  description        TEXT          NOT NULL,
+  assignee_id        UUID          NOT NULL,    -- FK → Employee（跨模块，应用层保证一致性）
+  planned_start_date DATE          NOT NULL,
+  planned_end_date   DATE          NOT NULL,
+  actual_start_time  TIMESTAMP,
+  actual_end_time    TIMESTAMP,
+  total_cost         DECIMAL(12,2) DEFAULT 0,
+  total_duration     DECIMAL(8,2)  DEFAULT 0,
+  created_by         UUID          NOT NULL,    -- FK → User（跨模块，应用层保证一致性）
+  created_at         TIMESTAMP     NOT NULL DEFAULT NOW(),
+  updated_at         TIMESTAMP     NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT uq_maintenance_order_no UNIQUE (order_no)
+);
+
+CREATE INDEX idx_order_no            ON maintenance_order (order_no);
+CREATE INDEX idx_order_equipment     ON maintenance_order (equipment_id);
+CREATE INDEX idx_order_station       ON maintenance_order (station_id);
+CREATE INDEX idx_order_status        ON maintenance_order (status);
+CREATE INDEX idx_order_type          ON maintenance_order (order_type);
+CREATE INDEX idx_order_assignee      ON maintenance_order (assignee_id);
+CREATE INDEX idx_order_urgency       ON maintenance_order (urgency);
+CREATE INDEX idx_order_planned_start ON maintenance_order (planned_start_date);
+CREATE INDEX idx_order_created       ON maintenance_order (created_at);
+
+COMMENT ON TABLE maintenance_order IS '维保工单 — 设备维护核心实体，支持保养/维修/报修三种类型';
+
+-- 1.7 OrderRecord（工单处理记录）
+CREATE TABLE order_record (
+  id          UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id    UUID          NOT NULL REFERENCES maintenance_order (id) ON DELETE CASCADE,
+  action      record_action NOT NULL,
+  content     TEXT          NOT NULL,
+  parts       VARCHAR(500),
+  cost        DECIMAL(10,2),
+  duration    DECIMAL(8,2),
+  operator_id UUID          NOT NULL,    -- FK → User（跨模块，应用层保证一致性）
+  created_at  TIMESTAMP     NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_record_order ON order_record (order_id);
+CREATE INDEX idx_record_time  ON order_record (created_at);
+
+COMMENT ON TABLE order_record IS '工单处理记录 — 工单处理过程的流水记录，形成完整处理时间线';
+
+-- 1.8 OrderAttachment（工单附件）
+CREATE TABLE order_attachment (
+  id          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  record_id   UUID         NOT NULL REFERENCES order_record (id) ON DELETE CASCADE,
+  file_url    VARCHAR(500) NOT NULL,
+  file_name   VARCHAR(255) NOT NULL,
+  file_size   INTEGER,
+  mime_type   VARCHAR(50),
+  sort_order  INTEGER      NOT NULL DEFAULT 0,
+  uploaded_at TIMESTAMP    NOT NULL DEFAULT NOW(),
+  uploaded_by UUID                             -- FK → User（跨模块，应用层保证一致性）
+);
+
+CREATE INDEX idx_attachment_record ON order_attachment (record_id);
+
+COMMENT ON TABLE order_attachment IS '工单附件 — 工单处理记录的附件（故障照片、维修凭证等）';
+
+-- 1.9 MaintenancePlan（保养计划）[MVP+]
+CREATE TABLE maintenance_plan (
+  id             UUID              PRIMARY KEY DEFAULT gen_random_uuid(),
+  name           VARCHAR(100)      NOT NULL,
+  equipment_id   UUID              NOT NULL REFERENCES equipment (id) ON DELETE CASCADE,
+  station_id     UUID              NOT NULL,    -- FK → Station（跨模块，应用层保证一致性）
+  frequency      maintenance_cycle NOT NULL,
+  start_date     DATE              NOT NULL,
+  next_date      DATE              NOT NULL,
+  reminder_days  INTEGER           NOT NULL DEFAULT 7,
+  enabled        BOOLEAN           NOT NULL DEFAULT TRUE,
+  created_at     TIMESTAMP         NOT NULL DEFAULT NOW(),
+  updated_at     TIMESTAMP         NOT NULL DEFAULT NOW(),
+  created_by     UUID                           -- FK → User（跨模块，应用层保证一致性）
+);
+
+CREATE INDEX idx_plan_equipment ON maintenance_plan (equipment_id);
+CREATE INDEX idx_plan_station   ON maintenance_plan (station_id);
+CREATE INDEX idx_plan_next_date ON maintenance_plan (next_date);
+CREATE INDEX idx_plan_enabled   ON maintenance_plan (enabled);
+
+COMMENT ON TABLE maintenance_plan IS '保养计划 [MVP+] — 周期性保养计划模板，到期自动创建维保工单';
+
+-- 1.10 AlarmRule（告警规则）[MVP+]
+CREATE TABLE alarm_rule (
+  id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  equipment_id  UUID        NOT NULL REFERENCES equipment (id) ON DELETE CASCADE,
+  station_id    UUID        NOT NULL,    -- FK → Station（跨模块，应用层保证一致性）
+  metric        VARCHAR(50) NOT NULL,
+  condition     VARCHAR(10) NOT NULL,
+  threshold     DECIMAL(10,4) NOT NULL,
+  alarm_level   alarm_level NOT NULL DEFAULT 'warning',
+  enabled       BOOLEAN     NOT NULL DEFAULT TRUE,
+  created_at    TIMESTAMP   NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMP   NOT NULL DEFAULT NOW(),
+  created_by    UUID                     -- FK → User（跨模块，应用层保证一致性）
+);
+
+CREATE INDEX idx_alarm_rule_equipment ON alarm_rule (equipment_id);
+CREATE INDEX idx_alarm_rule_station   ON alarm_rule (station_id);
+CREATE INDEX idx_alarm_rule_enabled   ON alarm_rule (enabled);
+
+COMMENT ON TABLE alarm_rule IS '告警规则 [MVP+] — 设备监控指标的告警阈值配置';
+
+-- 1.11 AlarmRecord（告警记录）[MVP+]
+CREATE TABLE alarm_record (
+  id              UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
+  rule_id         UUID          REFERENCES alarm_rule (id) ON DELETE SET NULL,
+  equipment_id    UUID          NOT NULL REFERENCES equipment (id) ON DELETE CASCADE,
+  station_id      UUID          NOT NULL,    -- FK → Station（跨模块，应用层保证一致性）
+  alarm_level     alarm_level   NOT NULL,
+  alarm_type      alarm_type    NOT NULL,
+  message         TEXT          NOT NULL,
+  metric_value    DECIMAL(10,4),
+  status          alarm_status  NOT NULL DEFAULT 'unhandled',
+  acknowledged_by UUID,                      -- FK → User（跨模块，应用层保证一致性）
+  acknowledged_at TIMESTAMP,
+  resolved_by     UUID,                      -- FK → User（跨模块，应用层保证一致性）
+  resolved_at     TIMESTAMP,
+  resolution_note TEXT,
+  triggered_at    TIMESTAMP     NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_alarm_record_equipment ON alarm_record (equipment_id);
+CREATE INDEX idx_alarm_record_station   ON alarm_record (station_id);
+CREATE INDEX idx_alarm_record_status    ON alarm_record (status);
+CREATE INDEX idx_alarm_record_level     ON alarm_record (alarm_level);
+CREATE INDEX idx_alarm_record_time      ON alarm_record (triggered_at);
+
+COMMENT ON TABLE alarm_record IS '告警记录 [MVP+] — 告警事件日志';
+
+COMMIT;
+```
+
+---
+
 *文档生成时间：2026-02-18*
+*最后更新：2026-02-24*
 *生成依据：requirements.md + user-stories.md + STANDARDS.md*

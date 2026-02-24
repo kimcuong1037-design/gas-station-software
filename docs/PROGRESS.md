@@ -1,12 +1,13 @@
 
 # 高层进度说明
 
-截至 2026-02-22，前端 UI 整体进展约为 **15%**（4/26 模块），Phase 1 基础运营全部完成。
+截至 2026-02-24，前端 UI 整体进展约为 **15%**（4/26 模块），Phase 1 基础运营全部完成。
 
 - **阶段 1（基础运营）：✅ 全部完成**
   - 1.1 站点管理 ✅ (4.15) | 1.2 交接班管理 ✅ (3.55) | 1.3 设备设施管理 ✅ (3.35) | 1.4 巡检安检管理 ✅ (3.45)
-- **流程体系升级：✅ 完成**（agent-plan v1.4 + architecture skill v1.1 + Phase 1 复盘）
-- **下一步方向：⚠️ 待决策**（继续前端 UI / 启动后端 / 混合策略）
+- **后端准备工作：✅ 完成**（跨模块 ERD + PostgreSQL Schema 草案 + API 路径一致性修复）
+- **流程体系升级：✅ 完成**（agent-plan v1.5 + architecture skill v1.2 + Phase 1 复盘）
+- **下一步方向：✅ 已决策** — 继续前端 Phase 2 能源交易 UI，之后启动后端研发
 - 阶段 2~7 尚未启动。
 
 # 项目进展追踪（Progress Tracker）
@@ -21,6 +22,68 @@
 ---
 
 ## 进展记录
+
+### 2026-02-24（Phase 1 后端准备工作 + Phase 2 方向决策）
+
+#### 方向决策
+
+- **确认 Phase 2 主线方向**：继续前端 Phase 2 能源交易模块 UI，之后启动后端研发
+- **子模块优先级**：2.1 价格管理 → 2.2 订单与交易 → 2.3 库存管理
+- **附加约束**：严格走 architecture 流程、API Docs 同步更新、每模块产出 PostgreSQL Schema 草案
+
+#### API 路径一致性修复
+
+- **交接班模块 (1.2) architecture.md** ✅：全部 13 处 API 端点路径从 `/api/` 统一为 `/api/v1/`
+  - 涵盖班次汇总、交接班、现金解缴、报表导出、用户身份、站点概况等端点
+  - 修复了 Phase 1 复盘中识别的跨模块一致性问题
+
+#### 跨模块实体关系图
+
+- **`docs/cross-module-erd.md`** ✅ (v1.0)：Phase 1 全模块 + Phase 2 预览
+  - 全局实体总览：4 模块 36 个实体的引用关系矩阵
+  - 跨模块外键关系表：1.2→1.1（6 条）、1.3→1.1（4 条）、1.4→1.1（10 条）、1.4→1.3（2 条）
+  - Phase 2 能源交易预期引用：价格管理 4 条、订单交易 7 条、库存管理 5 条
+  - 核心共享实体识别：Station、Employee、FuelType、Nozzle、Shift、Equipment（后端 shared/types 候选）
+  - 数据完整性约束（跨模块）：6 项级联删除前检查规则
+  - 数据库迁移顺序：7 层依赖链（从无 FK 到 Phase 2）
+
+#### PostgreSQL Schema 草案
+
+为 Phase 1 全部 4 个模块的 architecture.md 补充了 "Database Schema (PostgreSQL)" 章节：
+
+| 模块 | 新增章节 | ENUM 类型 | CREATE TABLE | 关键设计决策 |
+|------|---------|-----------|-------------|------------|
+| 1.1 站点管理 | §6 | 12 个 | 12 个 | 循环 FK 通过 ALTER TABLE 解决（Station↔StationImage） |
+| 1.2 交接班管理 | §7 | 9 个 | 6 个 | CashSettlement 使用 ON DELETE RESTRICT（财务数据保护） |
+| 1.3 设备设施管理 | §8 | 13 个 | 10 个 | EquipmentMonitoringLog 标注 TimescaleDB 分区建议 |
+| 1.4 巡检安检管理 | §7 | 7 个 | 8 个 | InspectionTask 含数据完整性 CHECK 约束 |
+
+- 共计 **41 个 ENUM 类型** + **36 个 CREATE TABLE** 语句
+- 跨模块外键统一使用 UUID 无 FK 约束 + COMMENT ON COLUMN 注释策略
+- 所有 Schema 包裹在 BEGIN/COMMIT 事务中
+
+#### 影响文件汇总
+
+- 新增文件 1 个：`docs/cross-module-erd.md`
+- 修改文件 4 个：`station/architecture.md`、`shift-handover/architecture.md`、`device-ledger/architecture.md`、`inspection/architecture.md`
+- 修改文件 1 个：`docs/PROGRESS.md`
+
+#### 流程体系升级（后端准备工作纳入标准流程）
+
+- **`agent-plan.md`** v1.4 → v1.5：
+  - Agent 2 (Architect) 输出增加 PostgreSQL Schema 草案 + 跨模块 ERD 更新
+  - Step 4 增加 DB Schema 生成和 cross-module-erd.md 更新子步骤
+  - Step 5 阻断性验证增加 PostgreSQL Schema + cross-module-erd.md 检查
+  - Step 12i 交付 Checklist 增加 3 项：DB Schema、cross-module ERD、API Docs 同步
+  - Agent 6 (Backend) 输入增加 PostgreSQL Schema 引用
+- **`data-model-design.md`** v1.1 → v1.2：
+  - 新增 Step 5：PostgreSQL Schema 草案（输出格式 + 8 条设计规则 + 特殊场景标注）
+  - 新增 Step 6：跨模块 ERD 更新（5 项更新内容 + 3 条验证规则）
+  - 原 Step 5 → Step 7：输出 architecture.md（必要章节增加 Database Schema 章节）
+  - 阻断性验证 Checklist 从 6 项扩展为 9 项
+  - 历史经验增加第 4 条：Phase 1 后端准备缺失教训
+
+---
 
 ### 2026-02-22（Phase 1 复盘 + 流程体系升级 + API 文档页）
 
@@ -281,7 +344,7 @@
 
 ---
 
-## 下次继续的起点（2026-02-23）
+## 下次继续的起点（2026-02-25）
 
 ### 当前状态总结
 
@@ -294,41 +357,37 @@
 | 1.3 设备设施管理 | 3.35 | 0 | 100% | device-ledger types 核验 |
 | 1.4 巡检安检管理 | 3.45 | 0 | 100% | 无 |
 
+**后端准备工作：✅ 全部完成**
+- 跨模块实体关系图 `cross-module-erd.md`（36 实体 + 7 层迁移顺序 + Phase 2 预期引用）
+- Phase 1 全 4 模块 PostgreSQL Schema 草案（41 ENUM + 36 CREATE TABLE）
+- API 路径一致性修复（交接班 `/api/` → `/api/v1/`）
+
 **流程体系：已完成 Phase 2 升级**
 - agent-plan.md v1.4（含文档预检、阻断验证、交付 checklist、分批执行）
 - architecture skill v1.1（含实体三问、聚合接口分析、数据完整性约束）
-- Phase 1 反思文档（reflections.md + phase1-retrospective.md）
 
-### ⚠️ 待决策：Phase 2 方向
+### ✅ 已决策：Phase 2 方向
 
-以下决策需要谨慎思考后确定，**明天开工前优先讨论**：
+**选择：继续前端 Phase 2 能源交易模块 UI，之后启动后端研发**
 
-**选项 A：继续前端 — 阶段 2 能源交易模块 UI**
-- 优点：保持前端开发节奏，快速扩大 Demo 覆盖面
-- 风险：后端积压越来越多，前后端类型可能进一步分叉
+### 明天计划
 
-**选项 B：启动后端研发 — Phase 1 模块 API 实现**
-- 优点：尽早验证架构设计的可行性，前后端类型对齐
-- 风险：打断前端节奏，后端基础设施搭建需要时间
+**启动 Phase 2 模块 2.1 价格管理**，严格按 agent-plan v1.4 流程推进：
 
-**选项 C：混合策略 — 先搭后端脚手架 + 1 个模块 API，再继续前端**
-- 优点：平衡两方面，验证后端可行性的同时不完全中断前端
+1. **步骤 0：文档完整性预检**
+   - 创建 `docs/features/energy-trade/price-management/` 目录
+   - 检查需求来源文档
 
-### 明天草拟计划
+2. **步骤 1-3：需求分析 → User Story → 用户确认**
+   - 基于 `requirements/加气站运营管理系统-功能清单-参考.md` 拆解价格管理需求
+   - 编写 User Story + 验收标准
+   - 等待用户确认
 
-无论最终选择哪个方向，以下准备工作可以先做：
-
-1. **Phase 1 收尾**（约 30min）
-   - 补全 `shiftHandoverUserStoryMapping.ts` 中 US-020~023 的映射记录
-   - STANDARDS.md 增加 API 路径规范章节（统一 `/api/v1/`）
-
-2. **方向决策讨论**
-   - 根据项目优先级和演示需求，确定 Phase 2 主线方向
-   - 如选择前端：确认阶段 2 能源交易 3 个子模块（价格管理/订单交易/库存管理）的优先级
-   - 如选择后端：确认技术栈（Node.js/Express vs Fastify）、数据库初始化方案、第一个实现的模块
-
-3. **开始执行**（方向确认后）
-   - 按确认方向启动新模块的需求分析/架构设计/脚手架搭建
+3. **步骤 4-5：架构设计 → 用户确认**
+   - 数据模型设计（含实体三问、PostgreSQL Schema 草案）
+   - API 端点设计（`/api/v1/` 规范）
+   - 跨模块引用对齐（cross-module-erd.md 中预判的 PricePolicy→Station/FuelType/Nozzle）
+   - 更新 API Docs 页面
 
 ---
 

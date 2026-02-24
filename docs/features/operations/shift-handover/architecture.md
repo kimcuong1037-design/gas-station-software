@@ -241,7 +241,7 @@
 
 ### 3.1 班次汇总 API
 
-#### GET /api/shifts/current/summary
+#### GET /api/v1/shifts/current/summary
 
 获取当前班次的实时汇总数据。
 
@@ -288,7 +288,7 @@
 
 ### 3.2 交接班 API
 
-#### POST /api/handovers
+#### POST /api/v1/handovers
 
 发起交接班。
 
@@ -320,7 +320,7 @@
 }
 ```
 
-#### GET /api/handovers/{id}/precheck
+#### GET /api/v1/handovers/{id}/precheck
 
 获取交接班预检结果。
 
@@ -365,7 +365,7 @@
 }
 ```
 
-#### PUT /api/handovers/{id}/complete
+#### PUT /api/v1/handovers/{id}/complete
 
 确认接班，完成交接。
 
@@ -376,7 +376,7 @@
 }
 ```
 
-#### POST /api/handovers/{id}/force
+#### POST /api/v1/handovers/{id}/force
 
 强制交接班（需站长权限）。
 
@@ -391,7 +391,7 @@
 
 ### 3.3 现金解缴 API
 
-#### POST /api/settlements
+#### POST /api/v1/settlements
 
 创建现金解缴记录。
 
@@ -406,7 +406,7 @@
 }
 ```
 
-#### PUT /api/settlements/{id}/review
+#### PUT /api/v1/settlements/{id}/review
 
 审核现金解缴。
 
@@ -418,7 +418,7 @@
 }
 ```
 
-#### POST /api/settlements/{id}/documents
+#### POST /api/v1/settlements/{id}/documents
 
 上传解缴凭证。
 
@@ -428,7 +428,7 @@
 
 ### 3.4 交接班报表 API
 
-#### GET /api/handovers
+#### GET /api/v1/handovers
 
 获取交接班历史列表。
 
@@ -475,11 +475,11 @@
 }
 ```
 
-#### GET /api/handovers/{id}
+#### GET /api/v1/handovers/{id}
 
 获取交接班详情。
 
-#### GET /api/handovers/export
+#### GET /api/v1/handovers/export
 
 导出交接班报表。
 
@@ -725,7 +725,7 @@ export interface CurrentShiftData {
 
 ### 3.5 用户身份 API
 
-#### GET /api/auth/me
+#### GET /api/v1/auth/me
 
 获取当前登录用户信息。
 
@@ -748,7 +748,7 @@ export interface CurrentShiftData {
 
 ### 3.6 站点概况聚合 API
 
-#### GET /api/stations/{stationId}/overview
+#### GET /api/v1/stations/{stationId}/overview
 
 获取站点概况聚合数据（当前班次 + 下一班次排班 + 核心经营指标）。
 
@@ -801,5 +801,236 @@ export interface CurrentShiftData {
 
 ---
 
+## 7. Database Schema (PostgreSQL)
+
+> 后端启动时可直接使用的数据库表定义草案。基于 Section 1 数据模型生成。
+> 跨模块外键（Station, Shift, Employee）使用 UUID 类型但不添加 FK 约束，由应用层保证一致性。
+
+```sql
+BEGIN;
+
+-- ============================================================
+-- ENUM TYPES
+-- ============================================================
+
+CREATE TYPE handover_status AS ENUM (
+  'initiated',
+  'pending_review',
+  'completed',
+  'cancelled'
+);
+
+CREATE TYPE settlement_status AS ENUM (
+  'pending',
+  'approved',
+  'rejected'
+);
+
+CREATE TYPE difference_type AS ENUM (
+  'surplus',
+  'shortage',
+  'balanced'
+);
+
+CREATE TYPE difference_reason AS ENUM (
+  'change_error',
+  'receipt_lost',
+  'equipment_fault',
+  'pending_verify',
+  'other'
+);
+
+CREATE TYPE settlement_method AS ENUM (
+  'safe',
+  'bank',
+  'manager'
+);
+
+CREATE TYPE handover_issue_type AS ENUM (
+  'equipment',
+  'inventory',
+  'cash',
+  'safety',
+  'other'
+);
+
+CREATE TYPE issue_severity AS ENUM (
+  'low',
+  'normal',
+  'high',
+  'critical'
+);
+
+CREATE TYPE precheck_result AS ENUM (
+  'pass',
+  'warning',
+  'fail'
+);
+
+CREATE TYPE payment_method AS ENUM (
+  'cash',
+  'wechat',
+  'alipay',
+  'unionpay',
+  'ic_card',
+  'member_card',
+  'credit',
+  'other'
+);
+
+-- ============================================================
+-- TABLE 1: shift_handover (交接班记录) — 核心父表，无内部 FK 依赖
+-- ============================================================
+
+CREATE TABLE shift_handover (
+  id            UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
+  handover_no   VARCHAR(32)   NOT NULL,
+  station_id    UUID          NOT NULL,   -- FK → module 1.1 Station
+  shift_id      UUID          NOT NULL,   -- FK → module 1.1 Shift
+  shift_date    DATE          NOT NULL,
+  handover_time TIMESTAMP     NOT NULL,
+  handover_by   UUID          NOT NULL,   -- FK → module 1.1 Employee
+  received_by   UUID,                     -- FK → module 1.1 Employee (NULL until received)
+  status        handover_status NOT NULL DEFAULT 'initiated',
+  is_forced     BOOLEAN       NOT NULL DEFAULT FALSE,
+  forced_by     UUID,                     -- FK → module 9.1 User
+  forced_reason TEXT,
+  remarks       TEXT,
+  created_at    TIMESTAMP     NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMP     NOT NULL DEFAULT NOW(),
+  completed_at  TIMESTAMP,
+
+  CONSTRAINT uq_handover_no UNIQUE (handover_no)
+);
+
+COMMENT ON TABLE shift_handover IS '交接班记录 — 本模块核心实体，记录每次班次交接的完整信息';
+
+-- Indexes (Section 1.1)
+CREATE INDEX idx_handover_no      ON shift_handover (handover_no);
+CREATE INDEX idx_handover_station ON shift_handover (station_id);
+CREATE INDEX idx_handover_shift   ON shift_handover (shift_id);
+CREATE INDEX idx_handover_date    ON shift_handover (shift_date);
+CREATE INDEX idx_handover_status  ON shift_handover (status);
+CREATE INDEX idx_handover_time    ON shift_handover (handover_time);
+
+-- ============================================================
+-- TABLE 2: shift_summary (班次汇总) — 依赖 shift_handover
+-- ============================================================
+
+CREATE TABLE shift_summary (
+  id                   UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
+  handover_id          UUID           NOT NULL
+                       REFERENCES shift_handover (id) ON DELETE CASCADE,
+  total_amount         DECIMAL(12,2)  NOT NULL DEFAULT 0,
+  total_orders         INTEGER        NOT NULL DEFAULT 0,
+  total_refund_amount  DECIMAL(12,2)  NOT NULL DEFAULT 0,
+  total_refund_orders  INTEGER        NOT NULL DEFAULT 0,
+  net_amount           DECIMAL(12,2)  NOT NULL DEFAULT 0,
+  fuel_summary         JSONB,
+  payment_summary      JSONB,
+  created_at           TIMESTAMP      NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE shift_summary IS '班次汇总 — 交接班时生成的经营数据快照';
+
+-- ============================================================
+-- TABLE 3: cash_settlement (现金解缴) — 依赖 shift_handover
+-- ============================================================
+
+CREATE TABLE cash_settlement (
+  id                UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
+  settlement_no     VARCHAR(32)    NOT NULL,
+  handover_id       UUID           NOT NULL
+                    REFERENCES shift_handover (id) ON DELETE RESTRICT,
+  station_id        UUID           NOT NULL,   -- FK → module 1.1 Station
+  expected_amount   DECIMAL(12,2)  NOT NULL,
+  actual_amount     DECIMAL(12,2)  NOT NULL,
+  difference        DECIMAL(12,2)  NOT NULL,
+  difference_type   difference_type   NOT NULL,
+  difference_reason difference_reason,
+  difference_note   TEXT,
+  settlement_method settlement_method NOT NULL,
+  settled_by        UUID           NOT NULL,   -- FK → module 1.1 Employee
+  status            settlement_status NOT NULL DEFAULT 'pending',
+  reviewed_by       UUID,                      -- FK → module 9.1 User
+  reviewed_at       TIMESTAMP,
+  review_note       TEXT,
+  created_at        TIMESTAMP      NOT NULL DEFAULT NOW(),
+  updated_at        TIMESTAMP      NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT uq_settlement_no UNIQUE (settlement_no)
+);
+
+COMMENT ON TABLE cash_settlement IS '现金解缴 — 班次现金收款的解缴与差异记录';
+
+-- Indexes (Section 1.3)
+CREATE INDEX idx_settlement_no       ON cash_settlement (settlement_no);
+CREATE INDEX idx_settlement_handover ON cash_settlement (handover_id);
+CREATE INDEX idx_settlement_station  ON cash_settlement (station_id);
+CREATE INDEX idx_settlement_status   ON cash_settlement (status);
+
+-- ============================================================
+-- TABLE 4: settlement_document (解缴凭证) — 依赖 cash_settlement
+-- ============================================================
+
+CREATE TABLE settlement_document (
+  id             UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
+  settlement_id  UUID          NOT NULL
+                 REFERENCES cash_settlement (id) ON DELETE CASCADE,
+  file_name      VARCHAR(255)  NOT NULL,
+  file_path      VARCHAR(500)  NOT NULL,
+  file_size      INTEGER       NOT NULL,
+  mime_type      VARCHAR(100)  NOT NULL,
+  sort_order     INTEGER       NOT NULL DEFAULT 0,
+  uploaded_by    UUID          NOT NULL,   -- FK → module 1.1 Employee
+  created_at     TIMESTAMP     NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE settlement_document IS '解缴凭证 — 现金解缴的凭证照片附件';
+
+-- ============================================================
+-- TABLE 5: handover_issue (交接班异常) — 依赖 shift_handover
+-- ============================================================
+
+CREATE TABLE handover_issue (
+  id              UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
+  handover_id     UUID           NOT NULL
+                  REFERENCES shift_handover (id) ON DELETE CASCADE,
+  issue_type      handover_issue_type NOT NULL,
+  severity        issue_severity NOT NULL DEFAULT 'normal',
+  description     TEXT           NOT NULL,
+  reported_by     UUID           NOT NULL,   -- FK → module 1.1 Employee
+  resolved        BOOLEAN        NOT NULL DEFAULT FALSE,
+  resolved_by     UUID,                      -- FK → module 1.1 Employee
+  resolved_at     TIMESTAMP,
+  resolution_note TEXT,
+  created_at      TIMESTAMP      NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMP      NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE handover_issue IS '交接班异常 — 交接过程中标注的异常情况';
+
+-- ============================================================
+-- TABLE 6: handover_precheck (交接班预检结果) — 依赖 shift_handover
+-- ============================================================
+
+CREATE TABLE handover_precheck (
+  id            UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
+  handover_id   UUID          NOT NULL
+                REFERENCES shift_handover (id) ON DELETE CASCADE,
+  check_type    VARCHAR(50)   NOT NULL,
+  check_result  precheck_result NOT NULL,
+  check_value   VARCHAR(100),
+  check_detail  JSONB,
+  created_at    TIMESTAMP     NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE handover_precheck IS '交接班预检结果 — 交接前自动检查的结果快照';
+
+COMMIT;
+```
+
+---
+
 *创建时间：2026-02-15*
-*最后更新：2026-02-16*
+*最后更新：2026-02-24*

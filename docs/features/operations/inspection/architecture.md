@@ -1168,5 +1168,303 @@ pending → processing → pending_review → closed
 
 ---
 
+## 7. Database Schema (PostgreSQL)
+
+> 后端启动时可直接使用的数据库表定义草案。基于 Section 1 数据模型生成。
+> 跨模块外键（Station, Employee/User, Equipment）使用 UUID 类型但不添加 FK 约束，由应用层保证一致性。
+
+```sql
+BEGIN;
+
+-- ============================================================
+-- ENUM TYPES
+-- ============================================================
+
+CREATE TYPE plan_status AS ENUM ('pending', 'in_progress', 'completed', 'cancelled');
+CREATE TYPE task_status_enum AS ENUM ('pending', 'in_progress', 'completed');
+CREATE TYPE check_result AS ENUM ('pending', 'normal', 'abnormal');
+CREATE TYPE check_item_category AS ENUM ('tank_area', 'dispenser', 'power_room', 'fueling_area', 'non_fuel', 'equipment');
+CREATE TYPE issue_severity_insp AS ENUM ('low', 'medium', 'high', 'urgent');
+CREATE TYPE issue_status AS ENUM ('pending', 'processing', 'pending_review', 'closed');
+CREATE TYPE photo_ref_type AS ENUM ('inspection_log', 'issue_record');
+
+-- ============================================================
+-- 1. InspectionTag（巡检标签）
+--    无内部 FK 依赖，最先创建
+-- ============================================================
+
+CREATE TABLE inspection_tag (
+    id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    name            VARCHAR(50) NOT NULL,
+    station_id      UUID        NOT NULL,   -- FK → Station（跨模块，应用层保证）
+    sort_order      INTEGER     NOT NULL DEFAULT 0,
+    usage_count     INTEGER     NOT NULL DEFAULT 0,
+    created_at      TIMESTAMP   NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMP   NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT uq_tag_station_name UNIQUE (station_id, name)
+);
+
+COMMENT ON TABLE inspection_tag IS '巡检标签 — 检查项目的一级标签分类体系';
+COMMENT ON COLUMN inspection_tag.station_id IS '所属站点（跨模块 FK → Station，应用层保证一致性）';
+
+CREATE INDEX idx_tag_station ON inspection_tag (station_id);
+CREATE INDEX idx_tag_sort    ON inspection_tag (station_id, sort_order);
+
+-- ============================================================
+-- 2. CheckItem（检查项目）
+--    依赖：无内部 FK（equipment_id 为跨模块引用）
+-- ============================================================
+
+CREATE TABLE check_item (
+    id              UUID                PRIMARY KEY DEFAULT gen_random_uuid(),
+    name            VARCHAR(200)        NOT NULL,
+    category        check_item_category NOT NULL,
+    description     TEXT,
+    station_id      UUID                NOT NULL,   -- FK → Station（跨模块，应用层保证）
+    equipment_id    UUID,                           -- FK → Equipment（跨模块 1.3，应用层保证）
+    tag_ids         JSONB,
+    sort_order      INTEGER             NOT NULL DEFAULT 0,
+    status          VARCHAR(20)         NOT NULL DEFAULT 'active',
+    created_at      TIMESTAMP           NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMP           NOT NULL DEFAULT NOW(),
+    created_by      UUID,                           -- FK → User（跨模块，应用层保证）
+
+    CONSTRAINT chk_check_item_status CHECK (status IN ('active', 'inactive'))
+);
+
+COMMENT ON TABLE check_item IS '检查项目 — 巡检的基础配置数据，定义需要检查的具体内容';
+COMMENT ON COLUMN check_item.station_id    IS '所属站点（跨模块 FK → Station，应用层保证一致性）';
+COMMENT ON COLUMN check_item.equipment_id  IS '关联设备（跨模块 FK → Equipment 1.3，应用层保证一致性）';
+COMMENT ON COLUMN check_item.created_by    IS '创建人（跨模块 FK → User，应用层保证一致性）';
+
+CREATE INDEX idx_check_item_station   ON check_item (station_id);
+CREATE INDEX idx_check_item_category  ON check_item (category);
+CREATE INDEX idx_check_item_status    ON check_item (status);
+CREATE INDEX idx_check_item_equipment ON check_item (equipment_id);
+CREATE INDEX idx_check_item_sort      ON check_item (station_id, sort_order);
+
+-- ============================================================
+-- 3. CheckItemTemplate（检查项模板）[MVP+]
+--    依赖：无内部 FK
+-- ============================================================
+
+CREATE TABLE check_item_template (
+    id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    name            VARCHAR(200)    NOT NULL,
+    station_id      UUID            NOT NULL,   -- FK → Station（跨模块，应用层保证）
+    check_item_ids  JSONB           NOT NULL,
+    description     TEXT,
+    created_at      TIMESTAMP       NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMP       NOT NULL DEFAULT NOW(),
+    created_by      UUID                        -- FK → User（跨模块，应用层保证）
+);
+
+COMMENT ON TABLE check_item_template IS '检查项模板 [MVP+] — 将多个检查项目组合为模板，方便批量添加';
+COMMENT ON COLUMN check_item_template.station_id  IS '所属站点（跨模块 FK → Station，应用层保证一致性）';
+COMMENT ON COLUMN check_item_template.created_by  IS '创建人（跨模块 FK → User，应用层保证一致性）';
+
+CREATE INDEX idx_template_station ON check_item_template (station_id);
+
+-- ============================================================
+-- 4. InspectionPlan（安检计划）
+--    依赖：无内部 FK
+-- ============================================================
+
+CREATE TABLE inspection_plan (
+    id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    plan_no         VARCHAR(32)     NOT NULL,
+    name            VARCHAR(200)    NOT NULL,
+    station_id      UUID            NOT NULL,   -- FK → Station（跨模块，应用层保证）
+    cycle_type      VARCHAR(20)     NOT NULL,
+    start_date      DATE            NOT NULL,
+    end_date        DATE            NOT NULL,
+    status          plan_status     NOT NULL DEFAULT 'pending',
+    description     TEXT,
+    check_item_ids  JSONB,
+    created_by      UUID            NOT NULL,   -- FK → User（跨模块，应用层保证）
+    created_at      TIMESTAMP       NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMP       NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT uq_plan_no      UNIQUE (plan_no),
+    CONSTRAINT chk_plan_cycle  CHECK (cycle_type IN ('daily', 'weekly', 'monthly')),
+    CONSTRAINT chk_plan_dates  CHECK (end_date >= start_date)
+);
+
+COMMENT ON TABLE inspection_plan IS '安检计划 — 巡检管理的顶层实体，定义巡检周期安排';
+COMMENT ON COLUMN inspection_plan.station_id  IS '关联站点（跨模块 FK → Station，应用层保证一致性）';
+COMMENT ON COLUMN inspection_plan.created_by  IS '创建人（跨模块 FK → User，应用层保证一致性）';
+
+CREATE INDEX idx_plan_no         ON inspection_plan (plan_no);
+CREATE INDEX idx_plan_station    ON inspection_plan (station_id);
+CREATE INDEX idx_plan_status     ON inspection_plan (status);
+CREATE INDEX idx_plan_cycle      ON inspection_plan (cycle_type);
+CREATE INDEX idx_plan_start_date ON inspection_plan (start_date);
+CREATE INDEX idx_plan_created    ON inspection_plan (created_at);
+
+-- ============================================================
+-- 5. InspectionTask（安检任务）
+--    依赖：inspection_plan (plan_id)
+-- ============================================================
+
+CREATE TABLE inspection_task (
+    id              UUID                PRIMARY KEY DEFAULT gen_random_uuid(),
+    task_no         VARCHAR(32)         NOT NULL,
+    plan_id         UUID                NOT NULL REFERENCES inspection_plan (id) ON DELETE RESTRICT,
+    station_id      UUID                NOT NULL,   -- FK → Station（跨模块，应用层保证）
+    assignee_id     UUID,                           -- FK → Employee（跨模块，应用层保证）
+    check_item_ids  JSONB               NOT NULL,
+    status          task_status_enum    NOT NULL DEFAULT 'pending',
+    due_date        DATE                NOT NULL,
+    started_at      TIMESTAMP,
+    completed_at    TIMESTAMP,
+    total_items     INTEGER             NOT NULL DEFAULT 0,
+    checked_items   INTEGER             NOT NULL DEFAULT 0,
+    normal_items    INTEGER             NOT NULL DEFAULT 0,
+    abnormal_items  INTEGER             NOT NULL DEFAULT 0,
+    remark          TEXT,
+    created_by      UUID                NOT NULL,   -- FK → User（跨模块，应用层保证）
+    created_at      TIMESTAMP           NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMP           NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT uq_task_no UNIQUE (task_no),
+    CONSTRAINT chk_task_checked_sum CHECK (checked_items = normal_items + abnormal_items),
+    CONSTRAINT chk_task_checked_le_total CHECK (checked_items <= total_items),
+    CONSTRAINT chk_task_total_nonneg CHECK (total_items >= 0),
+    CONSTRAINT chk_task_items_nonneg CHECK (checked_items >= 0 AND normal_items >= 0 AND abnormal_items >= 0)
+);
+
+COMMENT ON TABLE inspection_task IS '安检任务 — 从安检计划下发的具体执行单元';
+COMMENT ON COLUMN inspection_task.station_id   IS '所属站点（跨模块 FK → Station，应用层保证一致性）';
+COMMENT ON COLUMN inspection_task.assignee_id  IS '执行人（跨模块 FK → Employee，应用层保证一致性）';
+COMMENT ON COLUMN inspection_task.created_by   IS '创建人（跨模块 FK → User，应用层保证一致性）';
+
+CREATE INDEX idx_task_no       ON inspection_task (task_no);
+CREATE INDEX idx_task_plan     ON inspection_task (plan_id);
+CREATE INDEX idx_task_station  ON inspection_task (station_id);
+CREATE INDEX idx_task_assignee ON inspection_task (assignee_id);
+CREATE INDEX idx_task_status   ON inspection_task (status);
+CREATE INDEX idx_task_due_date ON inspection_task (due_date);
+CREATE INDEX idx_task_created  ON inspection_task (created_at);
+
+-- ============================================================
+-- 6. InspectionLog（巡检日志/执行记录）
+--    依赖：inspection_task (task_id), check_item (check_item_id)
+-- ============================================================
+
+CREATE TABLE inspection_log (
+    id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    task_id         UUID            NOT NULL REFERENCES inspection_task (id) ON DELETE CASCADE,
+    check_item_id   UUID            NOT NULL REFERENCES check_item (id) ON DELETE RESTRICT,
+    station_id      UUID            NOT NULL,   -- FK → Station（跨模块，应用层保证）
+    executor_id     UUID            NOT NULL,   -- FK → Employee（跨模块，应用层保证）
+    result          check_result    NOT NULL DEFAULT 'pending',
+    remark          TEXT,
+    executed_at     TIMESTAMP,
+    created_at      TIMESTAMP       NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMP       NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT uq_log_task_item UNIQUE (task_id, check_item_id)
+);
+
+COMMENT ON TABLE inspection_log IS '巡检日志 — 记录每个检查项的执行结果明细';
+COMMENT ON COLUMN inspection_log.station_id   IS '所属站点（跨模块 FK → Station，应用层保证一致性）';
+COMMENT ON COLUMN inspection_log.executor_id  IS '执行人（跨模块 FK → Employee，应用层保证一致性）';
+
+CREATE INDEX idx_log_task       ON inspection_log (task_id);
+CREATE INDEX idx_log_check_item ON inspection_log (check_item_id);
+CREATE INDEX idx_log_station    ON inspection_log (station_id);
+CREATE INDEX idx_log_executor   ON inspection_log (executor_id);
+CREATE INDEX idx_log_result     ON inspection_log (result);
+CREATE INDEX idx_log_executed   ON inspection_log (executed_at);
+-- idx_log_task_item 已通过 UNIQUE 约束 uq_log_task_item 自动创建
+
+-- ============================================================
+-- 7. IssueRecord（问题记录）
+--    依赖：inspection_task (task_id), inspection_log (log_id),
+--          check_item (check_item_id)
+-- ============================================================
+
+CREATE TABLE issue_record (
+    id                      UUID                PRIMARY KEY DEFAULT gen_random_uuid(),
+    issue_no                VARCHAR(32)         NOT NULL,
+    station_id              UUID                NOT NULL,   -- FK → Station（跨模块，应用层保证）
+    task_id                 UUID                REFERENCES inspection_task (id) ON DELETE SET NULL,
+    log_id                  UUID                REFERENCES inspection_log (id) ON DELETE SET NULL,
+    check_item_id           UUID                REFERENCES check_item (id) ON DELETE SET NULL,
+    equipment_id            UUID,                           -- FK → Equipment（跨模块 1.3，应用层保证）
+    description             TEXT                NOT NULL,
+    severity                issue_severity_insp NOT NULL DEFAULT 'medium',
+    status                  issue_status        NOT NULL DEFAULT 'pending',
+    reporter_id             UUID                NOT NULL,   -- FK → Employee（跨模块，应用层保证）
+    assignee_id             UUID,                           -- FK → Employee（跨模块，应用层保证）
+    assigned_at             TIMESTAMP,
+    assigned_by             UUID,                           -- FK → User（跨模块，应用层保证）
+    rectification           TEXT,
+    rectification_result    TEXT,
+    rectified_at            TIMESTAMP,
+    reviewer_id             UUID,                           -- FK → User（跨模块，应用层保证）
+    reviewed_at             TIMESTAMP,
+    review_comment          TEXT,
+    due_date                DATE,
+    created_at              TIMESTAMP           NOT NULL DEFAULT NOW(),
+    updated_at              TIMESTAMP           NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT uq_issue_no UNIQUE (issue_no)
+);
+
+COMMENT ON TABLE issue_record IS '问题记录 — 巡检中发现的问题，独立生命周期管理，支持全流程闭环';
+COMMENT ON COLUMN issue_record.station_id    IS '所属站点（跨模块 FK → Station，应用层保证一致性）';
+COMMENT ON COLUMN issue_record.equipment_id  IS '关联设备（跨模块 FK → Equipment 1.3，应用层保证一致性）';
+COMMENT ON COLUMN issue_record.reporter_id   IS '登记人（跨模块 FK → Employee，应用层保证一致性）';
+COMMENT ON COLUMN issue_record.assignee_id   IS '处理人（跨模块 FK → Employee，应用层保证一致性）';
+COMMENT ON COLUMN issue_record.assigned_by   IS '分配人（跨模块 FK → User，应用层保证一致性）';
+COMMENT ON COLUMN issue_record.reviewer_id   IS '闭环审核人（跨模块 FK → User，应用层保证一致性）';
+
+CREATE INDEX idx_issue_no       ON issue_record (issue_no);
+CREATE INDEX idx_issue_station  ON issue_record (station_id);
+CREATE INDEX idx_issue_task     ON issue_record (task_id);
+CREATE INDEX idx_issue_status   ON issue_record (status);
+CREATE INDEX idx_issue_severity ON issue_record (severity);
+CREATE INDEX idx_issue_assignee ON issue_record (assignee_id);
+CREATE INDEX idx_issue_reporter ON issue_record (reporter_id);
+CREATE INDEX idx_issue_due_date ON issue_record (due_date);
+CREATE INDEX idx_issue_created  ON issue_record (created_at);
+
+-- ============================================================
+-- 8. InspectionPhoto（巡检照片）
+--    依赖：通过 (ref_type, ref_id) 多态关联 inspection_log / issue_record
+--    不使用 FK，由应用层保证引用完整性
+-- ============================================================
+
+CREATE TABLE inspection_photo (
+    id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    ref_type        photo_ref_type  NOT NULL,
+    ref_id          UUID            NOT NULL,
+    file_url        VARCHAR(500)    NOT NULL,
+    file_name       VARCHAR(255)    NOT NULL,
+    file_size       INTEGER,
+    mime_type       VARCHAR(50),
+    sort_order      INTEGER         NOT NULL DEFAULT 0,
+    uploaded_at     TIMESTAMP       NOT NULL DEFAULT NOW(),
+    uploaded_by     UUID,                           -- FK → User（跨模块，应用层保证）
+
+    CONSTRAINT chk_photo_mime   CHECK (mime_type IN ('image/jpeg', 'image/png')),
+    CONSTRAINT chk_photo_size   CHECK (file_size IS NULL OR (file_size > 0 AND file_size <= 5242880))
+);
+
+COMMENT ON TABLE inspection_photo IS '巡检照片 — 巡检执行和问题整改的照片附件（多态关联）';
+COMMENT ON COLUMN inspection_photo.ref_type     IS '关联类型：inspection_log 或 issue_record';
+COMMENT ON COLUMN inspection_photo.ref_id       IS '关联 ID（InspectionLog.id 或 IssueRecord.id，应用层保证引用完整性）';
+COMMENT ON COLUMN inspection_photo.uploaded_by  IS '上传人（跨模块 FK → User，应用层保证一致性）';
+
+CREATE INDEX idx_photo_ref ON inspection_photo (ref_type, ref_id);
+
+COMMIT;
+```
+
+---
+
 *文档生成时间：2026-02-19*
+*最后更新：2026-02-24*
 *生成依据：AGENT-PLAN Step 4（架构设计）*
