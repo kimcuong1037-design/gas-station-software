@@ -8,7 +8,8 @@
 - **后端准备工作：✅ 完成**（跨模块 ERD + PostgreSQL Schema 草案 + API 路径一致性修复）
 - **流程体系升级：✅ 完成**（agent-plan v1.5 + architecture skill v1.2 + Phase 1 复盘）
 - **阶段 2（能源交易）：🔧 进行中**
-  - 2.1 价格管理 ✅ (3.94) — 前端 UI 完成 + UI 评审修复
+  - 2.1 价格管理 ✅ (3.94) — 前端 UI 完成 + UI 评审修复 + P1 补充修复（RequirementTag/scroll.x/侧边栏对齐）
+- **流程体系升级：** ui-eval 新增跨模块一致性检查 + AGENT-PLAN §7 RequirementTag Protocol
 - 阶段 2.2~7 尚未启动。
 
 # 项目进展追踪（Progress Tracker）
@@ -25,6 +26,51 @@
 ---
 
 ## 进展记录
+
+### 2026-02-25（P1 补充修复 + 侧边栏对齐修复 + 流程体系更新）
+
+#### 用户报告问题修复
+
+**侧边栏菜单对齐不一致（能源交易 vs 基础运营）：**
+- **现象**：左侧导航栏中「能源交易」下的二级菜单项与「基础运营」下的二级菜单项缩进不一致（差异 ~24px）
+- **根因**：基础运营使用 3 级菜单（Domain → Sub-group → Leaf），能源交易使用 2 级菜单（Domain → Leaf）。Ant Design `<Menu mode="inline">` 按嵌套深度自动添加 `padding-left`
+- **修复**：
+  1. `AppLayout.tsx` — 在「能源交易」下新增「价格管理」中间子菜单，统一为 3 级结构
+  2. `AppLayout.tsx` — `defaultOpenKeys` 新增 `'/energy-trade/price-management'`
+  3. `AppLayout.tsx` — 面包屑中间层从「价格总览」改为「价格管理」
+  4. `zh-CN/index.ts` + `en-US/index.ts` — 新增 `priceManagement` i18n key
+
+#### P1 补充修复（从前一 session 遗留）
+
+- **RequirementTag**：全部 7 个价格管理页面添加 `<RequirementTag>` 组件，含正确 componentId
+- **Table scroll.x**：全部 6 个含明确列宽的表格添加 `scroll={{ x }}`
+- **RequirementTag.tsx**：price-management 模块注册（import userStoryMapping + 合并到 allMappings）
+
+#### 流程体系更新
+
+- **`docs/skills/ui/ui-eval.md`**：维度 1（视觉保真度）新增「跨模块视觉一致性检查」子节
+  - 5 项检查：侧边栏层级深度、面包屑命名模式、Table scroll.x、Badge/Tag 样式、页面 Header 布局
+  - 新模块上线前必须与已有模块对比验证
+- **`docs/AGENT-PLAN.md`** v1.5 → v1.6：新增 §7 RequirementTag Protocol
+  - 集成三步法（创建 mapping → 注册到 RequirementTag.tsx → 页面添加 Tag）
+  - 验证命令 + 已注册模块列表
+- **`docs/CORRECTIONS.md`**：新增纠错条目「左侧导航栏二级菜单对齐不一致」
+  - 原因分析 + 经验总结（3 条预防规则）
+
+#### 影响文件汇总（14 个文件，+230/-68 行）
+
+| 类别 | 文件 | 变更 |
+|------|------|------|
+| 布局 | `AppLayout.tsx` | 菜单重构 + 面包屑 + defaultOpenKeys |
+| i18n | `zh-CN/index.ts`, `en-US/index.ts` | +priceManagement key |
+| 组件 | `RequirementTag.tsx` | +price-management 模块注册 |
+| 页面 | 7 个 price-management 页面 | +RequirementTag + scroll.x |
+| 文档 | `AGENT-PLAN.md`, `ui-eval.md`, `CORRECTIONS.md` | 流程更新 |
+
+#### Commit：`32d6f6c`
+- 构建验证：✅ `tsc + vite` 零错误
+
+---
 
 ### 2026-02-24（Phase 2 模块 2.1 价格管理 — 前端 UI 完整交付）
 
@@ -444,7 +490,7 @@
 
 ---
 
-## 下次继续的起点（2026-02-24 CST）
+## 下次继续的起点（2026-02-25 CST）
 
 ### 当前状态总结
 
@@ -461,14 +507,20 @@
 
 | 模块 | UI 评分 | P1 | US 覆盖率 | 状态 |
 |------|---------|-----|-----------|------|
-| 2.1 价格管理 | 3.94 | 0 | 70.6% (12/17) | ✅ 前端 UI 交付，待用户 review |
+| 2.1 价格管理 | 3.94 | 0 | 70.6% (12/17) | ✅ 前端 UI 交付 + P1 补充修复完成 |
 | 2.2 订单与交易 | - | - | - | 未启动 |
 | 2.3 库存管理 | - | - | - | 未启动 |
 
-### 下一步
+**流程体系：** agent-plan v1.6 + ui-eval 跨模块一致性检查 + RequirementTag Protocol
 
-1. **用户 review 模块 2.1 价格管理** — 等待反馈后进行修复迭代
-2. **启动模块 2.2 订单与交易** — 按 agent-plan v1.5 流程推进
+### 下一步建议（与用户确认）
+
+1. **更新 ROADMAP.md** — 进度跟踪表仍显示 Phase 2 为「☐ 未开始」，需更新为「🔧 进行中」并标记 2.1 完成
+2. **启动模块 2.2 订单与交易** — 按 agent-plan v1.6 流程推进
+   - 子模块：充装记录、订单流、支付处理、异常处理
+   - 第一步：检查 `docs/features/energy-trade/order-transaction/` 是否已有文档
+3. **Phase 1 遗留 scroll.x 批量修复**（低成本）— ~10 个旧模块表格缺少 `scroll={{ x }}`（inspection: 6, device-ledger: 2, station: 1, shift-handover: 1）
+4. **API Docs 同步检查** — 验证价格管理模块的 API 数据是否已添加到 `apiData.ts`
 
 ---
 
