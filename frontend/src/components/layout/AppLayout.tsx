@@ -167,47 +167,54 @@ const AppLayout: React.FC = () => {
       children: [
         {
           key: '/energy-trade/price-management',
-          icon: <DashboardOutlined />,
-          label: t('menu.priceOverview', '价格总览'),
-        },
-        {
-          key: '/energy-trade/price-management/history',
-          icon: <HistoryOutlined />,
-          label: t('menu.priceHistory', '调价历史'),
-        },
-        {
-          key: '/energy-trade/price-management/board',
           icon: <FundViewOutlined />,
-          label: t('menu.priceBoard', '价格公示'),
-        },
-        {
-          key: '/energy-trade/price-management/approvals',
-          icon: <AuditOutlined />,
-          label: (
-            <span>
-              {t('menu.priceApproval', '调价审批')}
-              {priceAdjustments.filter(a => a.status === 'pending_approval').length > 0 && (
-                <span style={{ marginLeft: 8, display: 'inline-block', minWidth: 18, height: 18, lineHeight: '18px', borderRadius: 9, background: '#ff4d4f', color: '#fff', fontSize: 11, textAlign: 'center', padding: '0 5px' }}>
-                  {priceAdjustments.filter(a => a.status === 'pending_approval').length}
+          label: t('menu.priceManagement', '价格管理'),
+          children: [
+            {
+              key: '/energy-trade/price-management',
+              icon: <DashboardOutlined />,
+              label: t('menu.priceOverview', '价格总览'),
+            },
+            {
+              key: '/energy-trade/price-management/history',
+              icon: <HistoryOutlined />,
+              label: t('menu.priceHistory', '调价历史'),
+            },
+            {
+              key: '/energy-trade/price-management/board',
+              icon: <FundViewOutlined />,
+              label: t('menu.priceBoard', '价格公示'),
+            },
+            {
+              key: '/energy-trade/price-management/approvals',
+              icon: <AuditOutlined />,
+              label: (
+                <span>
+                  {t('menu.priceApproval', '调价审批')}
+                  {priceAdjustments.filter(a => a.status === 'pending_approval').length > 0 && (
+                    <span style={{ marginLeft: 8, display: 'inline-block', minWidth: 18, height: 18, lineHeight: '18px', borderRadius: 9, background: '#ff4d4f', color: '#fff', fontSize: 11, textAlign: 'center', padding: '0 5px' }}>
+                      {priceAdjustments.filter(a => a.status === 'pending_approval').length}
+                    </span>
+                  )}
                 </span>
-              )}
-            </span>
-          ),
-        },
-        {
-          key: '/energy-trade/price-management/member-prices',
-          icon: <TeamOutlined />,
-          label: t('menu.memberPrices', '会员专享价'),
-        },
-        {
-          key: '/energy-trade/price-management/agreements',
-          icon: <FileSearchOutlined />,
-          label: t('menu.priceAgreements', '价格协议'),
-        },
-        {
-          key: '/energy-trade/price-management/settings',
-          icon: <SettingOutlined />,
-          label: t('menu.priceSettings', '价格设置'),
+              ),
+            },
+            {
+              key: '/energy-trade/price-management/member-prices',
+              icon: <TeamOutlined />,
+              label: t('menu.memberPrices', '会员专享价'),
+            },
+            {
+              key: '/energy-trade/price-management/agreements',
+              icon: <FileSearchOutlined />,
+              label: t('menu.priceAgreements', '价格协议'),
+            },
+            {
+              key: '/energy-trade/price-management/settings',
+              icon: <SettingOutlined />,
+              label: t('menu.priceSettings', '价格设置'),
+            },
+          ],
         },
       ],
     },
@@ -408,7 +415,7 @@ const AppLayout: React.FC = () => {
       });
       if (pathSegments.includes('price-management')) {
         items.push({
-          title: t('menu.priceOverview', '价格总览') as string,
+          title: t('menu.priceManagement', '价格管理') as string,
           onClick: () => navigate('/energy-trade/price-management'),
           className: 'breadcrumb-link'
         });
@@ -464,7 +471,7 @@ const AppLayout: React.FC = () => {
         <Menu
           mode="inline"
           selectedKeys={getSelectedKeys()}
-          defaultOpenKeys={['/operations', '/operations/shift-handover', '/operations/device-ledger', '/operations/inspection', '/energy-trade']}
+          defaultOpenKeys={['/operations', '/operations/shift-handover', '/operations/device-ledger', '/operations/inspection', '/energy-trade', '/energy-trade/price-management']}
           items={menuItems}
           onClick={handleMenuClick}
         />

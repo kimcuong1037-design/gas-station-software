@@ -26,6 +26,7 @@ import {
   ADJUSTMENT_TYPE_CONFIG,
   getLabel,
 } from '../constants';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -160,12 +161,15 @@ const ApprovalList: React.FC = () => {
   return (
     <div style={{ padding: 24 }}>
       <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-        <Title level={4} style={{ margin: 0 }}>
-          {t('price.approval.title', '调价审批')}
-          {pendingData.length > 0 && (
-            <Tag color="red" style={{ marginLeft: 8 }}>{pendingData.length}</Tag>
-          )}
-        </Title>
+        <Space align="center">
+          <Title level={4} style={{ margin: 0 }}>
+            {t('price.approval.title', '调价审批')}
+            {pendingData.length > 0 && (
+              <Tag color="red" style={{ marginLeft: 8 }}>{pendingData.length}</Tag>
+            )}
+          </Title>
+          <RequirementTag componentIds={['approval-list']} module="price-management" showDetail />
+        </Space>
       </Row>
 
       <Card>
@@ -173,6 +177,7 @@ const ApprovalList: React.FC = () => {
           columns={columns}
           dataSource={pendingData}
           rowKey="id"
+          scroll={{ x: 1230 }}
           pagination={false}
           locale={{
             emptyText: (

@@ -23,6 +23,7 @@ import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { priceDefenseConfigs } from '../../../../mock/priceManagement';
 import type { PriceDefenseConfig } from '../types';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title, Text } = Typography;
 
@@ -120,11 +121,12 @@ const PriceSettings: React.FC = () => {
   return (
     <div style={{ padding: 24 }}>
       <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-        <Space>
+        <Space align="center">
           <SettingOutlined />
           <Title level={4} style={{ margin: 0 }}>
             {t('price.settings.title', '价格设置')}
           </Title>
+          <RequirementTag componentIds={['defense-config-view', 'defense-config-edit']} module="price-management" showDetail />
         </Space>
       </Row>
 
@@ -197,6 +199,7 @@ const PriceSettings: React.FC = () => {
           columns={configColumns}
           dataSource={[...stationConfigs, ...fuelConfigs]}
           rowKey="id"
+          scroll={{ x: 970 }}
           pagination={false}
           locale={{
             emptyText: <div style={{ padding: 40 }}><Text type="secondary">{t('price.settings.empty', '暂无自定义配置')}</Text></div>,

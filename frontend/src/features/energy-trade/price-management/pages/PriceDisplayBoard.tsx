@@ -7,6 +7,7 @@ import { ClockCircleOutlined, ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { getPriceBoardData } from '../../../../mock/priceManagement';
 import type { PriceBoardItem } from '../types';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title, Text } = Typography;
 
@@ -31,9 +32,12 @@ const PriceDisplayBoard: React.FC = () => {
   return (
     <div style={{ padding: 24 }}>
       <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-        <Title level={4} style={{ margin: 0 }}>
-          {t('price.board.title', '价格公示看板')}
-        </Title>
+        <Space align="center">
+          <Title level={4} style={{ margin: 0 }}>
+            {t('price.board.title', '价格公示看板')}
+          </Title>
+          <RequirementTag componentIds={['price-board']} module="price-management" showDetail />
+        </Space>
         <Space>
           <ClockCircleOutlined />
           <Text type="secondary">

@@ -77,6 +77,7 @@ export default {
     maintenanceOrders: '维保工单',
     deviceConnectivity: '设备连接',
     energyTrade: '能源交易',
+    priceManagement: '价格管理',
     priceOverview: '价格总览',
     priceHistory: '调价历史',
     priceBoard: '价格公示',

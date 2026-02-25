@@ -39,6 +39,7 @@ import {
   PRICE_STATUS_CONFIG,
   getLabel,
 } from '../constants';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title, Text } = Typography;
 
@@ -337,9 +338,12 @@ const PriceOverview: React.FC = () => {
   return (
     <div style={{ padding: 24 }}>
       <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-        <Title level={4} style={{ margin: 0 }}>
-          {t('price.overview.title', '价格总览')}
-        </Title>
+        <Space align="center">
+          <Title level={4} style={{ margin: 0 }}>
+            {t('price.overview.title', '价格总览')}
+          </Title>
+          <RequirementTag componentIds={['price-overview', 'fuel-type-adjust', 'nozzle-override', 'nozzle-restore']} module="price-management" showDetail />
+        </Space>
       </Row>
 
       {/* Stat Cards */}
@@ -408,6 +412,7 @@ const PriceOverview: React.FC = () => {
           dataSource={overviewData.fuelTypePrices}
           rowKey="id"
           loading={loading}
+          scroll={{ x: 960 }}
           expandable={{
             expandedRowRender,
             rowExpandable: (record) => record.nozzles.length > 0,

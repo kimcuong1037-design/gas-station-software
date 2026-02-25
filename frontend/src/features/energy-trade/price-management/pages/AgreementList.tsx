@@ -27,6 +27,7 @@ import dayjs from 'dayjs';
 import { priceAgreements } from '../../../../mock/priceManagement';
 import type { PriceAgreement } from '../types';
 import { AGREEMENT_STATUS_CONFIG, getLabel } from '../constants';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title, Text } = Typography;
 
@@ -160,11 +161,12 @@ const AgreementList: React.FC = () => {
   return (
     <div style={{ padding: 24 }}>
       <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-        <Space>
+        <Space align="center">
           <Title level={4} style={{ margin: 0 }}>
             {t('price.agreement.title', '价格协议')}
           </Title>
           <Tag color="blue">MVP+</Tag>
+          <RequirementTag componentIds={['agreement-list', 'agreement-form']} module="price-management" showDetail />
         </Space>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => message.info(t('common.comingSoon', '功能即将上线'))}>
           {t('price.agreement.add', '新增协议')}
@@ -193,6 +195,7 @@ const AgreementList: React.FC = () => {
           columns={columns}
           dataSource={filteredData}
           rowKey="id"
+          scroll={{ x: 1030 }}
           pagination={{
             defaultPageSize: 20,
             showSizeChanger: true,

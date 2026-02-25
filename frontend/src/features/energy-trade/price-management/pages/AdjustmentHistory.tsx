@@ -31,6 +31,7 @@ import {
   ADJUSTMENT_TYPE_CONFIG,
   getLabel,
 } from '../constants';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -192,9 +193,12 @@ const AdjustmentHistory: React.FC = () => {
   return (
     <div style={{ padding: 24 }}>
       <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-        <Title level={4} style={{ margin: 0 }}>
-          {t('price.history.title', '调价历史')}
-        </Title>
+        <Space align="center">
+          <Title level={4} style={{ margin: 0 }}>
+            {t('price.history.title', '调价历史')}
+          </Title>
+          <RequirementTag componentIds={['adjustment-history', 'adjustment-detail', 'adjustment-export']} module="price-management" showDetail />
+        </Space>
         <Button icon={<ExportOutlined />} onClick={handleExport}>
           {t('common.export', '导出')}
         </Button>
@@ -237,6 +241,7 @@ const AdjustmentHistory: React.FC = () => {
           columns={columns}
           dataSource={filteredData}
           rowKey="id"
+          scroll={{ x: 1010 }}
           pagination={{
             defaultPageSize: 20,
             showSizeChanger: true,

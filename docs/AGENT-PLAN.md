@@ -1,8 +1,8 @@
 # Agent 结构计划 (Agent Architecture Plan)
 
 **项目：** 加气站运营管理系统
-**版本：** 1.5
-**更新日期：** 2026-02-24
+**版本：** 1.6
+**更新日期：** 2026-02-25
 
 ---
 
@@ -266,8 +266,10 @@
             ☐ 路由注册（router.tsx 中已添加模块路由）
             ☐ 导航菜单（AppLayout 侧边栏已添加入口）
             ☐ i18n 翻译完整（中英文 key 无遗漏）
-            ☐ RequirementTag 已关联（所有页面组件标注需求来源）
-            ☐ userStoryMapping.ts 已更新（覆盖所有 User Story）
+            ☐ 需求追踪集成（RequirementTag Protocol，详见 §7）：
+              ☐ a. userStoryMapping.ts 已创建且覆盖所有 User Story
+              ☐ b. RequirementTag.tsx 已 import 新模块的 mapping 并注册到 moduleStories
+              ☐ c. 每个页面组件的标题区域已添加 <RequirementTag> 并关联正确的 componentIds
             ☐ PostgreSQL Schema 草案已包含在 architecture.md 中
             ☐ cross-module-erd.md 已更新（新模块实体 + 跨模块 FK）
             ☐ API Docs 页面数据同步更新（apiData.ts）
@@ -420,6 +422,83 @@ docs/skills/
 
 ---
 
+## 7. RequirementTag 需求追踪协议
+
+### 7.1 目的
+
+确保每个前端页面组件都可追溯到其对应的 User Story，提供从需求 → 用户故事 → UI 组件的完整链路。此机制仅在开发模式下可见（`devOnly=true`），不影响生产构建。
+
+### 7.2 集成三步法（每个新模块必须执行）
+
+#### Step 1: 创建 userStoryMapping.ts
+
+在模块目录下创建映射文件，覆盖该模块所有 User Story：
+
+```
+frontend/src/features/{domain}/{module}/userStoryMapping.ts
+```
+
+每个条目包含：
+- `us`: User Story ID 数组（如 `['US-001']`）
+- `desc`: 功能描述
+- `priority`: `'MVP' | 'MVP+' | 'PROD' | 'FUTURE'`
+- `status`: `'implemented' | 'partial' | 'planned' | 'not-planned'`
+
+#### Step 2: 注册到 RequirementTag.tsx
+
+在 `frontend/src/components/RequirementTag.tsx` 中：
+1. **Import** 新模块的映射：`import { xxxUserStories } from '../features/{domain}/{module}/userStoryMapping';`
+2. **Spread** 到 `allUserStories` 对象
+3. **注册** 到 `moduleStories` 对象，key 为模块短名（如 `'price-management'`）
+
+#### Step 3: 在页面组件中添加标记
+
+每个页面组件的标题区域添加 `<RequirementTag>`：
+
+```tsx
+import { RequirementTag } from '../../../../components/RequirementTag';
+
+// 在页面标题旁
+<Space align="center">
+  <Title level={4} style={{ margin: 0 }}>页面标题</Title>
+  <RequirementTag
+    componentIds={['component-id-1', 'component-id-2']}
+    module="module-short-name"
+    showDetail
+  />
+</Space>
+```
+
+**componentIds 选择原则：** 包含该页面实现或承载的所有 userStoryMapping 条目 ID。
+
+### 7.3 验证方法
+
+交付时用以下命令快速验证：
+
+```bash
+# 检查模块页面文件是否都包含 RequirementTag
+grep -rL "RequirementTag" frontend/src/features/{domain}/{module}/pages/*.tsx
+
+# 检查 RequirementTag.tsx 是否已注册新模块
+grep "{module}UserStories" frontend/src/components/RequirementTag.tsx
+```
+
+如有文件缺失则交付不通过。
+
+### 7.4 已注册模块清单
+
+| 模块 | moduleStories Key | 映射文件路径 | 页面数 |
+|------|-------------------|-------------|--------|
+| 站点管理 | `station` | `features/operations/station/userStoryMapping.ts` | - |
+| 交接班 | `shift-handover` | `features/operations/shift-handover/userStoryMapping.ts` | - |
+| 设备台账 | `device-ledger` | `features/operations/device-ledger/userStoryMapping.ts` | - |
+| 巡检安检 | `inspection` | `features/operations/inspection/userStoryMapping.ts` | 17 |
+| 价格管理 | `price-management` | `features/energy-trade/price-management/userStoryMapping.ts` | 7 |
+
+> **新模块上线时务必更新此清单。**
+
+---
+
 *创建时间：2026-02-07*
-*最后更新：2026-02-24*
-*版本：1.5*
+*最后更新：2026-02-25*
+*版本：1.6*

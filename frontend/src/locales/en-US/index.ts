@@ -77,6 +77,7 @@ export default {
     maintenanceOrders: 'Maintenance Orders',
     deviceConnectivity: 'Device Connectivity',
     energyTrade: 'Energy Trade',
+    priceManagement: 'Price Management',
     priceOverview: 'Price Overview',
     priceHistory: 'Adjustment History',
     priceBoard: 'Price Board',

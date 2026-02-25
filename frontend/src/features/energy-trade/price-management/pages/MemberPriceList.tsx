@@ -23,6 +23,7 @@ import {
   PRICE_STATUS_CONFIG,
   getLabel,
 } from '../constants';
+import { RequirementTag } from '../../../../components/RequirementTag';
 
 const { Title, Text } = Typography;
 
@@ -152,11 +153,12 @@ const MemberPriceList: React.FC = () => {
   return (
     <div style={{ padding: 24 }}>
       <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-        <Space>
+        <Space align="center">
           <Title level={4} style={{ margin: 0 }}>
             {t('price.member.title', '会员专享价')}
           </Title>
           <Tag color="blue">MVP+</Tag>
+          <RequirementTag componentIds={['member-price-list', 'member-price-edit']} module="price-management" showDetail />
         </Space>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => message.info(t('common.comingSoon', '功能即将上线'))}>
           {t('price.member.add', '新增规则')}
@@ -178,6 +180,7 @@ const MemberPriceList: React.FC = () => {
           columns={columns}
           dataSource={filteredData}
           rowKey="id"
+          scroll={{ x: 890 }}
           pagination={{
             defaultPageSize: 20,
             showSizeChanger: true,
