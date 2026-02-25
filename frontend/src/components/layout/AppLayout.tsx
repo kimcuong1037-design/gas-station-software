@@ -21,11 +21,17 @@ import {
   BugOutlined,
   FileTextOutlined,
   BarChartOutlined,
+  DollarOutlined,
+  FundViewOutlined,
+  TeamOutlined,
+  FileSearchOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { stations } from '../../mock/stations';
 import { issueRecords } from '../../mock/inspections';
+import { priceAdjustments } from '../../mock/priceManagement';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
@@ -154,6 +160,57 @@ const AppLayout: React.FC = () => {
         },
       ],
     },
+    {
+      key: '/energy-trade',
+      icon: <DollarOutlined />,
+      label: t('menu.energyTrade', '能源交易'),
+      children: [
+        {
+          key: '/energy-trade/price-management',
+          icon: <DashboardOutlined />,
+          label: t('menu.priceOverview', '价格总览'),
+        },
+        {
+          key: '/energy-trade/price-management/history',
+          icon: <HistoryOutlined />,
+          label: t('menu.priceHistory', '调价历史'),
+        },
+        {
+          key: '/energy-trade/price-management/board',
+          icon: <FundViewOutlined />,
+          label: t('menu.priceBoard', '价格公示'),
+        },
+        {
+          key: '/energy-trade/price-management/approvals',
+          icon: <AuditOutlined />,
+          label: (
+            <span>
+              {t('menu.priceApproval', '调价审批')}
+              {priceAdjustments.filter(a => a.status === 'pending_approval').length > 0 && (
+                <span style={{ marginLeft: 8, display: 'inline-block', minWidth: 18, height: 18, lineHeight: '18px', borderRadius: 9, background: '#ff4d4f', color: '#fff', fontSize: 11, textAlign: 'center', padding: '0 5px' }}>
+                  {priceAdjustments.filter(a => a.status === 'pending_approval').length}
+                </span>
+              )}
+            </span>
+          ),
+        },
+        {
+          key: '/energy-trade/price-management/member-prices',
+          icon: <TeamOutlined />,
+          label: t('menu.memberPrices', '会员专享价'),
+        },
+        {
+          key: '/energy-trade/price-management/agreements',
+          icon: <FileSearchOutlined />,
+          label: t('menu.priceAgreements', '价格协议'),
+        },
+        {
+          key: '/energy-trade/price-management/settings',
+          icon: <SettingOutlined />,
+          label: t('menu.priceSettings', '价格设置'),
+        },
+      ],
+    },
   ];
 
   const handleMenuClick = (e: { key: string }) => {
@@ -185,11 +242,12 @@ const AppLayout: React.FC = () => {
     ],
   };
 
-  // Check if on shift-handover, device-ledger, or inspection pages to show station selector
+  // Check if on pages that need station selector
   const isShiftHandoverPage = location.pathname.startsWith('/operations/shift-handover');
   const isDeviceLedgerPage = location.pathname.startsWith('/operations/device-ledger');
   const isInspectionPage = location.pathname.startsWith('/operations/inspection');
-  const showStationSelector = isShiftHandoverPage || isDeviceLedgerPage || isInspectionPage;
+  const isPriceManagementPage = location.pathname.startsWith('/energy-trade/price-management');
+  const showStationSelector = isShiftHandoverPage || isDeviceLedgerPage || isInspectionPage || isPriceManagementPage;
 
   // 生成当前路径的面包屑
   const getBreadcrumbItems = () => {
@@ -342,7 +400,34 @@ const AppLayout: React.FC = () => {
         }
       }
     }
-    
+    if (pathSegments.includes('energy-trade')) {
+      items.push({
+        title: t('menu.energyTrade', '能源交易') as string,
+        onClick: () => navigate('/energy-trade'),
+        className: 'breadcrumb-link'
+      });
+      if (pathSegments.includes('price-management')) {
+        items.push({
+          title: t('menu.priceOverview', '价格总览') as string,
+          onClick: () => navigate('/energy-trade/price-management'),
+          className: 'breadcrumb-link'
+        });
+        if (pathSegments.includes('history')) {
+          items.push({ title: t('menu.priceHistory', '调价历史') as string });
+        } else if (pathSegments.includes('board')) {
+          items.push({ title: t('menu.priceBoard', '价格公示') as string });
+        } else if (pathSegments.includes('approvals')) {
+          items.push({ title: t('menu.priceApproval', '调价审批') as string });
+        } else if (pathSegments.includes('member-prices')) {
+          items.push({ title: t('menu.memberPrices', '会员专享价') as string });
+        } else if (pathSegments.includes('agreements')) {
+          items.push({ title: t('menu.priceAgreements', '价格协议') as string });
+        } else if (pathSegments.includes('settings')) {
+          items.push({ title: t('menu.priceSettings', '价格设置') as string });
+        }
+      }
+    }
+
     return items;
   };
 
@@ -379,7 +464,7 @@ const AppLayout: React.FC = () => {
         <Menu
           mode="inline"
           selectedKeys={getSelectedKeys()}
-          defaultOpenKeys={['/operations', '/operations/shift-handover', '/operations/device-ledger', '/operations/inspection']}
+          defaultOpenKeys={['/operations', '/operations/shift-handover', '/operations/device-ledger', '/operations/inspection', '/energy-trade']}
           items={menuItems}
           onClick={handleMenuClick}
         />

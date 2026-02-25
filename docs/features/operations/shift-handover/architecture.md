@@ -25,7 +25,7 @@
 | `received_by` | `UUID` | FK → Employee | 接班人（员工ID，接班前为NULL） |
 | `status` | `VARCHAR(20)` | NOT NULL, DEFAULT 'initiated' | 状态：initiated/pending_review/completed/cancelled |
 | `is_forced` | `BOOLEAN` | NOT NULL, DEFAULT FALSE | 是否强制交接 |
-| `forced_by` | `UUID` | FK → User | 强制交接审批人 |
+| `forced_by` | `UUID` | FK → User | 强制交接审批人 ⚠️ Phase 7 依赖（9.5 审批流程引擎） |
 | `forced_reason` | `TEXT` | | 强制交接原因 |
 | `remarks` | `TEXT` | | 交接备注 |
 | `created_at` | `TIMESTAMP` | NOT NULL, DEFAULT NOW() | 创建时间 |
@@ -97,7 +97,7 @@
 | `difference_note` | `TEXT` | | 差异说明 |
 | `settlement_method` | `VARCHAR(50)` | NOT NULL | 解缴方式：safe/bank/manager |
 | `settled_by` | `UUID` | FK → Employee, NOT NULL | 解缴人 |
-| `status` | `VARCHAR(20)` | NOT NULL, DEFAULT 'pending' | 状态：pending/approved/rejected |
+| `status` | `VARCHAR(20)` | NOT NULL, DEFAULT 'pending' | 状态：pending/approved/rejected ⚠️ Phase 7 依赖（9.5 审批流程引擎） |
 | `reviewed_by` | `UUID` | FK → User | 审核人 |
 | `reviewed_at` | `TIMESTAMP` | | 审核时间 |
 | `review_note` | `TEXT` | | 审核备注 |
@@ -700,6 +700,8 @@ export interface CurrentShiftData {
 ## 6. 安全与权限
 
 ### 6.1 权限矩阵
+
+> ⚠️ **Phase 7 依赖（9.1 角色权限管理）：** 本模块定义的 8 个权限代码，MVP 阶段前端硬编码角色判断。Phase 7 上线后需导入 RBAC 系统。详见 [DEFERRED-FIXES.md — DF-001](../../DEFERRED-FIXES.md)。
 
 | 权限代码 | 说明 | 站长 | 班组长 | 收银员 | 财务 |
 |----------|------|------|--------|--------|------|

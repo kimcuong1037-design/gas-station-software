@@ -1,9 +1,9 @@
 # 跨模块实体关系图 (Cross-Module Entity Relationship Diagram)
 
 **项目：** 加气站运营管理系统
-**覆盖范围：** Phase 1 基础运营（1.1~1.4）+ Phase 2 能源交易（预览）
+**覆盖范围：** Phase 1 基础运营（1.1~1.4）+ Phase 2.1 价格管理（已确认）+ Phase 2.2~2.3（预览）
 **创建日期：** 2026-02-24
-**版本：** 1.0
+**版本：** 1.3（2026-02-24 §8 扩展 Phase 1 四模块依赖详情）
 
 ---
 
@@ -64,6 +64,17 @@
 | InspectionLog | 巡检日志 | 仅内部 |
 | InspectionPhoto | 巡检照片 | 仅内部 |
 | IssueRecord | 问题记录 | 风控模块引用 |
+
+### 2.1 价格管理 (Price Management) ✅ 已确认
+
+| 实体 | 说明 | 被引用次数 |
+|------|------|-----------|
+| **FuelTypePrice** | 燃料类型基准价（每站每类型唯一 active） | 2.2 订单引用 |
+| **PriceAdjustment** | 调价记录（全留痕，不可篡改） | 仅内部 |
+| **NozzlePriceOverride** | 枪独立定价（覆盖基准价） | 2.2 订单引用 |
+| PriceDefenseConfig | 调价防御配置 | 仅内部 |
+| MemberPriceRule | 会员专享价规则 [⚠️ Phase 4 依赖] | 2.2 订单引用 |
+| PriceAgreement | 大客户价格协议 [⚠️ Phase 4 依赖] | 2.2 订单引用 |
 
 ---
 
@@ -238,18 +249,34 @@
 
 ---
 
+### 3.5 模块 2.1 → 1.1（价格管理 → 站点管理）✅ 已确认
+
+| 源实体 | 源字段 | 目标实体 | 目标字段 | 关系 | 说明 |
+|--------|--------|---------|---------|------|------|
+| FuelTypePrice | station_id | Station | id | N:1 | 基准价所属站点 |
+| FuelTypePrice | fuel_type_id | FuelType | id | N:1 | 基准价燃料类型 |
+| FuelTypePrice | updated_by | StationEmployee | employee_id | N:1 | 最后更新人 |
+| PriceAdjustment | station_id | Station | id | N:1 | 调价所属站点 |
+| PriceAdjustment | fuel_type_id | FuelType | id | N:1 | 调价燃料类型 |
+| PriceAdjustment | nozzle_id | Nozzle | id | N:1 | 枪级调价目标（可空） |
+| PriceAdjustment | adjusted_by | StationEmployee | employee_id | N:1 | 调价提交人 |
+| PriceAdjustment | approved_by | StationEmployee | employee_id | N:1 | 审批人（可空） |
+| NozzlePriceOverride | nozzle_id | Nozzle | id | 1:1 | 枪覆盖价 |
+| NozzlePriceOverride | station_id | Station | id | N:1 | 所属站点 |
+| NozzlePriceOverride | fuel_type_id | FuelType | id | N:1 | 燃料类型 |
+| PriceDefenseConfig | station_id | Station | id | N:1 | 站点级配置（可空） |
+| PriceDefenseConfig | fuel_type_id | FuelType | id | N:1 | 燃料类型级配置（可空） |
+| MemberPriceRule | station_id | Station | id | N:1 | 适用站点 |
+| MemberPriceRule | fuel_type_id | FuelType | id | N:1 | 适用燃料类型 |
+| PriceAgreement | station_id | Station | id | N:1 | 适用站点 |
+| PriceAgreement | fuel_type_id | FuelType | id | N:1 | 适用燃料类型 |
+| PriceAgreement | created_by | StationEmployee | employee_id | N:1 | 创建人 |
+
+---
+
 ## 4. Phase 2 能源交易 — 预期跨模块引用
 
-> 以下为 Phase 2 架构设计前的预判，具体外键关系将在各模块 architecture.md 中正式定义。
-
-### 4.1 模块 2.1 价格管理 → Phase 1
-
-| 预期实体 | 预期字段 | 目标实体 | 目标模块 | 说明 |
-|---------|---------|---------|---------|------|
-| PricePolicy | station_id | Station | 1.1 | 价格策略关联站点 |
-| PricePolicy | fuel_type_id | FuelType | 1.1 | 价格关联燃料类型 |
-| PriceAdjustment | nozzle_id | Nozzle | 1.1 | 按枪调价 |
-| PriceAdjustment | adjusted_by | StationEmployee | 1.1 | 调价操作人 |
+> 模块 2.1 价格管理已确认，见 §3.5。以下为 2.2/2.3 的预判，具体外键关系将在各模块 architecture.md 中正式定义。
 
 ### 4.2 模块 2.2 订单与交易 → Phase 1
 
@@ -314,8 +341,10 @@ shared/
 | Employee 离职前检查 | 员工标记离职前，必须检查是否有未完成的巡检任务分配、未完成的维保工单 |
 | Equipment 停用前检查 | 设备停用前，必须检查是否有未完成的维保工单、关联的活跃巡检检查项 |
 | Shift 删除前检查 | 班次删除前，必须检查是否有未完成的排班计划引用 |
-| Nozzle 停用前检查 | 枪停用前，必须检查是否有进行中的订单（Phase 2） |
-| FuelType 停用前检查 | 燃料类型停用前，必须检查是否有活跃的枪绑定、有效的价格策略（Phase 2） |
+| Nozzle 停用前检查 | 枪停用前，必须检查是否有进行中的订单（Phase 2）、**活跃的枪覆盖价（NozzlePriceOverride）** |
+| FuelType 停用前检查 | 燃料类型停用前，必须检查是否有活跃的枪绑定、**有效的基准价（FuelTypePrice active）、活跃的价格协议** |
+| FuelTypePrice 停用前检查 | 基准价停用前，必须检查是否有 pending_approval/approved 的调价记录 |
+| PriceAgreement 到期检查 | 协议到期时（valid_to 到达），自动将 status 设为 expired |
 
 ---
 
@@ -364,10 +393,16 @@ shared/
   → IssueRecord (→ Station, InspectionTask, CheckItem, Equipment, StationEmployee)
   → InspectionPhoto (→ InspectionLog | IssueRecord)
 
-第 7 层（Phase 2 — 依赖 Phase 1 实体）：
-  → PricePolicy (→ Station, FuelType)
-  → PriceAdjustment (→ Nozzle, StationEmployee)
-  → FuelingOrder (→ Station, Nozzle, FuelType, Shift, StationEmployee)
+第 7 层（Phase 2.1 价格管理 ✅ — 依赖 Phase 1 实体）：
+  → FuelTypePrice (→ Station, FuelType, StationEmployee)
+  → PriceDefenseConfig (→ Station?, FuelType?)
+  → NozzlePriceOverride (→ Nozzle, Station, FuelType, StationEmployee)
+  → PriceAdjustment (→ Station, FuelType, Nozzle?, StationEmployee)
+  → MemberPriceRule (→ Station, FuelType) [⚠️ Phase 4 member_tier 依赖]
+  → PriceAgreement (→ Station, FuelType, StationEmployee) [⚠️ Phase 4 enterprise_id 依赖]
+
+第 8 层（Phase 2.2~2.3 预期 — 依赖 Phase 1 + 2.1 实体）：
+  → FuelingOrder (→ Station, Nozzle, FuelType, Shift, StationEmployee, FuelTypePrice?)
   → PaymentRecord (→ FuelingOrder)
   → InventoryRecord (→ Station, FuelType, Equipment)
   → TankComparison (→ Equipment, EquipmentMonitoring)
@@ -375,5 +410,32 @@ shared/
 
 ---
 
+## 8. Phase 7 系统模块依赖预览
+
+> 以下为各已实现/设计中模块对 Phase 7 系统模块的依赖汇总，便于 Phase 7 启动时回补。
+
+### 8.1 角色权限管理 (9.1) 依赖清单
+
+| 依赖模块 | 权限代码数量 | 依赖内容 | 当前处理 | Phase 7 回补 |
+|---------|------------|---------|---------|-------------|
+| 1.1 站点管理 | 44 个 | §5 权限列表，5 角色分配（station_master/ops_manager/finance 等） | 前端硬编码角色 | 对接 RBAC API，动态渲染菜单和按钮 |
+| 1.2 交接班 | 8 个 | §6.1 权限矩阵（4 角色 × 8 权限） | 前端硬编码 | 同上 |
+| 1.3 设备台账 | 18 个 | §7.1 权限列表 + §6.1 系统权限依赖声明 | 前端硬编码 | 同上 |
+| 1.4 巡检管理 | 50+ 个 | 各 API 接口内联权限声明，**缺少角色→权限映射矩阵**（P0，见 DF-001） | 前端硬编码 | 补充权限矩阵 + 导入 RBAC |
+| **2.1 价格管理** | 12 个 | §2.3 权限矩阵（4 角色 × 12 权限） | architecture.md 权限矩阵约定，前端硬编码 | 权限矩阵导入 RBAC 系统，前端改用动态权限指令 |
+| 所有模块 | — | StationEmployee → User 关联 | StationEmployee 作为用户代理 | 建立 User ↔ StationEmployee 正式关联 |
+
+### 8.2 审批流程引擎 (9.5) 依赖清单
+
+| 依赖模块 | 审批场景 | 当前处理 | Phase 7 回补 |
+|---------|---------|---------|-------------|
+| 1.2 交接班 | CashSettlement 现金解缴审批（pending/approved/rejected）、ShiftHandover 强制交接审批（forced_by） | 简单状态字段 + 角色判断 | 对接审批引擎：审批节点、审批通知 |
+| 1.3 设备台账 | 维保工单审批（§0.4 已声明对接统一审批模块） | 未实现 | 纳入审批引擎 |
+| 1.4 巡检管理 | 问题闭环确认（pending_review → closed，reviewer_id）、巡检计划审批（需求中提及但未定义流程） | 简单 reviewer_id 字段 | 纳入审批引擎 |
+| **2.1 价格管理** | 调价审批（PriceAdjustment: pending_approval → approved/rejected） | PriceDefenseConfig 阈值触发 + 单级硬编码审批（ops_manager/admin） | 对接审批引擎：可配置审批节点、多级审批链、审批通知 |
+
+---
+
 *创建时间：2026-02-24*
-*版本：1.0*
+*版本：1.3*
+*最后更新：2026-02-24（§8 扩展 Phase 1 四模块依赖详情）*

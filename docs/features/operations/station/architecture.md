@@ -1885,6 +1885,8 @@ X-Station-Context: <station_id>  // 当前站点上下文（可选）
 
 ## 5. 权限列表
 
+> ⚠️ **Phase 7 依赖（9.1 角色权限管理）：** 本模块定义的 44 个权限代码及角色分配，MVP 阶段前端硬编码角色判断（`usePermission(code)` 封装）。Phase 7 上线后需导入 RBAC 系统，改为动态权限控制。详见 [DEFERRED-FIXES.md — DF-001](../../DEFERRED-FIXES.md)。
+
 | 权限代码 | 说明 | 默认角色 |
 |----------|------|----------|
 | `station:list` | 查看站点列表 | 所有角色 |

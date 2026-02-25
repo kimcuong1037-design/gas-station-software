@@ -46,6 +46,15 @@ const InspectionLogDetail = lazy(() => import('./features/operations/inspection/
 const InspectionAnalytics = lazy(() => import('./features/operations/inspection/pages/InspectionAnalytics'));
 const InspectionReportDetail = lazy(() => import('./features/operations/inspection/pages/InspectionReportDetail'));
 
+// Price Management pages
+const PriceOverview = lazy(() => import('./features/energy-trade/price-management/pages/PriceOverview'));
+const AdjustmentHistory = lazy(() => import('./features/energy-trade/price-management/pages/AdjustmentHistory'));
+const PriceDisplayBoard = lazy(() => import('./features/energy-trade/price-management/pages/PriceDisplayBoard'));
+const ApprovalList = lazy(() => import('./features/energy-trade/price-management/pages/ApprovalList'));
+const MemberPriceList = lazy(() => import('./features/energy-trade/price-management/pages/MemberPriceList'));
+const AgreementList = lazy(() => import('./features/energy-trade/price-management/pages/AgreementList'));
+const PriceSettings = lazy(() => import('./features/energy-trade/price-management/pages/PriceSettings'));
+
 // API Docs page (standalone, no AppLayout)
 const ApiDocs = lazy(() => import('./pages/ApiDocs'));
 
@@ -296,6 +305,49 @@ export const router = createBrowserRouter([
                     element: withSuspense(InspectionReportDetail),
                   },
                 ],
+              },
+            ],
+          },
+        ],
+      },
+      // Energy Trade routes
+      {
+        path: 'energy-trade',
+        children: [
+          {
+            index: true,
+            element: <Navigate to="/energy-trade/price-management" replace />,
+          },
+          {
+            path: 'price-management',
+            children: [
+              {
+                index: true,
+                element: withSuspense(PriceOverview),
+              },
+              {
+                path: 'history',
+                element: withSuspense(AdjustmentHistory),
+              },
+              {
+                path: 'board',
+                element: withSuspense(PriceDisplayBoard),
+              },
+              {
+                path: 'approvals',
+                element: withSuspense(ApprovalList),
+              },
+              {
+                path: 'member-prices',
+                element: withSuspense(MemberPriceList),
+              },
+              {
+                path: 'agreements',
+                element: withSuspense(AgreementList),
+              },
+              {
+                path: 'settings',
+                element: withSuspense(PriceSettings),
               },
             ],
           },

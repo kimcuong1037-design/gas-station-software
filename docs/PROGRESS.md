@@ -1,18 +1,21 @@
 
 # 高层进度说明
 
-截至 2026-02-24，前端 UI 整体进展约为 **15%**（4/26 模块），Phase 1 基础运营全部完成。
+截至 2026-02-24，前端 UI 整体进展约为 **19%**（5/26 模块），Phase 1 全部完成，Phase 2 首个模块已交付。
 
 - **阶段 1（基础运营）：✅ 全部完成**
   - 1.1 站点管理 ✅ (4.15) | 1.2 交接班管理 ✅ (3.55) | 1.3 设备设施管理 ✅ (3.35) | 1.4 巡检安检管理 ✅ (3.45)
 - **后端准备工作：✅ 完成**（跨模块 ERD + PostgreSQL Schema 草案 + API 路径一致性修复）
 - **流程体系升级：✅ 完成**（agent-plan v1.5 + architecture skill v1.2 + Phase 1 复盘）
-- **下一步方向：✅ 已决策** — 继续前端 Phase 2 能源交易 UI，之后启动后端研发
-- 阶段 2~7 尚未启动。
+- **阶段 2（能源交易）：🔧 进行中**
+  - 2.1 价格管理 ✅ (3.94) — 前端 UI 完成 + UI 评审修复
+- 阶段 2.2~7 尚未启动。
 
 # 项目进展追踪（Progress Tracker）
 
 > 本文档用于每日/每次 commit 后精细记录项目进展，颗粒度细于 ROADMAP，便于随时了解项目具体推进到哪一步。
+>
+> **时区约定**：本文档所有日期均使用 **UTC+8（CST，中国标准时间）**。
 
 ## 使用说明
 - 每次有功能开发、页面完善、Bug 修复、文档补充等进展，均应在此文档记录。
@@ -23,7 +26,104 @@
 
 ## 进展记录
 
-### 2026-02-24（Phase 1 后端准备工作 + Phase 2 方向决策）
+### 2026-02-24（Phase 2 模块 2.1 价格管理 — 前端 UI 完整交付）
+
+#### 模块概况
+
+| 项目 | 数据 |
+|------|------|
+| UI 评审分数 | **3.94/5.0** |
+| P1 问题 | 2 → **0**（全部修复） |
+| P2 问题 | 15 → **5**（10 项修复） |
+| User Story | 17 个（8 implemented, 4 partial, 5 planned） |
+| MVP 覆盖率 | 12/17 (70.6%) 至少部分实现 |
+| 构建验证 | ✅ `tsc + vite` 零错误 |
+
+#### 文档阶段（步骤 0-9，前一 session 完成）
+
+- **requirements.md** ✅：价格管理需求拆解
+- **user-stories.md** ✅：17 个 User Story（US-001 ~ US-017），9 个 Epic
+- **ux-design.md** ✅：用户角色画像、任务流、线框图
+- **ui-schema.md** ✅：7 页 UI Schema（P01-P07），含路由、组件映射、Mock 接口
+- **architecture.md** ✅：数据模型 + API 端点 + PostgreSQL Schema 草案
+
+#### 前端开发阶段（步骤 10）
+
+**基础文件（3 个）：**
+- `types.ts` — 12 个 type/interface（FuelTypePrice, PriceAdjustment 5 态 FSM, NozzlePriceOverride, PriceDefenseConfig, MemberPriceRule, PriceAgreement 等）
+- `constants.ts` — 6 组状态配置 + `getLabel()` i18n 辅助函数
+- `userStoryMapping.ts` — 17 条 User Story → 组件 ID 映射
+
+**Mock 数据（1 个文件，678 行）：**
+- `mock/priceManagement.ts` — 6 类实体数据 + 3 个聚合查询辅助函数（getPriceOverviewData, getPriceBoardData, getAdjustmentDetail）
+
+**页面组件（7 个 + barrel export）：**
+
+| Page ID | 组件名 | 功能描述 |
+|---------|--------|----------|
+| P01 | PriceOverview | 价格总览 — 统计卡片 + 可展开油品价格表 + 待生效调价面板 |
+| P02 | AdjustmentHistory | 调价历史 — 多条件筛选 + 详情 Drawer + 受影响枪列表 |
+| P03 | PriceDisplayBoard | 价格公示 — LED 风格暗色看板 + 会员价 + 刷新按钮 |
+| P04 | ApprovalList | 调价审批 — 待审批列表 + 通过/驳回 Modal + 数据更新 |
+| P05 | MemberPriceList | 会员专享价 [MVP+] — 油品/等级筛选 + 计算会员价 + 分页 |
+| P06 | AgreementList | 价格协议 [MVP+] — 到期预警 + 详情 Drawer + 搜索 |
+| P07 | PriceSettings | 价格设置 — 全局防御配置卡片 + 站点/品类级配置表 |
+
+**集成更新：**
+- `router.tsx` — 7 个 lazy-loaded 路由，`/energy-trade/price-management/*`
+- `AppLayout.tsx` — 能源交易菜单组（7 项）+ 审批 Badge + 站点选择器 + 面包屑
+- `mock/index.ts` — 新增 priceManagement 导出
+- `zh-CN/index.ts` + `en-US/index.ts` — `menu.energyTrade.*` + `price.*` 完整命名空间（~120 个 key）
+
+#### UI 评审 + 修复迭代（步骤 11-12）
+
+**评审结果（v1）：3.94/5.0**
+
+| 维度 | 分数 |
+|------|------|
+| 功能完整性 | 3.5 |
+| UI/UX 质量 | 4.2 |
+| 代码质量 | 4.0 |
+| 数据集成 | 3.8 |
+| 跨模块一致性 | 4.2 |
+
+**P1 修复（2/2）：**
+- [P1] 全部 7 页面：`useOutletContext<LayoutContext>()` 消费站点选择器（原硬编码 `station-001`）
+- [P1] PriceSettings：全局防御配置卡片增加编辑按钮
+
+**P2 修复（10/15）：**
+- P02/P05/P06 筛选选项 i18n 化（15+ 硬编码中文 → `t()` 包裹）
+- P04 审批后从列表移除已处理项（`processedIds` 状态管理）
+- P05/P07 action column render 签名修复（`(_, record)` 参数）
+- P05 添加分页配置
+- P03 添加刷新按钮 + `refreshKey` 状态
+- P01 硬编码 message 文案 i18n 化
+- P02 详情 Drawer 枪状态标签 i18n 化
+
+**新增 i18n key：** `price.filter.*`, `price.status.*`, `price.type.*`, `price.tier.*`, `price.agreementStatus.*`, `price.unit.yuan`, `price.action.restored`, `price.agreement.expiringSoon`
+
+#### 交付 Checklist（步骤 12i）：8/8 全部 PASS
+
+| # | 检查项 | 结果 |
+|---|--------|------|
+| 1 | 文件结构（12 文件） | ✅ |
+| 2 | 路由集成（7 routes + withSuspense） | ✅ |
+| 3 | 菜单集成（7 项 + Badge + 面包屑） | ✅ |
+| 4 | i18n 覆盖（zh-CN + en-US） | ✅ |
+| 5 | Mock 数据导出 | ✅ |
+| 6 | User Story 映射 | ✅ |
+| 7 | useOutletContext 集成 | ✅ |
+| 8 | 跨模块一致性 | ✅ |
+
+#### 影响文件汇总
+
+- **新增 12 个**：`docs/features/energy-trade/price-management/` 下 5 个文档 + `frontend/` 下 `types.ts`, `constants.ts`, `userStoryMapping.ts`, `pages/index.ts`, 7 个页面组件, `mock/priceManagement.ts`
+- **修改 6 个**：`router.tsx`, `AppLayout.tsx`, `mock/index.ts`, `zh-CN/index.ts`, `en-US/index.ts`, `PROGRESS.md`
+- 跨阶段修改：`CORRECTIONS.md`, `cross-module-erd.md`, 4 个 Phase 1 `architecture.md`
+
+---
+
+### 2026-02-24（早期 — Phase 1 后端准备工作 + Phase 2 方向决策）
 
 #### 方向决策
 
@@ -344,7 +444,7 @@
 
 ---
 
-## 下次继续的起点（2026-02-25）
+## 下次继续的起点（2026-02-24 CST）
 
 ### 当前状态总结
 
@@ -357,37 +457,18 @@
 | 1.3 设备设施管理 | 3.35 | 0 | 100% | device-ledger types 核验 |
 | 1.4 巡检安检管理 | 3.45 | 0 | 100% | 无 |
 
-**后端准备工作：✅ 全部完成**
-- 跨模块实体关系图 `cross-module-erd.md`（36 实体 + 7 层迁移顺序 + Phase 2 预期引用）
-- Phase 1 全 4 模块 PostgreSQL Schema 草案（41 ENUM + 36 CREATE TABLE）
-- API 路径一致性修复（交接班 `/api/` → `/api/v1/`）
+**Phase 2 能源交易：🔧 进行中**
 
-**流程体系：已完成 Phase 2 升级**
-- agent-plan.md v1.4（含文档预检、阻断验证、交付 checklist、分批执行）
-- architecture skill v1.1（含实体三问、聚合接口分析、数据完整性约束）
+| 模块 | UI 评分 | P1 | US 覆盖率 | 状态 |
+|------|---------|-----|-----------|------|
+| 2.1 价格管理 | 3.94 | 0 | 70.6% (12/17) | ✅ 前端 UI 交付，待用户 review |
+| 2.2 订单与交易 | - | - | - | 未启动 |
+| 2.3 库存管理 | - | - | - | 未启动 |
 
-### ✅ 已决策：Phase 2 方向
+### 下一步
 
-**选择：继续前端 Phase 2 能源交易模块 UI，之后启动后端研发**
-
-### 明天计划
-
-**启动 Phase 2 模块 2.1 价格管理**，严格按 agent-plan v1.4 流程推进：
-
-1. **步骤 0：文档完整性预检**
-   - 创建 `docs/features/energy-trade/price-management/` 目录
-   - 检查需求来源文档
-
-2. **步骤 1-3：需求分析 → User Story → 用户确认**
-   - 基于 `requirements/加气站运营管理系统-功能清单-参考.md` 拆解价格管理需求
-   - 编写 User Story + 验收标准
-   - 等待用户确认
-
-3. **步骤 4-5：架构设计 → 用户确认**
-   - 数据模型设计（含实体三问、PostgreSQL Schema 草案）
-   - API 端点设计（`/api/v1/` 规范）
-   - 跨模块引用对齐（cross-module-erd.md 中预判的 PricePolicy→Station/FuelType/Nozzle）
-   - 更新 API Docs 页面
+1. **用户 review 模块 2.1 价格管理** — 等待反馈后进行修复迭代
+2. **启动模块 2.2 订单与交易** — 按 agent-plan v1.5 流程推进
 
 ---
 

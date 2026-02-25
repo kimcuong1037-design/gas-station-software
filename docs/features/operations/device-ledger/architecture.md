@@ -33,6 +33,8 @@
 
 ### 0.4 工单审批流对接
 
+> ⚠️ **Phase 7 依赖（9.5 审批流程引擎）：** 维保工单审批流将对接 Phase 7 统一审批流程引擎（模块 9.5）。MVP 阶段工单审批未实现，Phase 7 上线后纳入审批引擎。详见 [DEFERRED-FIXES.md — DF-001](../../DEFERRED-FIXES.md)。
+
 维保工单的审批流由系统统一审批流模块提供，本模块仅定义工单状态机和审批触发节点。各站点可配置不同的审批流。
 
 ---
@@ -1679,7 +1681,7 @@ export interface PendingAction {
 |------|----------|------|
 | 站点管理 (1.1) | Station, StationEmployee | 设备归属站点，工单指派站点员工 |
 | 站点管理 (1.1) | Nozzle | 加气机枪位数据来源（只读引用） |
-| 系统权限 (9.1) | User, Role, Permission | 用户认证、权限控制、审批流 |
+| 系统权限 (9.1) | User, Role, Permission | 用户认证、权限控制 ⚠️ Phase 7 依赖（9.1 RBAC） |
 
 ### 6.2 被依赖的模块
 
@@ -1694,6 +1696,8 @@ export interface PendingAction {
 ## 7. 安全与权限
 
 ### 7.1 权限列表
+
+> ⚠️ **Phase 7 依赖（9.1 角色权限管理）：** 本模块定义的 18 个权限代码及角色分配，MVP 阶段前端硬编码角色判断。Phase 7 上线后需导入 RBAC 系统。详见 [DEFERRED-FIXES.md — DF-001](../../DEFERRED-FIXES.md)。
 
 | 权限代码 | 说明 | 默认角色 |
 |----------|------|----------|
