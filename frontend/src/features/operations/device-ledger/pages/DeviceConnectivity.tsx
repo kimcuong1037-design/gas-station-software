@@ -255,6 +255,7 @@ const DeviceConnectivity: React.FC = () => {
           onRow={(record) => ({
             style: record.connectionStatus === 'disconnected' ? { backgroundColor: '#fff1f0' } : undefined,
           })}
+          scroll={{ x: 1100 }}
         />
       </Card>
     </div>

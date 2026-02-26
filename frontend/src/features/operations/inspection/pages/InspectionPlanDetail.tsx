@@ -255,6 +255,7 @@ const InspectionPlanDetail: React.FC = () => {
           columns={taskColumns}
           dataSource={associatedTasks}
           rowKey="id"
+          scroll={{ x: 850 }}
           pagination={
             associatedTasks.length > 10
               ? {

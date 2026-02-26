@@ -1,16 +1,17 @@
 
 # 高层进度说明
 
-截至 2026-02-24，前端 UI 整体进展约为 **19%**（5/26 模块），Phase 1 全部完成，Phase 2 首个模块已交付。
+截至 2026-02-25，前端 UI 整体进展约为 **19%**（5/26 模块），Phase 1 全部完成，Phase 2 模块 2.1 已交付、模块 2.2 文档套件已确认。
 
 - **阶段 1（基础运营）：✅ 全部完成**
   - 1.1 站点管理 ✅ (4.15) | 1.2 交接班管理 ✅ (3.55) | 1.3 设备设施管理 ✅ (3.35) | 1.4 巡检安检管理 ✅ (3.45)
+  - Phase 1 scroll.x 批量修复完成（14 个表格，4 模块）
 - **后端准备工作：✅ 完成**（跨模块 ERD + PostgreSQL Schema 草案 + API 路径一致性修复）
-- **流程体系升级：✅ 完成**（agent-plan v1.5 + architecture skill v1.2 + Phase 1 复盘）
+- **流程体系升级：✅ 完成**（agent-plan v1.6 + architecture skill v1.2 + Phase 1 复盘 + RequirementTag Protocol + 跨模块一致性检查）
 - **阶段 2（能源交易）：🔧 进行中**
-  - 2.1 价格管理 ✅ (3.94) — 前端 UI 完成 + UI 评审修复 + P1 补充修复（RequirementTag/scroll.x/侧边栏对齐）
-- **流程体系升级：** ui-eval 新增跨模块一致性检查 + AGENT-PLAN §7 RequirementTag Protocol
-- 阶段 2.2~7 尚未启动。
+  - 2.1 价格管理 ✅ (3.94) — 前端 UI 完成 + UI 评审修复 + P1 补充修复
+  - 2.2 订单与交易 📋 文档套件完成（5/5 已确认）— 待前端开发
+- 阶段 2.3~7 尚未启动。
 
 # 项目进展追踪（Progress Tracker）
 
@@ -27,7 +28,77 @@
 
 ## 进展记录
 
-### 2026-02-25（P1 补充修复 + 侧边栏对齐修复 + 流程体系更新）
+### 2026-02-25 Session 2（ROADMAP 更新 + scroll.x 批量修复 + API Docs 同步 + Module 2.2 文档套件）
+
+#### ROADMAP.md 更新
+
+- Phase 2.1 价格管理状态：「☐ 待开发」→「✅ 已完成（3.94/5.0）」
+- 进度表 Phase 2 行：「☐ 未开始」→「🔧 进行中 | 2.1 ✅ 2.2 ☐ 2.3 ☐」
+- 版本号更新至 v1.4
+
+#### Phase 1 scroll.x 批量修复（14 个表格，4 模块）
+
+| 模块 | 组件 | scroll.x 值 |
+|------|------|-------------|
+| shift-handover | HandoverDetail | 800 |
+| device-ledger | MaintenanceOrderList | 1000 |
+| device-ledger | DeviceConnectivity | 1100 |
+| device-ledger | EquipmentList | 1100 |
+| device-ledger | EquipmentDetail | 800 |
+| inspection | InspectionTaskList | 1200 |
+| inspection | InspectionLogList | 800 |
+| inspection | InspectionPlanDetail | 850 |
+| inspection | IssueRecordList | 1250 |
+| inspection | CheckItemList | 1000 |
+| inspection | InspectionPlanList | 1200 |
+| station | StationDetail — nozzle 表 | 900 |
+| station | StationDetail — shift 表 | 750 |
+| station | StationDetail — employee 表 | 750 |
+
+- TypeScript 编译验证：✅ 零错误
+
+#### API Docs 同步
+
+- `frontend/src/pages/ApiDocs/apiData.ts` — 新增 priceManagementModule（24 个端点，7 个分类）
+
+#### Module 2.2 订单与交易 — 文档套件完成（5/5 已确认）
+
+| 文档 | 内容概要 | 状态 |
+|------|---------|------|
+| `requirements.md` | 35 个功能点，7 大分类 | ✅ 已确认 |
+| `user-stories.md` | 21 个 User Story，7 个 Epic | ✅ 已确认 |
+| `ux-design.md` | 4 种角色，6 个核心任务流 | ✅ 已确认 |
+| `ui-schema.md` | 4 页面 + 3 抽屉 + 3 弹窗 | ✅ 已确认 |
+| `architecture.md` | 5 实体，25+ API，订单/退款状态机 | ✅ 已确认 |
+
+- 用户审阅时发现命名不一致问题：「充装记录」→ 统一为「订单列表」
+- 影响范围：5 份文档，25+ 处修改（页面名、组件名、路由、侧边栏、i18n key、面包屑等）
+- 3 处保留的「充装记录」引用为合法的业务概念描述
+
+#### 经验积累（CORRECTIONS.md 新增 2 条）
+
+1. **命名不一致分析** — 「充装记录」vs「订单列表」，根因分析 + 4 条预防规则
+2. **页面合并决策框架** — 量化重合度分析方法论（列重合度 27%、操作重合度 14% → 保持独立）
+
+#### 影响文件汇总
+
+| 类别 | 文件 | 变更 |
+|------|------|------|
+| 文档 | `docs/ROADMAP.md` | Phase 2 进度更新 |
+| Phase 1 | 14 个表格组件 | +scroll={{ x }} |
+| API Docs | `apiData.ts` | +24 price-management API endpoints |
+| Module 2.2 | `requirements.md` | 创建 + 命名统一 |
+| Module 2.2 | `user-stories.md` | 创建 + 命名统一 |
+| Module 2.2 | `ux-design.md` | 创建 + 命名统一 |
+| Module 2.2 | `ui-schema.md` | 创建 + 命名统一 |
+| Module 2.2 | `architecture.md` | 创建 + 命名统一 |
+| 经验 | `CORRECTIONS.md` | +2 条目 |
+
+#### ⚠️ 尚未提交（等待下次 session commit）
+
+---
+
+### 2026-02-25 Session 1（P1 补充修复 + 侧边栏对齐修复 + 流程体系更新）
 
 #### 用户报告问题修复
 
@@ -490,7 +561,7 @@
 
 ---
 
-## 下次继续的起点（2026-02-25 CST）
+## 下次继续的起点（2026-02-26 CST）
 
 ### 当前状态总结
 
@@ -500,27 +571,44 @@
 |------|---------|-----|-----------|---------|
 | 1.1 站点管理 | 4.15 | 0 | ~88% | US-006 全局站点切换器 |
 | 1.2 交接班管理 | 3.55 | 0 | ~95% | US-007 接班人选择组件 |
-| 1.3 设备设施管理 | 3.35 | 0 | 100% | device-ledger types 核验 |
-| 1.4 巡检安检管理 | 3.45 | 0 | 100% | 无 |
+| 1.3 设备设施管理 | 3.35 | 0 | 100% | — |
+| 1.4 巡检安检管理 | 3.45 | 0 | 100% | — |
+
+- Phase 1 scroll.x 批量修复已完成（14 个表格）
 
 **Phase 2 能源交易：🔧 进行中**
 
 | 模块 | UI 评分 | P1 | US 覆盖率 | 状态 |
 |------|---------|-----|-----------|------|
 | 2.1 价格管理 | 3.94 | 0 | 70.6% (12/17) | ✅ 前端 UI 交付 + P1 补充修复完成 |
-| 2.2 订单与交易 | - | - | - | 未启动 |
+| 2.2 订单与交易 | - | - | - | 📋 文档套件 5/5 已确认，待前端开发 |
 | 2.3 库存管理 | - | - | - | 未启动 |
 
 **流程体系：** agent-plan v1.6 + ui-eval 跨模块一致性检查 + RequirementTag Protocol
 
 ### 下一步建议（与用户确认）
 
-1. **更新 ROADMAP.md** — 进度跟踪表仍显示 Phase 2 为「☐ 未开始」，需更新为「🔧 进行中」并标记 2.1 完成
-2. **启动模块 2.2 订单与交易** — 按 agent-plan v1.6 流程推进
-   - 子模块：充装记录、订单流、支付处理、异常处理
-   - 第一步：检查 `docs/features/energy-trade/order-transaction/` 是否已有文档
-3. **Phase 1 遗留 scroll.x 批量修复**（低成本）— ~10 个旧模块表格缺少 `scroll={{ x }}`（inspection: 6, device-ledger: 2, station: 1, shift-handover: 1）
-4. **API Docs 同步检查** — 验证价格管理模块的 API 数据是否已添加到 `apiData.ts`
+1. **术语命名一致性扫描** ⚠️ 用户明确要求
+   - 扫描全项目文档（Phase 1 + Phase 2 已有文档），识别命名不一致但意思相同的情况
+   - 包括但不限于：业务术语 vs UI 命名、中英文对照、代码命名 vs 文档用语
+   - 将确认后的术语统一存储到 `docs/STANDARDS.md` 术语表
+   - 参考 CORRECTIONS.md 中「充装记录→订单列表」的经验
+
+2. **Module 2.2 订单与交易 — 前端开发** — 按 AGENT-PLAN Step 10 执行
+   - types.ts — FuelingOrder, PaymentRecord, RefundRecord, OrderTag 等类型定义
+   - constants.ts — 状态配置、支付方式配置、颜色映射
+   - userStoryMapping.ts — 21 stories 映射
+   - Mock data — 30 orders + 25 payments + 5 refunds + 5 tags
+   - Pages: OrderList (P01), ExceptionOrderList (P02), RefundManagement (P03), OrderSettings (P04)
+   - Drawers: OrderDetailDrawer (D01), CreateOrderDrawer (D02), SupplementDrawer (D03)
+   - Modals: PaymentModal (M01), RefundModal (M02), ReceiptPreviewModal (M03)
+   - Route registration + sidebar menu registration
+   - RequirementTag integration (follow §7 protocol)
+   - i18n keys (order.* namespace)
+
+3. **cross-module-erd.md 更新** — 新增 Module 2.2 实体关系（FuelingOrder, PaymentRecord, RefundRecord 等）
+
+4. **Commit** — Session 2 工作尚未提交（文档套件 + scroll.x fix + apiData.ts + ROADMAP + CORRECTIONS）
 
 ---
 

@@ -276,6 +276,7 @@ const EquipmentList: React.FC = () => {
               </div>
             ),
           }}
+          scroll={{ x: 1100 }}
         />
       </Card>
     </div>

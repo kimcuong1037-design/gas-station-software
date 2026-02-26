@@ -266,6 +266,7 @@ const IssueRecordList: React.FC = () => {
           columns={columns}
           dataSource={filteredData}
           rowClassName={rowClassName}
+          scroll={{ x: 1250 }}
           pagination={{
             pageSize: DEFAULT_PAGE_SIZE,
             showSizeChanger: false,

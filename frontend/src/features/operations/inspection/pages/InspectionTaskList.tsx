@@ -426,6 +426,7 @@ const InspectionTaskList: React.FC = () => {
           rowClassName={(record) =>
             isOverdue(record.dueDate, record.status) ? 'row-overdue' : ''
           }
+          scroll={{ x: 1200 }}
           pagination={{
             current: currentPage,
             pageSize,

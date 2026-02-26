@@ -431,12 +431,15 @@ export default function ApiDocs() {
             Gas Station API Docs
           </Title>
           <Text style={{ color: '#888', fontSize: 12 }}>
-            加气站运营管理系统 — 内部 API 文档 v1
+            加气站运营管理系统 — 内部 API 文档 v1.1
           </Text>
         </div>
         <div style={{ flex: 1 }} />
         <Tag color="blue" style={{ fontSize: 12 }}>
           Phase 1 — 基础运营
+        </Tag>
+        <Tag color="magenta" style={{ fontSize: 12 }}>
+          Phase 2 — 能源交易
         </Tag>
         <Text style={{ color: '#888', fontSize: 12 }}>
           共 {totalEndpoints} 个端点
@@ -577,7 +580,7 @@ export default function ApiDocs() {
           {!activeModuleId && !searchText && (
             <Row gutter={16} style={{ marginBottom: 24 }}>
               {API_MODULES.map((module) => (
-                <Col span={6} key={module.id}>
+                <Col span={4} key={module.id}>
                   <Card
                     size="small"
                     hoverable
@@ -623,7 +626,11 @@ export default function ApiDocs() {
             </Text>
             <br />
             <Text type="secondary">
-              Phase 1 覆盖模块：站点管理 / 交接班管理 / 设备设施管理 / 巡检安检管理
+              Phase 1 基础运营：站点管理 / 交接班管理 / 设备设施管理 / 巡检安检管理
+            </Text>
+            <br />
+            <Text type="secondary">
+              Phase 2 能源交易：价格管理 / 订单与交易
             </Text>
             <br />
             <Text type="secondary">

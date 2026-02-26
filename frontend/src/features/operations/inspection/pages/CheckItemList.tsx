@@ -291,6 +291,7 @@ const CheckItemList: React.FC = () => {
           columns={columns}
           dataSource={filteredData}
           rowKey="id"
+          scroll={{ x: 1000 }}
           pagination={{
             current: currentPage,
             pageSize,

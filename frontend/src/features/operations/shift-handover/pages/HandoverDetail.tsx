@@ -366,6 +366,7 @@ const HandoverDetail: React.FC = () => {
             rowKey="id"
             pagination={false}
             size="small"
+            scroll={{ x: 800 }}
           />
         ) : (
           <Empty description={t('shiftHandover.noIssues')} image={Empty.PRESENTED_IMAGE_SIMPLE} />

@@ -228,6 +228,7 @@ const InspectionPlanList: React.FC = () => {
           columns={columns}
           dataSource={filteredData}
           rowKey="id"
+          scroll={{ x: 1200 }}
           pagination={{
             current: currentPage,
             pageSize,

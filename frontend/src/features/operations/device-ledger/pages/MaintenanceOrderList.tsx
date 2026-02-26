@@ -286,6 +286,7 @@ const MaintenanceOrderList: React.FC = () => {
           onRow={(record) => ({
             style: record.urgency === 'urgent' ? { backgroundColor: '#fff1f0' } : undefined,
           })}
+          scroll={{ x: 1000 }}
         />
       </Card>
 

@@ -267,6 +267,7 @@ const EquipmentDetail: React.FC = () => {
             dataSource={relatedOrders}
             rowKey="id"
             pagination={{ pageSize: 10 }}
+            scroll={{ x: 800 }}
           />
         </Card>
       ) : (

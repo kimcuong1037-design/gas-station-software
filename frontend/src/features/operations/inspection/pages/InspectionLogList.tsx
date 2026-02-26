@@ -213,6 +213,7 @@ const InspectionLogList: React.FC = () => {
           rowKey="id"
           columns={columns}
           dataSource={filteredData}
+          scroll={{ x: 800 }}
           pagination={{
             pageSize: DEFAULT_PAGE_SIZE,
             showSizeChanger: false,

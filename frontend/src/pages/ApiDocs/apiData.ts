@@ -2,11 +2,13 @@
  * API Documentation Data
  * 全局 API 接口文档数据源
  *
- * 覆盖 Phase 1 四个模块的所有 REST API 端点：
+ * 覆盖 Phase 1 + Phase 2 模块的所有 REST API 端点：
  * - 1.1 站点管理 (Station Management)
  * - 1.2 交接班管理 (Shift Handover)
  * - 1.3 设备设施管理 (Device Ledger)
  * - 1.4 巡检安检管理 (Inspection)
+ * - 2.1 价格管理 (Price Management)
+ * - 2.2 订单与交易 (Order & Transaction)
  */
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
@@ -1271,6 +1273,832 @@ const inspectionModule: ApiModule = {
 };
 
 // ============================================================
+// 模块 2.1 — 价格管理
+// ============================================================
+const priceManagementModule: ApiModule = {
+  id: 'price-management',
+  name: '价格管理',
+  nameEn: 'Price Management',
+  description: '燃料类型基准价、调价操作与审批、枪独立定价、价格防御配置、会员专享价、价格协议、聚合接口',
+  baseUrl: '/api/v1',
+  color: '#fa8c16',
+  endpoints: [
+    // --- 燃料类型基准价 ---
+    {
+      id: 'fuel-type-price-list',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/fuel-type-prices',
+      summary: '获取站点所有燃料类型基准价列表',
+      tags: ['燃料基准价'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      queryParams: [
+        { name: 'status', type: 'string', required: false, description: '状态筛选', example: 'active' },
+        { name: 'fuelTypeId', type: 'string', required: false, description: '燃料类型ID', example: 'ft-lng' },
+      ],
+      responseFields: ['items[].id', 'items[].fuelTypeId', 'items[].fuelTypeName', 'items[].basePrice', 'items[].status', 'items[].nozzleCount'],
+    },
+    {
+      id: 'fuel-type-price-create',
+      method: 'POST',
+      path: '/api/v1/stations/:stationId/fuel-type-prices',
+      summary: '设置燃料类型初始基准价',
+      tags: ['燃料基准价'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [
+          { name: 'fuelTypeId', type: 'string', required: true, description: '燃料类型ID', example: 'ft-lng' },
+          { name: 'basePrice', type: 'number', required: true, description: '基准价（元/kg）', example: '4.8' },
+        ],
+        example: '{\n  "fuelTypeId": "ft-lng",\n  "basePrice": 4.8\n}',
+      },
+    },
+    {
+      id: 'fuel-type-price-update',
+      method: 'PUT',
+      path: '/api/v1/stations/:stationId/fuel-type-prices/:id',
+      summary: '更新基准价（内部走调价流程）',
+      tags: ['燃料基准价'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '基准价ID', example: 'ftp-001' },
+      ],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [{ name: 'basePrice', type: 'number', required: true, description: '新基准价', example: '5.0' }],
+        example: '{ "basePrice": 5.0 }',
+      },
+      notes: '内部走 PriceAdjustment 流程',
+    },
+    // --- 调价操作 ---
+    {
+      id: 'price-adjustment-list',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/price-adjustments',
+      summary: '调价记录列表（历史 + 待生效）',
+      tags: ['调价操作'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      queryParams: [
+        { name: 'status', type: 'string', required: false, description: '调价状态', example: 'pending' },
+        { name: 'fuelTypeId', type: 'string', required: false, description: '燃料类型ID', example: 'ft-lng' },
+        { name: 'adjustmentType', type: 'string', required: false, description: '调价类型', example: 'immediate' },
+        { name: 'dateFrom', type: 'string', required: false, description: '开始日期', example: '2026-01-01' },
+        { name: 'dateTo', type: 'string', required: false, description: '结束日期', example: '2026-02-28' },
+        { name: 'page', type: 'number', required: false, description: '页码', example: '1' },
+        { name: 'pageSize', type: 'number', required: false, description: '每页数量', example: '20' },
+      ],
+      responseFields: ['items[].id', 'items[].fuelTypeId', 'items[].oldPrice', 'items[].newPrice', 'items[].adjustmentType', 'items[].status', 'items[].effectiveAt', 'pagination'],
+    },
+    {
+      id: 'price-adjustment-detail',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/price-adjustments/:id',
+      summary: '调价记录详情（含影响枪列表、审批信息）',
+      tags: ['调价操作'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '调价记录ID', example: 'pa-001' },
+      ],
+      responseFields: ['id', 'fuelTypeId', 'oldPrice', 'newPrice', 'adjustmentType', 'status', 'effectiveAt', 'affectedNozzles[]', 'approvalInfo'],
+    },
+    {
+      id: 'price-adjustment-create',
+      method: 'POST',
+      path: '/api/v1/stations/:stationId/price-adjustments',
+      summary: '提交调价',
+      tags: ['调价操作'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [
+          { name: 'fuelTypeId', type: 'string', required: true, description: '燃料类型ID', example: 'ft-lng' },
+          { name: 'nozzleId', type: 'string', required: false, description: '枪ID（枪级调价时提供）', example: 'nz-001' },
+          { name: 'newPrice', type: 'number', required: true, description: '新价格', example: '5.2' },
+          { name: 'adjustmentType', type: 'string', required: true, description: '调价类型：immediate / scheduled', example: 'immediate' },
+          { name: 'effectiveAt', type: 'string', required: false, description: '生效时间（scheduled 时必填）', example: '2026-03-01T00:00:00Z' },
+          { name: 'reason', type: 'string', required: false, description: '调价原因', example: '市场价格调整' },
+        ],
+        example: '{\n  "fuelTypeId": "ft-lng",\n  "newPrice": 5.2,\n  "adjustmentType": "immediate",\n  "reason": "市场价格调整"\n}',
+      },
+    },
+    {
+      id: 'price-adjustment-approve',
+      method: 'PATCH',
+      path: '/api/v1/stations/:stationId/price-adjustments/:id/approve',
+      summary: '审批通过',
+      tags: ['调价操作'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '调价记录ID', example: 'pa-001' },
+      ],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [{ name: 'approvedBy', type: 'string', required: true, description: '审批人ID', example: 'emp-001' }],
+        example: '{ "approvedBy": "emp-001" }',
+      },
+    },
+    {
+      id: 'price-adjustment-reject',
+      method: 'PATCH',
+      path: '/api/v1/stations/:stationId/price-adjustments/:id/reject',
+      summary: '审批驳回',
+      tags: ['调价操作'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '调价记录ID', example: 'pa-001' },
+      ],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [
+          { name: 'rejectedBy', type: 'string', required: true, description: '驳回人ID', example: 'emp-002' },
+          { name: 'reason', type: 'string', required: true, description: '驳回原因', example: '调价幅度过大' },
+        ],
+        example: '{ "rejectedBy": "emp-002", "reason": "调价幅度过大" }',
+      },
+    },
+    {
+      id: 'price-adjustment-cancel',
+      method: 'PATCH',
+      path: '/api/v1/stations/:stationId/price-adjustments/:id/cancel',
+      summary: '取消调价计划',
+      tags: ['调价操作'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '调价记录ID', example: 'pa-001' },
+      ],
+    },
+    {
+      id: 'price-adjustment-batch',
+      method: 'POST',
+      path: '/api/v1/stations/:stationId/price-adjustments/batch',
+      summary: '批量调价',
+      tags: ['调价操作'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [
+          { name: 'fuelTypeIds', type: 'string[]', required: true, description: '燃料类型ID数组', example: '["ft-lng", "ft-cng"]' },
+          { name: 'adjustmentMode', type: 'string', required: true, description: '调价模式：absolute / percentage', example: 'absolute' },
+          { name: 'adjustmentValue', type: 'number', required: true, description: '调价值', example: '0.5' },
+        ],
+        example: '{\n  "fuelTypeIds": ["ft-lng", "ft-cng"],\n  "adjustmentMode": "absolute",\n  "adjustmentValue": 0.5\n}',
+      },
+    },
+    // --- 枪独立定价 ---
+    {
+      id: 'nozzle-override-list',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/nozzle-price-overrides',
+      summary: '获取站点所有枪覆盖价列表',
+      tags: ['枪独立定价'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      queryParams: [
+        { name: 'nozzleId', type: 'string', required: false, description: '枪ID', example: 'nz-001' },
+        { name: 'fuelTypeId', type: 'string', required: false, description: '燃料类型ID', example: 'ft-lng' },
+      ],
+      responseFields: ['items[].id', 'items[].nozzleId', 'items[].overridePrice', 'items[].fuelTypeId'],
+    },
+    {
+      id: 'nozzle-override-create',
+      method: 'POST',
+      path: '/api/v1/stations/:stationId/nozzle-price-overrides',
+      summary: '创建枪覆盖价（内部走调价流程）',
+      tags: ['枪独立定价'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [
+          { name: 'nozzleId', type: 'string', required: true, description: '枪ID', example: 'nz-001' },
+          { name: 'overridePrice', type: 'number', required: true, description: '覆盖价格', example: '5.5' },
+        ],
+        example: '{ "nozzleId": "nz-001", "overridePrice": 5.5 }',
+      },
+    },
+    {
+      id: 'nozzle-override-delete',
+      method: 'DELETE',
+      path: '/api/v1/stations/:stationId/nozzle-price-overrides/:id',
+      summary: '删除覆盖价（恢复基准价）',
+      tags: ['枪独立定价'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '覆盖价ID', example: 'npo-001' },
+      ],
+    },
+    // --- 调价防御配置 ---
+    {
+      id: 'defense-config-list',
+      method: 'GET',
+      path: '/api/v1/price-defense-configs',
+      summary: '获取防御配置列表',
+      tags: ['调价防御'],
+      queryParams: [
+        { name: 'stationId', type: 'string', required: false, description: '站点ID', example: 'station-001' },
+        { name: 'fuelTypeId', type: 'string', required: false, description: '燃料类型ID', example: 'ft-lng' },
+      ],
+      responseFields: ['items[].id', 'items[].stationId', 'items[].fuelTypeId', 'items[].maxIncreasePct', 'items[].maxDecreasePct', 'items[].requireApproval', 'items[].approvalThresholdPct'],
+    },
+    {
+      id: 'defense-config-create',
+      method: 'POST',
+      path: '/api/v1/price-defense-configs',
+      summary: '创建防御配置',
+      tags: ['调价防御'],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [
+          { name: 'stationId', type: 'string', required: false, description: '站点ID（不传表示全局）', example: 'station-001' },
+          { name: 'fuelTypeId', type: 'string', required: false, description: '燃料类型ID（不传表示全品类）', example: 'ft-lng' },
+          { name: 'maxIncreasePct', type: 'number', required: true, description: '最大上调幅度（%）', example: '10' },
+          { name: 'maxDecreasePct', type: 'number', required: true, description: '最大下调幅度（%）', example: '15' },
+          { name: 'requireApproval', type: 'boolean', required: true, description: '是否需要审批', example: 'true' },
+          { name: 'approvalThresholdPct', type: 'number', required: false, description: '审批触发阈值（%）', example: '5' },
+        ],
+        example: '{\n  "maxIncreasePct": 10,\n  "maxDecreasePct": 15,\n  "requireApproval": true,\n  "approvalThresholdPct": 5\n}',
+      },
+    },
+    {
+      id: 'defense-config-update',
+      method: 'PUT',
+      path: '/api/v1/price-defense-configs/:id',
+      summary: '更新防御配置',
+      tags: ['调价防御'],
+      pathParams: [{ name: 'id', type: 'string', required: true, description: '配置ID', example: 'pdc-001' }],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [
+          { name: 'maxIncreasePct', type: 'number', required: true, description: '最大上调幅度（%）', example: '10' },
+          { name: 'maxDecreasePct', type: 'number', required: true, description: '最大下调幅度（%）', example: '15' },
+          { name: 'requireApproval', type: 'boolean', required: true, description: '是否需要审批', example: 'true' },
+          { name: 'approvalThresholdPct', type: 'number', required: false, description: '审批触发阈值（%）', example: '5' },
+        ],
+      },
+    },
+    // --- 会员专享价 ---
+    {
+      id: 'member-price-list',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/member-price-rules',
+      summary: '获取会员价规则列表',
+      tags: ['会员专享价'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      queryParams: [
+        { name: 'fuelTypeId', type: 'string', required: false, description: '燃料类型ID', example: 'ft-lng' },
+        { name: 'memberTier', type: 'string', required: false, description: '会员等级', example: 'gold' },
+      ],
+      responseFields: ['items[].id', 'items[].fuelTypeId', 'items[].memberTier', 'items[].discountType', 'items[].discountValue'],
+      notes: '⚠️ Phase 4 依赖（会员管理模块）',
+    },
+    {
+      id: 'member-price-create',
+      method: 'POST',
+      path: '/api/v1/stations/:stationId/member-price-rules',
+      summary: '创建会员价规则',
+      tags: ['会员专享价'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [
+          { name: 'fuelTypeId', type: 'string', required: true, description: '燃料类型ID', example: 'ft-lng' },
+          { name: 'memberTier', type: 'string', required: true, description: '会员等级', example: 'gold' },
+          { name: 'discountType', type: 'string', required: true, description: '折扣类型：fixed / percentage', example: 'fixed' },
+          { name: 'discountValue', type: 'number', required: true, description: '折扣值', example: '0.3' },
+        ],
+        example: '{\n  "fuelTypeId": "ft-lng",\n  "memberTier": "gold",\n  "discountType": "fixed",\n  "discountValue": 0.3\n}',
+      },
+    },
+    {
+      id: 'member-price-update',
+      method: 'PUT',
+      path: '/api/v1/stations/:stationId/member-price-rules/:id',
+      summary: '更新会员价规则',
+      tags: ['会员专享价'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '规则ID', example: 'mpr-001' },
+      ],
+    },
+    {
+      id: 'member-price-delete',
+      method: 'DELETE',
+      path: '/api/v1/stations/:stationId/member-price-rules/:id',
+      summary: '删除会员价规则',
+      tags: ['会员专享价'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '规则ID', example: 'mpr-001' },
+      ],
+    },
+    // --- 价格协议 ---
+    {
+      id: 'agreement-list',
+      method: 'GET',
+      path: '/api/v1/price-agreements',
+      summary: '价格协议列表',
+      tags: ['价格协议'],
+      queryParams: [
+        { name: 'enterpriseId', type: 'string', required: false, description: '企业ID', example: 'ent-001' },
+        { name: 'stationId', type: 'string', required: false, description: '站点ID', example: 'station-001' },
+        { name: 'status', type: 'string', required: false, description: '状态筛选', example: 'active' },
+        { name: 'page', type: 'number', required: false, description: '页码', example: '1' },
+        { name: 'pageSize', type: 'number', required: false, description: '每页数量', example: '20' },
+      ],
+      responseFields: ['items[].id', 'items[].enterpriseId', 'items[].enterpriseName', 'items[].stationId', 'items[].fuelTypeId', 'items[].agreedPrice', 'items[].validFrom', 'items[].validTo', 'items[].status', 'pagination'],
+      notes: '⚠️ Phase 4 依赖（大客户管理模块）',
+    },
+    {
+      id: 'agreement-detail',
+      method: 'GET',
+      path: '/api/v1/price-agreements/:id',
+      summary: '协议详情',
+      tags: ['价格协议'],
+      pathParams: [{ name: 'id', type: 'string', required: true, description: '协议ID', example: 'agr-001' }],
+      responseFields: ['id', 'enterpriseId', 'enterpriseName', 'stationId', 'fuelTypeId', 'agreedPrice', 'validFrom', 'validTo', 'status', 'createdAt', 'updatedAt'],
+    },
+    {
+      id: 'agreement-create',
+      method: 'POST',
+      path: '/api/v1/price-agreements',
+      summary: '创建协议',
+      tags: ['价格协议'],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [
+          { name: 'enterpriseId', type: 'string', required: true, description: '企业ID', example: 'ent-001' },
+          { name: 'enterpriseName', type: 'string', required: true, description: '企业名称', example: '顺丰物流' },
+          { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+          { name: 'fuelTypeId', type: 'string', required: true, description: '燃料类型ID', example: 'ft-lng' },
+          { name: 'agreedPrice', type: 'number', required: true, description: '协议价格', example: '4.5' },
+          { name: 'validFrom', type: 'string', required: true, description: '生效日期', example: '2026-01-01' },
+          { name: 'validTo', type: 'string', required: true, description: '到期日期', example: '2026-12-31' },
+        ],
+        example: '{\n  "enterpriseId": "ent-001",\n  "enterpriseName": "顺丰物流",\n  "stationId": "station-001",\n  "fuelTypeId": "ft-lng",\n  "agreedPrice": 4.5,\n  "validFrom": "2026-01-01",\n  "validTo": "2026-12-31"\n}',
+      },
+    },
+    {
+      id: 'agreement-update',
+      method: 'PUT',
+      path: '/api/v1/price-agreements/:id',
+      summary: '更新协议',
+      tags: ['价格协议'],
+      pathParams: [{ name: 'id', type: 'string', required: true, description: '协议ID', example: 'agr-001' }],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [
+          { name: 'agreedPrice', type: 'number', required: false, description: '协议价格', example: '4.6' },
+          { name: 'validTo', type: 'string', required: false, description: '到期日期', example: '2027-06-30' },
+        ],
+        example: '{ "agreedPrice": 4.6, "validTo": "2027-06-30" }',
+      },
+    },
+    {
+      id: 'agreement-terminate',
+      method: 'PATCH',
+      path: '/api/v1/price-agreements/:id/terminate',
+      summary: '终止协议',
+      tags: ['价格协议'],
+      pathParams: [{ name: 'id', type: 'string', required: true, description: '协议ID', example: 'agr-001' }],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [{ name: 'terminationReason', type: 'string', required: true, description: '终止原因', example: '合同到期不续约' }],
+        example: '{ "terminationReason": "合同到期不续约" }',
+      },
+    },
+    // --- 聚合接口 ---
+    {
+      id: 'price-overview',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/price-overview',
+      summary: '价格管理首页聚合数据',
+      tags: ['聚合接口'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      responseFields: ['fuelTypePrices[]', 'pendingAdjustments[]', 'defenseConfig'],
+      notes: '聚合多个实体数据用于 Dashboard 展示',
+    },
+    {
+      id: 'price-board',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/price-board',
+      summary: '价格公示看板数据',
+      tags: ['聚合接口'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      responseFields: ['stationName', 'prices[]', 'prices[].fuelTypeName', 'prices[].standardPrice', 'prices[].memberPrice', 'lastUpdatedAt'],
+      notes: '聚合标准价 + 会员价用于价格公示看板',
+    },
+  ],
+};
+
+// ============================================================
+// 模块 2.2 — 订单与交易
+// ============================================================
+const orderTransactionModule: ApiModule = {
+  id: 'order-transaction',
+  name: '订单与交易',
+  nameEn: 'Order & Transaction',
+  description: '充装订单管理、收银支付、异常订单处理、退款审批、订单标签管理',
+  baseUrl: '/api/v1',
+  color: '#eb2f96',
+  endpoints: [
+    // --- 充装订单 ---
+    {
+      id: 'fueling-order-list',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/fueling-orders',
+      summary: '订单列表',
+      tags: ['充装订单'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      queryParams: [
+        { name: 'status', type: 'string', required: false, description: '订单状态筛选：filling / pending_payment / paid / cancelled / exception / suspended / refunded / closed', example: 'paid' },
+        { name: 'paymentMethod', type: 'string', required: false, description: '支付方式筛选：cash / wechat / alipay / unionpay', example: 'wechat' },
+        { name: 'fuelTypeId', type: 'string', required: false, description: '燃料类型ID', example: 'ft-lng' },
+        { name: 'nozzleNo', type: 'string', required: false, description: '枪号', example: '01' },
+        { name: 'dateFrom', type: 'string', required: false, description: '开始日期', example: '2026-02-20' },
+        { name: 'dateTo', type: 'string', required: false, description: '结束日期', example: '2026-02-26' },
+        { name: 'keyword', type: 'string', required: false, description: '搜索关键词（匹配订单号、车牌号）', example: 'ST001' },
+        { name: 'page', type: 'number', required: false, description: '页码', example: '1' },
+        { name: 'pageSize', type: 'number', required: false, description: '每页数量', example: '20' },
+      ],
+      responseFields: ['items[]', 'items[].id', 'items[].orderNo', 'items[].nozzleNo', 'items[].fuelTypeName', 'items[].quantity', 'items[].totalAmount', 'items[].payableAmount', 'items[].orderStatus', 'items[].paymentMethod', 'items[].vehiclePlateNo', 'items[].createdAt', 'pagination'],
+    },
+    {
+      id: 'fueling-order-detail',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/fueling-orders/:id',
+      summary: '订单详情',
+      tags: ['充装订单'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '订单ID', example: 'order-001' },
+      ],
+      responseFields: ['id', 'orderNo', 'stationId', 'nozzleId', 'nozzleNo', 'fuelTypeId', 'fuelTypeName', 'shiftId', 'operatorId', 'operatorName', 'unitPrice', 'quantity', 'totalAmount', 'discountAmount', 'payableAmount', 'orderStatus', 'vehiclePlateNo', 'notes', 'paymentRecords[]', 'refundRecords[]', 'tags[]', 'createdAt', 'updatedAt'],
+    },
+    {
+      id: 'fueling-order-create',
+      method: 'POST',
+      path: '/api/v1/stations/:stationId/fueling-orders',
+      summary: '手动创建订单',
+      tags: ['充装订单'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [
+          { name: 'nozzleId', type: 'string', required: true, description: '枪ID', example: 'nozzle-01' },
+          { name: 'quantity', type: 'number', required: true, description: '充装量（kg）', example: '50.5' },
+          { name: 'vehiclePlateNo', type: 'string', required: false, description: '车牌号', example: '京A12345' },
+          { name: 'notes', type: 'string', required: false, description: '备注', example: '补录订单' },
+        ],
+        example: '{\n  "nozzleId": "nozzle-01",\n  "quantity": 50.5,\n  "vehiclePlateNo": "京A12345",\n  "notes": "补录订单"\n}',
+      },
+      responseFields: ['id', 'orderNo'],
+      notes: '内部自动获取当前价格（来自价格管理 API）并锁定在 unitPrice 字段',
+    },
+    {
+      id: 'fueling-order-cancel',
+      method: 'PATCH',
+      path: '/api/v1/stations/:stationId/fueling-orders/:id/cancel',
+      summary: '取消订单',
+      tags: ['充装订单'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '订单ID', example: 'order-001' },
+      ],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [{ name: 'cancelReason', type: 'string', required: true, description: '取消原因', example: '客户临时取消' }],
+        example: '{ "cancelReason": "客户临时取消" }',
+      },
+      notes: '仅 filling / pending_payment 状态可取消；已支付需走退款流程',
+    },
+    {
+      id: 'fueling-order-update-notes',
+      method: 'PATCH',
+      path: '/api/v1/stations/:stationId/fueling-orders/:id/notes',
+      summary: '更新订单备注',
+      tags: ['充装订单'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '订单ID', example: 'order-001' },
+      ],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [{ name: 'notes', type: 'string', required: true, description: '备注内容', example: '已与客户确认' }],
+        example: '{ "notes": "已与客户确认" }',
+      },
+    },
+    {
+      id: 'fueling-order-statistics',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/fueling-orders/statistics',
+      summary: '订单统计',
+      tags: ['充装订单'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      queryParams: [
+        { name: 'dimension', type: 'string', required: true, description: '统计维度：today / shift', example: 'today' },
+        { name: 'shiftId', type: 'string', required: false, description: '班次ID（dimension=shift 时必填）', example: 'shift-001' },
+      ],
+      responseFields: ['totalOrders', 'totalAmount', 'totalQuantity', 'pendingPaymentCount', 'paymentMethodBreakdown'],
+    },
+    {
+      id: 'fueling-order-export',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/fueling-orders/export',
+      summary: '导出订单',
+      tags: ['充装订单'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      queryParams: [
+        { name: 'status', type: 'string', required: false, description: '状态筛选', example: 'paid' },
+        { name: 'dateFrom', type: 'string', required: false, description: '开始日期', example: '2026-02-01' },
+        { name: 'dateTo', type: 'string', required: false, description: '结束日期', example: '2026-02-28' },
+      ],
+      notes: 'MVP+ 功能，响应为 Excel 文件流（application/vnd.openxmlformats-officedocument.spreadsheetml.sheet）',
+    },
+    // --- 异常订单 ---
+    {
+      id: 'exception-order-list',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/fueling-orders/exceptions',
+      summary: '异常订单列表',
+      tags: ['异常订单'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      queryParams: [
+        { name: 'exceptionType', type: 'string', required: false, description: '异常类型：power_loss / timeout / amount_error / other', example: 'timeout' },
+        { name: 'handleStatus', type: 'string', required: false, description: '处理状态：pending / suspended / supplemented / pending_review / closed', example: 'pending' },
+        { name: 'dateFrom', type: 'string', required: false, description: '开始日期', example: '2026-02-20' },
+        { name: 'dateTo', type: 'string', required: false, description: '结束日期', example: '2026-02-26' },
+        { name: 'page', type: 'number', required: false, description: '页码', example: '1' },
+        { name: 'pageSize', type: 'number', required: false, description: '每页数量', example: '20' },
+      ],
+      responseFields: ['items[]', 'pagination', 'statistics'],
+    },
+    {
+      id: 'exception-order-suspend',
+      method: 'PATCH',
+      path: '/api/v1/stations/:stationId/fueling-orders/:id/suspend',
+      summary: '挂起异常订单',
+      tags: ['异常订单'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '订单ID', example: 'order-exc-001' },
+      ],
+      notes: '挂起后订单不参与班次结算统计',
+    },
+    {
+      id: 'exception-order-unsuspend',
+      method: 'PATCH',
+      path: '/api/v1/stations/:stationId/fueling-orders/:id/unsuspend',
+      summary: '取消挂起',
+      tags: ['异常订单'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '订单ID', example: 'order-exc-001' },
+      ],
+    },
+    {
+      id: 'exception-order-supplement',
+      method: 'POST',
+      path: '/api/v1/stations/:stationId/fueling-orders/:id/supplement',
+      summary: '补单',
+      tags: ['异常订单'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '订单ID', example: 'order-exc-001' },
+      ],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [
+          { name: 'paymentMethod', type: 'string', required: true, description: '支付方式', example: 'cash' },
+          { name: 'amount', type: 'number', required: true, description: '支付金额', example: '293.00' },
+          { name: 'supplementReason', type: 'string', required: true, description: '补单原因', example: '掉电恢复后补录' },
+        ],
+        example: '{\n  "paymentMethod": "cash",\n  "amount": 293.00,\n  "supplementReason": "掉电恢复后补录"\n}',
+      },
+      notes: '仅对 exception / suspended 状态订单可用',
+    },
+    {
+      id: 'exception-order-supplement-approve',
+      method: 'PATCH',
+      path: '/api/v1/stations/:stationId/fueling-orders/:id/supplement-approve',
+      summary: '补单审核通过',
+      tags: ['异常订单'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '订单ID', example: 'order-exc-001' },
+      ],
+      notes: 'MVP+ 功能',
+    },
+    {
+      id: 'exception-order-supplement-reject',
+      method: 'PATCH',
+      path: '/api/v1/stations/:stationId/fueling-orders/:id/supplement-reject',
+      summary: '补单审核驳回',
+      tags: ['异常订单'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '订单ID', example: 'order-exc-001' },
+      ],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [{ name: 'reason', type: 'string', required: true, description: '驳回原因', example: '金额不符' }],
+        example: '{ "reason": "金额不符" }',
+      },
+      notes: 'MVP+ 功能',
+    },
+    // --- 支付 ---
+    {
+      id: 'fueling-order-pay',
+      method: 'POST',
+      path: '/api/v1/stations/:stationId/fueling-orders/:id/pay',
+      summary: '支付（单一方式）',
+      tags: ['支付'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '订单ID', example: 'order-001' },
+      ],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [
+          { name: 'paymentMethod', type: 'string', required: true, description: '支付方式：cash / wechat / alipay / unionpay', example: 'wechat' },
+          { name: 'amount', type: 'number', required: true, description: '支付金额', example: '293.00' },
+          { name: 'receivedAmount', type: 'number', required: false, description: '实收金额（现金支付时使用，用于找零计算）', example: '300.00' },
+        ],
+        example: '{\n  "paymentMethod": "wechat",\n  "amount": 293.00\n}',
+      },
+      notes: '支付操作保证幂等性（通过 transaction_ref 去重）',
+    },
+    {
+      id: 'fueling-order-pay-mixed',
+      method: 'POST',
+      path: '/api/v1/stations/:stationId/fueling-orders/:id/pay-mixed',
+      summary: '混合支付',
+      tags: ['支付'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '订单ID', example: 'order-001' },
+      ],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [
+          { name: 'payments', type: 'array', required: true, description: '支付明细数组：[{ paymentMethod, amount }]', example: '见下方示例' },
+        ],
+        example: '{\n  "payments": [\n    { "paymentMethod": "cash", "amount": 100.00 },\n    { "paymentMethod": "wechat", "amount": 193.00 }\n  ]\n}',
+      },
+      notes: 'MVP+ 功能，一笔订单可多种支付方式混合支付',
+    },
+    // --- 退款 ---
+    {
+      id: 'refund-list',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/refunds',
+      summary: '退款记录列表',
+      tags: ['退款'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      queryParams: [
+        { name: 'refundStatus', type: 'string', required: false, description: '退款状态：pending_approval / refunded / rejected', example: 'pending_approval' },
+        { name: 'dateFrom', type: 'string', required: false, description: '开始日期', example: '2026-02-20' },
+        { name: 'dateTo', type: 'string', required: false, description: '结束日期', example: '2026-02-26' },
+        { name: 'keyword', type: 'string', required: false, description: '搜索关键词（匹配订单号）', example: 'ST001' },
+        { name: 'page', type: 'number', required: false, description: '页码', example: '1' },
+        { name: 'pageSize', type: 'number', required: false, description: '每页数量', example: '20' },
+      ],
+      responseFields: ['items[]', 'items[].id', 'items[].orderId', 'items[].orderNo', 'items[].refundType', 'items[].refundAmount', 'items[].refundReason', 'items[].refundStatus', 'items[].appliedBy', 'items[].approvedBy', 'items[].createdAt', 'pagination'],
+    },
+    {
+      id: 'refund-apply',
+      method: 'POST',
+      path: '/api/v1/stations/:stationId/fueling-orders/:id/refund',
+      summary: '发起退款申请',
+      tags: ['退款'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '订单ID', example: 'order-001' },
+      ],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [
+          { name: 'refundType', type: 'string', required: true, description: '退款类型：full / partial', example: 'partial' },
+          { name: 'refundAmount', type: 'number', required: true, description: '退款金额', example: '100.00' },
+          { name: 'refundReason', type: 'string', required: true, description: '退款原因', example: '多充退款' },
+        ],
+        example: '{\n  "refundType": "partial",\n  "refundAmount": 100.00,\n  "refundReason": "多充退款"\n}',
+      },
+      notes: '退款金额 ≤ (实付金额 - 已退总额)；全额退款时 refundAmount 自动填入 payableAmount',
+    },
+    {
+      id: 'refund-approve',
+      method: 'PATCH',
+      path: '/api/v1/stations/:stationId/refunds/:id/approve',
+      summary: '退款审批通过',
+      tags: ['退款'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '退款记录ID', example: 'refund-001' },
+      ],
+      notes: '审批通过后：全额退款→订单状态变更为 refunded；部分退款→订单状态保持 paid',
+    },
+    {
+      id: 'refund-reject',
+      method: 'PATCH',
+      path: '/api/v1/stations/:stationId/refunds/:id/reject',
+      summary: '退款审批驳回',
+      tags: ['退款'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '退款记录ID', example: 'refund-001' },
+      ],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [{ name: 'reason', type: 'string', required: true, description: '驳回原因', example: '退款金额有误' }],
+        example: '{ "reason": "退款金额有误" }',
+      },
+    },
+    // --- 标签管理 ---
+    {
+      id: 'order-tag-config-list',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/order-tags',
+      summary: '标签配置列表',
+      tags: ['标签管理'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      responseFields: ['items[]', 'items[].id', 'items[].name', 'items[].sortOrder'],
+      notes: 'MVP+ 功能',
+    },
+    {
+      id: 'order-tag-config-create',
+      method: 'POST',
+      path: '/api/v1/stations/:stationId/order-tags',
+      summary: '创建标签',
+      tags: ['标签管理'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [{ name: 'name', type: 'string', required: true, description: '标签名称', example: '滴滴' }],
+        example: '{ "name": "滴滴" }',
+      },
+      notes: 'MVP+ 功能',
+    },
+    {
+      id: 'order-tag-config-update',
+      method: 'PUT',
+      path: '/api/v1/stations/:stationId/order-tags/:id',
+      summary: '更新标签',
+      tags: ['标签管理'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '标签ID', example: 'tag-001' },
+      ],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [{ name: 'name', type: 'string', required: true, description: '标签名称', example: '物流车队' }],
+        example: '{ "name": "物流车队" }',
+      },
+      notes: 'MVP+ 功能',
+    },
+    {
+      id: 'order-tag-config-delete',
+      method: 'DELETE',
+      path: '/api/v1/stations/:stationId/order-tags/:id',
+      summary: '删除标签',
+      tags: ['标签管理'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '标签ID', example: 'tag-001' },
+      ],
+      notes: 'MVP+ 功能',
+    },
+    {
+      id: 'order-tag-add',
+      method: 'POST',
+      path: '/api/v1/stations/:stationId/fueling-orders/:id/tags',
+      summary: '为订单添加标签',
+      tags: ['标签管理'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '订单ID', example: 'order-001' },
+      ],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [{ name: 'tagName', type: 'string', required: true, description: '标签名称', example: '滴滴' }],
+        example: '{ "tagName": "滴滴" }',
+      },
+      notes: 'MVP+ 功能',
+    },
+    {
+      id: 'order-tag-remove',
+      method: 'DELETE',
+      path: '/api/v1/stations/:stationId/fueling-orders/:orderId/tags/:tagId',
+      summary: '移除订单标签',
+      tags: ['标签管理'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'orderId', type: 'string', required: true, description: '订单ID', example: 'order-001' },
+        { name: 'tagId', type: 'string', required: true, description: '标签ID', example: 'tag-001' },
+      ],
+      notes: 'MVP+ 功能',
+    },
+  ],
+};
+
+// ============================================================
 // 导出所有模块
 // ============================================================
 export const API_MODULES: ApiModule[] = [
@@ -1278,6 +2106,8 @@ export const API_MODULES: ApiModule[] = [
   shiftHandoverModule,
   deviceLedgerModule,
   inspectionModule,
+  priceManagementModule,
+  orderTransactionModule,
 ];
 
 export const API_VERSION = 'v1';

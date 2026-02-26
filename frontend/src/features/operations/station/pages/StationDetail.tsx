@@ -749,6 +749,7 @@ const StationDetail: React.FC = () => {
                 rowKey="id"
                 size="small"
                 pagination={false}
+                scroll={{ x: 900 }}
               />
             </Card>
           </TabPane>
@@ -796,6 +797,7 @@ const StationDetail: React.FC = () => {
                         dataSource={shifts}
                         rowKey="id"
                         pagination={false}
+                        scroll={{ x: 750 }}
                       />
                     </>
                   ),
@@ -872,6 +874,7 @@ const StationDetail: React.FC = () => {
               dataSource={employees}
               rowKey="id"
               pagination={false}
+              scroll={{ x: 750 }}
             />
           </TabPane>
         </Tabs>
