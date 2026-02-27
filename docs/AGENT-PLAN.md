@@ -228,6 +228,14 @@
          ↓
 步骤 9: [用户确认 UI Schema]
          ↓
+步骤 9.5: 术语一致性扫描（文档阶段出口检查）
+          → 执行 `glossary-management` Skill（docs/skills/analysis/glossary-management.md）
+          → 以 STANDARDS.md §1 为基准，扫描 5 份文档的术语一致性
+          → 检查：页面名称、组件名、路由、菜单文案在文档间是否统一
+          → 检查：新增术语是否已注册到 STANDARDS.md §1
+          → 如有不一致 → 修正文档后继续
+          → 如有新增术语 → 更新 STANDARDS.md 后继续
+          ↓
 步骤 10: 前端工程 Agent
           → 创建模拟数据
           → 实现 React 组件
@@ -273,6 +281,10 @@
             ☐ PostgreSQL Schema 草案已包含在 architecture.md 中
             ☐ cross-module-erd.md 已更新（新模块实体 + 跨模块 FK）
             ☐ API Docs 页面数据同步更新（apiData.ts）
+            ☐ 术语合规（Terminology Compliance，详见 `docs/skills/analysis/glossary-management.md`）：
+              ☐ a. 所有新增术语已录入 STANDARDS.md §1（含中英文 + 代码命名）
+              ☐ b. 文档间术语命名一致（页面名称、组件名、路由、菜单、面包屑在 5 份文档中统一）
+              ☐ c. i18n key 与 STANDARDS.md 术语对齐
             ☐ npm run build 编译通过
           → 有遗漏项则修复后重新验证
           ↓ (交付验证通过)
@@ -320,7 +332,7 @@ docs/skills/
 ├── analysis/                          # 需求分析类 Skills
 │   ├── requirement-decomposition.md   # ✅ 需求拆解
 │   ├── user-story-writing.md          # ✅ User Story 编写
-│   └── glossary-management.md         # ☐ 术语表维护
+│   └── glossary-management.md         # ✅ 术语表维护
 │
 ├── architecture/                      # 架构设计类 Skills
 │   ├── data-model-design.md           # ✅ 综合架构设计（数据模型 + API + 权限 + 约束）
