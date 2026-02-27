@@ -1,8 +1,8 @@
 # 项目规范 (Project Standards)
 
 **项目：** 加气站运营管理系统 (Gas Station Operations Management System)
-**版本：** 1.0
-**更新日期：** 2026-02-07
+**版本：** 1.1
+**更新日期：** 2026-02-27
 
 ---
 
@@ -10,17 +10,24 @@
 
 统一项目中使用的核心术语，避免歧义。
 
+### 1.1 核心业务术语
+
 | 中文术语 | 英文术语 | 代码命名 | 说明 |
 |---------|---------|---------|------|
 | 站点 | Station | station | 加气站/加油站物理站点 |
-| 加注机 | Dispenser | dispenser | 加气/加油设备 |
+| 加注机 | Dispenser | dispenser | 加气/加油设备（**泛称**，见下方说明） |
 | 枪 | Nozzle / Gun | nozzle | 加注机上的加注枪 |
+| 充装 | Fueling / Filling | fueling | 加气/加油操作（**泛称**，见下方说明） |
+| 储罐 | Tank | tank | 燃料存储罐 |
+| 罐存 | Tank Level | tankLevel | 储罐中的燃料存量 |
+| 订单 | Order / Transaction | order | 一次加注交易记录 |
 | 交接班 | Shift Handover | shiftHandover | 班次交接操作 |
 | 班次 | Shift | shift | 一个工作时段 |
-| 充装 | Fueling / Filling | fueling | 加气/加油操作 |
-| 罐存 | Tank Level | tankLevel | 储罐中的燃料存量 |
-| 巡检 | Inspection | inspection | 安全巡检操作 |
-| 订单 | Order / Transaction | order | 一次加注交易记录 |
+| 巡检 | Inspection | inspection | 安全巡检/安检操作 |
+| 维保工单 | Maintenance Order | maintenanceOrder | 设备维修保养工单 |
+| 设备台账 | Equipment Ledger | equipmentLedger | 设备资产档案 |
+| 价格调整 | Price Adjustment | priceAdjustment | 燃料价格变更记录 |
+| 退款 | Refund | refund | 订单退款记录 |
 | 会员 | Member | member | 注册会员客户 |
 | 大客户 | Enterprise Client | enterprise | 企业/车队客户 |
 | IC卡 | IC Card | icCard | 预付费IC卡 |
@@ -29,6 +36,66 @@
 | 挂账 | Credit Account | creditAccount | 企业客户赊账 |
 | 数据大屏 | Data Dashboard | dataDashboard | 全屏可视化展示 |
 | 非油业务 | Non-fuel Business | nonFuel | 便利店、洗车、充电等 |
+
+#### 术语使用规则
+
+**加注机 / 加气机 / 加油机**：
+- **泛称**：在文档描述、代码变量名、i18n key 中统一使用 **加注机** (`dispenser`)
+- **具体设备名**：设备实例（如"加气机#01"）保留原名，因为这是 CNG/LNG 站点的实际设备名称
+- **禁止**：同一段落中混用"加油机/加气机"并列写法，应统一为"加注机"
+
+**充装 / 加注**：
+- **泛称**：统一使用 **充装** (`fueling`)
+- **状态描述**："加注中"(`fueling`) 可作为设备运行状态保留
+
+**新增 vs 新建**：
+- 统一使用 **新增** 作为创建类操作的动作用语（按钮文案、面包屑等）
+
+### 1.2 角色术语
+
+| 中文术语 | 英文术语 | 代码命名 | 说明 |
+|---------|---------|---------|------|
+| 站长 | Station Master | station_master | 站点负责人，管理站点日常运营 |
+| 安全主管 | Safety Supervisor | safety_supervisor | 制定检查项目、下发安检任务、审核结果 |
+| 安全员 | Safety Officer | safety_officer | 执行安检任务、巡检操作 |
+| 操作员 / 充装员 | Operator | operator | 负责加注操作的一线员工 |
+| 运维工程师 | Maintenance Engineer | maintenance_engineer | 设备维保执行人 |
+| 财务 | Finance | finance | 财务审核与结算 |
+| 管理员 | Admin | admin | 系统管理员 |
+
+> **安全主管 vs 安全员**：这是两个不同层级的角色。安全主管负责计划制定与审批，安全员负责执行。小站点中两个角色可由同一人兼任，通过组织架构管理模块（Phase 9 系统与权限）实现角色权限控制。
+
+### 1.3 模块与菜单术语
+
+| 模块 ID | 中文名称 | 英文菜单 | 侧边栏层级 |
+|---------|---------|---------|-----------|
+| 1.1 | 站点管理 | Station | 基础运营 → 站点管理 → {子页面} |
+| 1.2 | 交接班管理 | Shift | 基础运营 → 交接班 → {子页面} |
+| 1.3 | 设备设施管理 | Device & Facility | 基础运营 → 设备设施 → {子页面} |
+| 1.4 | 巡检/安检管理 | Inspection | 基础运营 → 巡检/安检管理 → {子页面} |
+| 2.1 | 价格管理 | Price Management | 能源交易 → 价格管理 → {子页面} |
+| 2.2 | 订单与交易 | Order | 能源交易 → 订单管理 → {子页面} |
+| 2.3 | 库存管理 | Inventory | 能源交易 → 库存管理 → {子页面} |
+
+### 1.4 状态/枚举术语
+
+**严重程度量表（全系统通用）**：
+
+| 值 | 中文 | 英文 | 代码 |
+|---|------|------|------|
+| 低 | 低 | Low | `low` |
+| 中 | 中 | Medium | `medium` |
+| 高 | 高 | High | `high` |
+| 紧急 | 紧急 | Urgent | `urgent` |
+
+**安检检查项分类（双维度）**：
+
+安检检查项包含两个分类维度，通过不同字段区分：
+
+| 维度 | 字段名 | 说明 | 值 |
+|------|--------|------|-----|
+| 空间区域 | `area` | 检查项所在物理区域 | `tank_area`, `dispenser`, `power_room`, `fueling_area`, `non_fuel`, `equipment` |
+| 业务类型 | `category` | 检查项的业务分类 | `safety_equipment`, `fire_protection`, `electrical`, `pressure_vessel`, `environmental`, `general_facility` |
 
 > 此表将随项目推进持续补充。新增术语需同时更新中英文和代码命名。
 

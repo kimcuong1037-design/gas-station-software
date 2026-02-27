@@ -1,4 +1,4 @@
-# 跨模块实体关系图 (Cross-Module Entity Relationship Diagram)
+# wend
 
 **项目：** 加气站运营管理系统
 **覆盖范围：** Phase 1 基础运营（1.1~1.4）+ Phase 2.1 价格管理（已确认）+ Phase 2.2~2.3（预览）

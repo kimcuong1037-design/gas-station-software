@@ -85,6 +85,11 @@ export default {
     memberPrices: 'Member Prices',
     priceAgreements: 'Price Agreements',
     priceSettings: 'Price Settings',
+    orderTransaction: 'Order & Transaction',
+    orderList: 'Order List',
+    orderExceptions: 'Exception Orders',
+    orderRefunds: 'Refund Management',
+    orderSettings: 'Order Settings',
   },
 
   // User identity
@@ -1030,5 +1035,23 @@ export default {
       yuan: 'CNY',
     },
     empty: 'No fuel price data',
+  },
+
+  // Order & Transaction module
+  order: {
+    list: 'Order List',
+    exceptions: 'Exception Orders',
+    refunds: 'Refund Management',
+    settings: 'Order Settings',
+    stats: {
+      totalOrders: 'Total Orders',
+      totalAmount: 'Total Amount',
+      totalQuantity: 'Total Quantity',
+      pendingPayment: 'Pending Payment',
+    },
+    action: {
+      createOrder: 'Create Order',
+      export: 'Export',
+    },
   },
 };

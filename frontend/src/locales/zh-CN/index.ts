@@ -85,6 +85,11 @@ export default {
     memberPrices: '会员专享价',
     priceAgreements: '价格协议',
     priceSettings: '价格设置',
+    orderTransaction: '订单交易',
+    orderList: '订单列表',
+    orderExceptions: '异常订单',
+    orderRefunds: '退款管理',
+    orderSettings: '订单设置',
   },
 
   // 用户身份
@@ -1034,5 +1039,23 @@ export default {
       yuan: '元',
     },
     empty: '暂无油品价格数据',
+  },
+
+  // 订单与交易模块
+  order: {
+    list: '订单列表',
+    exceptions: '异常订单',
+    refunds: '退款管理',
+    settings: '订单设置',
+    stats: {
+      totalOrders: '总订单数',
+      totalAmount: '总金额',
+      totalQuantity: '总充装量',
+      pendingPayment: '待支付',
+    },
+    action: {
+      createOrder: '创建订单',
+      export: '导出',
+    },
   },
 };

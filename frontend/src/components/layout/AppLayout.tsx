@@ -26,12 +26,17 @@ import {
   TeamOutlined,
   FileSearchOutlined,
   SettingOutlined,
+  ShoppingCartOutlined,
+  ExclamationCircleOutlined,
+  TransactionOutlined,
+  TagsOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { stations } from '../../mock/stations';
 import { issueRecords } from '../../mock/inspections';
 import { priceAdjustments } from '../../mock/priceManagement';
+import { fuelingOrders, refundRecords } from '../../mock/orderTransaction';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
@@ -216,6 +221,51 @@ const AppLayout: React.FC = () => {
             },
           ],
         },
+        {
+          key: '/energy-trade/order',
+          icon: <ShoppingCartOutlined />,
+          label: t('menu.orderTransaction', '订单交易'),
+          children: [
+            {
+              key: '/energy-trade/order',
+              icon: <FileTextOutlined />,
+              label: t('menu.orderList', '订单列表'),
+            },
+            {
+              key: '/energy-trade/order/exceptions',
+              icon: <ExclamationCircleOutlined />,
+              label: (
+                <span>
+                  {t('menu.orderExceptions', '异常订单')}
+                  {fuelingOrders.filter(o => o.exceptionType && o.handleStatus === 'pending').length > 0 && (
+                    <span style={{ marginLeft: 8, display: 'inline-block', minWidth: 18, height: 18, lineHeight: '18px', borderRadius: 9, background: '#ff4d4f', color: '#fff', fontSize: 11, textAlign: 'center', padding: '0 5px' }}>
+                      {fuelingOrders.filter(o => o.exceptionType && o.handleStatus === 'pending').length}
+                    </span>
+                  )}
+                </span>
+              ),
+            },
+            {
+              key: '/energy-trade/order/refunds',
+              icon: <TransactionOutlined />,
+              label: (
+                <span>
+                  {t('menu.orderRefunds', '退款管理')}
+                  {refundRecords.filter(r => r.refundStatus === 'pending_approval').length > 0 && (
+                    <span style={{ marginLeft: 8, display: 'inline-block', minWidth: 18, height: 18, lineHeight: '18px', borderRadius: 9, background: '#faad14', color: '#fff', fontSize: 11, textAlign: 'center', padding: '0 5px' }}>
+                      {refundRecords.filter(r => r.refundStatus === 'pending_approval').length}
+                    </span>
+                  )}
+                </span>
+              ),
+            },
+            {
+              key: '/energy-trade/order/settings',
+              icon: <TagsOutlined />,
+              label: t('menu.orderSettings', '订单设置'),
+            },
+          ],
+        },
       ],
     },
   ];
@@ -254,7 +304,8 @@ const AppLayout: React.FC = () => {
   const isDeviceLedgerPage = location.pathname.startsWith('/operations/device-ledger');
   const isInspectionPage = location.pathname.startsWith('/operations/inspection');
   const isPriceManagementPage = location.pathname.startsWith('/energy-trade/price-management');
-  const showStationSelector = isShiftHandoverPage || isDeviceLedgerPage || isInspectionPage || isPriceManagementPage;
+  const isOrderTransactionPage = location.pathname.startsWith('/energy-trade/order');
+  const showStationSelector = isShiftHandoverPage || isDeviceLedgerPage || isInspectionPage || isPriceManagementPage || isOrderTransactionPage;
 
   // 生成当前路径的面包屑
   const getBreadcrumbItems = () => {
@@ -433,6 +484,20 @@ const AppLayout: React.FC = () => {
           items.push({ title: t('menu.priceSettings', '价格设置') as string });
         }
       }
+      if (pathSegments.includes('order')) {
+        items.push({
+          title: t('menu.orderTransaction', '订单交易') as string,
+          onClick: () => navigate('/energy-trade/order'),
+          className: 'breadcrumb-link'
+        });
+        if (pathSegments.includes('exceptions')) {
+          items.push({ title: t('menu.orderExceptions', '异常订单') as string });
+        } else if (pathSegments.includes('refunds')) {
+          items.push({ title: t('menu.orderRefunds', '退款管理') as string });
+        } else if (pathSegments.includes('settings')) {
+          items.push({ title: t('menu.orderSettings', '订单设置') as string });
+        }
+      }
     }
 
     return items;
@@ -471,7 +536,7 @@ const AppLayout: React.FC = () => {
         <Menu
           mode="inline"
           selectedKeys={getSelectedKeys()}
-          defaultOpenKeys={['/operations', '/operations/shift-handover', '/operations/device-ledger', '/operations/inspection', '/energy-trade', '/energy-trade/price-management']}
+          defaultOpenKeys={['/operations', '/operations/shift-handover', '/operations/device-ledger', '/operations/inspection', '/energy-trade', '/energy-trade/price-management', '/energy-trade/order']}
           items={menuItems}
           onClick={handleMenuClick}
         />

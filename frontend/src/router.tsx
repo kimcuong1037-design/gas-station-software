@@ -55,6 +55,12 @@ const MemberPriceList = lazy(() => import('./features/energy-trade/price-managem
 const AgreementList = lazy(() => import('./features/energy-trade/price-management/pages/AgreementList'));
 const PriceSettings = lazy(() => import('./features/energy-trade/price-management/pages/PriceSettings'));
 
+// Order Transaction pages
+const OrderList = lazy(() => import('./features/energy-trade/order-transaction/pages/OrderList'));
+const ExceptionOrderList = lazy(() => import('./features/energy-trade/order-transaction/pages/ExceptionOrderList'));
+const RefundManagement = lazy(() => import('./features/energy-trade/order-transaction/pages/RefundManagement'));
+const OrderSettings = lazy(() => import('./features/energy-trade/order-transaction/pages/OrderSettings'));
+
 // API Docs page (standalone, no AppLayout)
 const ApiDocs = lazy(() => import('./pages/ApiDocs'));
 
@@ -348,6 +354,28 @@ export const router = createBrowserRouter([
               {
                 path: 'settings',
                 element: withSuspense(PriceSettings),
+              },
+            ],
+          },
+          // Order Transaction routes
+          {
+            path: 'order',
+            children: [
+              {
+                index: true,
+                element: withSuspense(OrderList),
+              },
+              {
+                path: 'exceptions',
+                element: withSuspense(ExceptionOrderList),
+              },
+              {
+                path: 'refunds',
+                element: withSuspense(RefundManagement),
+              },
+              {
+                path: 'settings',
+                element: withSuspense(OrderSettings),
               },
             ],
           },

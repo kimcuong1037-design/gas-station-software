@@ -7,6 +7,7 @@ import { shiftHandoverUserStories } from '../features/operations/shift-handover/
 import { deviceLedgerUserStories } from '../features/operations/device-ledger/userStoryMapping';
 import { inspectionUserStories } from '../features/operations/inspection/userStoryMapping';
 import { priceManagementUserStories } from '../features/energy-trade/price-management/userStoryMapping';
+import { orderTransactionUserStories } from '../features/energy-trade/order-transaction/userStoryMapping';
 
 // 合并所有模块的 User Story 映射
 const allUserStories: Record<string, UserStoryMapping> = {
@@ -15,6 +16,7 @@ const allUserStories: Record<string, UserStoryMapping> = {
   ...deviceLedgerUserStories,
   ...inspectionUserStories,
   ...priceManagementUserStories,
+  ...orderTransactionUserStories,
 };
 
 // 模块映射表，用于按模块筛选
@@ -24,6 +26,7 @@ const moduleStories = {
   'device-ledger': deviceLedgerUserStories,
   inspection: inspectionUserStories,
   'price-management': priceManagementUserStories,
+  'order-transaction': orderTransactionUserStories,
   all: allUserStories,
 } as const;
 
