@@ -2,19 +2,25 @@ import React, { useState, useMemo } from 'react';
 import { Typography, Tabs, Table, Tag, Button, Select, DatePicker, Input, Space, message, Modal, Popconfirm } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useTranslation } from 'react-i18next';
+import { useOutletContext } from 'react-router-dom';
 import { RequirementTag } from '../../../../components/RequirementTag';
 import type { RefundRecord, RefundStatus } from '../types';
 import type { Dayjs } from 'dayjs';
 import { REFUND_STATUS_CONFIG, getLabel } from '../constants';
-import { refundRecords as allRefunds } from '../../../../mock/orderTransaction';
+import { refundRecords as allRefunds, fuelingOrders } from '../../../../mock/orderTransaction';
 import OrderDetailDrawer from '../components/OrderDetailDrawer';
 
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
 
+interface LayoutContext {
+  selectedStationId: string;
+}
+
 const RefundManagement: React.FC = () => {
   const { t } = useTranslation();
+  const { selectedStationId: stationId } = useOutletContext<LayoutContext>();
 
   const [activeTab, setActiveTab] = useState<'records' | 'approvals'>('records');
   const [statusFilter, setStatusFilter] = useState<RefundStatus | ''>('');
@@ -23,11 +29,21 @@ const RefundManagement: React.FC = () => {
   const [detailOrderId, setDetailOrderId] = useState<string | null>(null);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
+  const [rejectingRecord, setRejectingRecord] = useState<RefundRecord | null>(null);
 
-  const pendingApprovalCount = allRefunds.filter(r => r.refundStatus === 'pending_approval').length;
+  // Filter refunds by station — match via orderId → fuelingOrders.stationId
+  const stationOrderIds = useMemo(() => {
+    return new Set(fuelingOrders.filter(o => o.stationId === stationId).map(o => o.id));
+  }, [stationId]);
+
+  const stationRefunds = useMemo(() => {
+    return allRefunds.filter(r => stationOrderIds.has(r.orderId));
+  }, [stationOrderIds]);
+
+  const pendingApprovalCount = stationRefunds.filter(r => r.refundStatus === 'pending_approval').length;
 
   const recordList = useMemo(() => {
-    let list = [...allRefunds];
+    let list = [...stationRefunds];
     if (statusFilter) list = list.filter(r => r.refundStatus === statusFilter);
     if (keyword) {
       const kw = keyword.toLowerCase();
@@ -42,12 +58,12 @@ const RefundManagement: React.FC = () => {
       });
     }
     return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [statusFilter, keyword, dateRange]);
+  }, [stationRefunds, statusFilter, keyword, dateRange]);
 
   const approvalList = useMemo(() => {
-    return allRefunds.filter(r => r.refundStatus === 'pending_approval')
+    return stationRefunds.filter(r => r.refundStatus === 'pending_approval')
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, []);
+  }, [stationRefunds]);
 
   const handleApprove = (record: RefundRecord) => {
     message.success(`退款 ${record.orderNo} 审批通过，退款已执行`);
@@ -58,9 +74,10 @@ const RefundManagement: React.FC = () => {
       message.error('请填写驳回原因');
       return;
     }
-    message.success('已驳回');
+    message.success(`退款 ${rejectingRecord?.orderNo} 已驳回`);
     setRejectModalOpen(false);
     setRejectReason('');
+    setRejectingRecord(null);
   };
 
   const baseColumns: ColumnsType<RefundRecord> = [
@@ -112,7 +129,7 @@ const RefundManagement: React.FC = () => {
             <Popconfirm title="确认通过此退款申请？" onConfirm={() => handleApprove(record)}>
               <Button size="small" style={{ color: '#52c41a', borderColor: '#52c41a' }}>通过</Button>
             </Popconfirm>
-            <Button size="small" danger onClick={() => setRejectModalOpen(true)}>驳回</Button>
+            <Button size="small" danger onClick={() => { setRejectingRecord(record); setRejectModalOpen(true); }}>驳回</Button>
           </Space>
         );
       },
@@ -177,7 +194,9 @@ const RefundManagement: React.FC = () => {
       />
 
       <Modal
-        title="驳回退款申请" open={rejectModalOpen} onCancel={() => { setRejectModalOpen(false); setRejectReason(''); }}
+        title={`驳回退款申请${rejectingRecord ? ` — ${rejectingRecord.orderNo}` : ''}`}
+        open={rejectModalOpen}
+        onCancel={() => { setRejectModalOpen(false); setRejectReason(''); setRejectingRecord(null); }}
         onOk={handleReject} okText="确认驳回" okButtonProps={{ danger: true }}
       >
         <TextArea rows={3} value={rejectReason} onChange={e => setRejectReason(e.target.value)}

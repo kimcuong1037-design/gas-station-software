@@ -247,7 +247,32 @@
   3. 实现前对照 ui-schema 操作列设计：如果为某状态定义了按钮，该状态数据必须出现在数据源中
   4. 跨页面标记一致性：某属性在专用页面有展示，在主列表也应有视觉标记
 
+## 2026-02-28 跨模块数据流文档缺口：订单→库存扣减、订单→交接班 KPI
+
+- **修正内容：** 用户在 review Module 2.3 库存管理 requirements.md 时提出两个跨模块设计问题：(1) Module 2.2 订单完成后应触发 Module 2.3 库存自动扣减；(2) Module 2.2 订单数据应影响 Phase 1 交接班模块的站点经营 KPI（销售金额、订单数等）。经全面跨模块分析发现：
+  - **链路 1 (2.2→2.3)**：Module 2.3 requirements.md F22 和 Section 3.2 正确定义了"订单完成时自动生成出库记录"和"退款时生成冲红入库记录"，但 Module 2.2 的 architecture.md 未将 Module 2.3 列为下游消费者，也未定义事件触发机制（同步/异步/事件总线）和数据契约
+  - **链路 2 (2.2→1.2)**：cross-module-erd.md 有 FuelingOrder→ShiftHandover 引用，shift-handover/architecture.md 的 ShiftSummary 包含 totalSales/orderCount 字段，但缺少聚合计算算法（按哪些字段聚合、时间窗口如何确定）和 API 契约
+
+  据此确定处理方案：在 Module 2.3 architecture.md 中补充完整的 2.2→2.3 数据流定义（触发机制、数据契约、冲红流程），同时记录 2.2→1.2 链路留作 Phase 1 增强阶段实现。更新 CORRECTIONS.md P7 模式新增 3 条规则（规则 5-7）
+
+- **原因分析：** 模块开发按"自内向外"视角设计——每个模块的 architecture.md 只关注"我依赖谁"（上游），不关注"谁依赖我"（下游）。当下游模块尚未启动设计时，上游模块没有动力去声明"我的数据会被谁消费"。这导致跨模块数据流的触发机制和数据契约缺失，只有到下游模块设计时才暴露缺口。另外 cross-module-erd.md 只定义了实体间的静态关系（FK 引用），未定义动态行为（事件触发、数据聚合算法）
+
+- **经验总结：**
+  1. **上游必须声明下游**：模块 architecture.md 不仅要列"我依赖谁"，还必须列"谁消费我的数据"。当新模块 B 消费模块 A 的数据时，A 的 architecture.md 需回溯补充
+  2. **数据流 ≠ 实体关系**：cross-module-erd.md 定义实体间的静态 FK 引用，但跨模块数据流需要额外定义：触发条件（订单状态变为 paid）、触发机制（事件/轮询/同步调用）、数据契约（传递哪些字段）、失败处理（重试/补偿）
+  3. **反向影响审查**是必要步骤：每个新模块的 requirements.md 完成后，应回溯检查上游模块的 architecture.md 是否需要补充。这一步应加入 AGENT-PLAN 的文档套件流程
+  4. **聚合计算必须文档化**：当模块 B 需要聚合模块 A 的数据生成统计（如 ShiftSummary.totalSales = Σ FuelingOrder.totalAmount），聚合算法（字段、时间窗口、过滤条件）必须在 architecture.md 中显式定义，不能依赖"隐式约定"
+  5. **跨模块文档缺口的发现时机**：理想是上游模块设计时就预留；实际往往是下游模块需求分析时暴露。应将"反向影响审查"制度化，而非依赖偶然发现
+
+- **修正文件清单：**
+  - `docs/CORRECTIONS.md` — P7 新增规则 5-7，摘要表新增 #27
+  - `docs/CORRECTIONS-ARCHIVE.md` — 新增本条完整记录
+  - `docs/features/energy-trade/inventory-management/requirements.md` — F22/Section 3.2 已正确覆盖（无需修改）
+  - `docs/features/energy-trade/inventory-management/architecture.md` — 待创建时补充完整跨模块数据流定义
+  - `docs/features/energy-trade/order-transaction/architecture.md` — 待补充 Module 2.3 为下游消费者
+
 ---
 
 *创建时间：2026-02-27*
-*内容来源：docs/CORRECTIONS.md 原始内容 (2026-02-07 ~ 2026-02-25) + auto-memory corrections (2026-02-25 ~ 2026-02-27)*
+*最后更新：2026-02-28*
+*内容来源：docs/CORRECTIONS.md 原始内容 (2026-02-07 ~ 2026-02-25) + auto-memory corrections (2026-02-25 ~ 2026-02-28)*
