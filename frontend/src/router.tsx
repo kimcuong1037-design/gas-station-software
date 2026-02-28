@@ -61,6 +61,14 @@ const ExceptionOrderList = lazy(() => import('./features/energy-trade/order-tran
 const RefundManagement = lazy(() => import('./features/energy-trade/order-transaction/pages/RefundManagement'));
 const OrderSettings = lazy(() => import('./features/energy-trade/order-transaction/pages/OrderSettings'));
 
+// Inventory Management pages
+const InventoryOverview = lazy(() => import('./features/energy-trade/inventory-management/pages/InventoryOverview'));
+const InboundManagement = lazy(() => import('./features/energy-trade/inventory-management/pages/InboundManagement'));
+const OutboundRecords = lazy(() => import('./features/energy-trade/inventory-management/pages/OutboundRecords'));
+const TransactionLedger = lazy(() => import('./features/energy-trade/inventory-management/pages/TransactionLedger'));
+const TankComparison = lazy(() => import('./features/energy-trade/inventory-management/pages/TankComparison'));
+const AlertManagement = lazy(() => import('./features/energy-trade/inventory-management/pages/AlertManagement'));
+
 // API Docs page (standalone, no AppLayout)
 const ApiDocs = lazy(() => import('./pages/ApiDocs'));
 
@@ -376,6 +384,40 @@ export const router = createBrowserRouter([
               {
                 path: 'settings',
                 element: withSuspense(OrderSettings),
+              },
+            ],
+          },
+          // Inventory Management routes
+          {
+            path: 'inventory',
+            children: [
+              {
+                index: true,
+                element: <Navigate to="/energy-trade/inventory/overview" replace />,
+              },
+              {
+                path: 'overview',
+                element: withSuspense(InventoryOverview),
+              },
+              {
+                path: 'inbound',
+                element: withSuspense(InboundManagement),
+              },
+              {
+                path: 'outbound',
+                element: withSuspense(OutboundRecords),
+              },
+              {
+                path: 'ledger',
+                element: withSuspense(TransactionLedger),
+              },
+              {
+                path: 'tank-comparison',
+                element: withSuspense(TankComparison),
+              },
+              {
+                path: 'alerts',
+                element: withSuspense(AlertManagement),
               },
             ],
           },

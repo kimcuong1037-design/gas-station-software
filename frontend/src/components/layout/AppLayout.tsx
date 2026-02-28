@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layout, Menu, Select, theme, Typography, Breadcrumb, Dropdown, Avatar, Tag, Space, message } from 'antd';
+import { Badge, Layout, Menu, Select, theme, Typography, Breadcrumb, Dropdown, Avatar, Tag, Space, message } from 'antd';
 import {
   HomeOutlined,
   EnvironmentOutlined,
@@ -30,6 +30,12 @@ import {
   ExclamationCircleOutlined,
   TransactionOutlined,
   TagsOutlined,
+  ContainerOutlined,
+  AlertOutlined,
+  SwapRightOutlined,
+  ReconciliationOutlined,
+  StockOutlined,
+  LineChartOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
@@ -37,6 +43,7 @@ import { stations } from '../../mock/stations';
 import { issueRecords } from '../../mock/inspections';
 import { priceAdjustments } from '../../mock/priceManagement';
 import { fuelingOrders, refundRecords } from '../../mock/orderTransaction';
+import { getActiveAlertCount } from '../../mock/inventory';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
@@ -222,6 +229,50 @@ const AppLayout: React.FC = () => {
           ],
         },
         {
+          key: '/energy-trade/inventory',
+          icon: <ContainerOutlined />,
+          label: t('menu.inventoryManagement', '库存管理'),
+          children: [
+            {
+              key: '/energy-trade/inventory/overview',
+              icon: <DashboardOutlined />,
+              label: t('menu.inventoryOverview', '库存总览'),
+            },
+            {
+              key: '/energy-trade/inventory/inbound',
+              icon: <SwapRightOutlined />,
+              label: t('menu.inventoryInbound', '入库管理'),
+            },
+            {
+              key: '/energy-trade/inventory/outbound',
+              icon: <ReconciliationOutlined />,
+              label: t('menu.inventoryOutbound', '出库记录'),
+            },
+            {
+              key: '/energy-trade/inventory/ledger',
+              icon: <StockOutlined />,
+              label: t('menu.inventoryLedger', '进销存流水'),
+            },
+            {
+              key: '/energy-trade/inventory/tank-comparison',
+              icon: <LineChartOutlined />,
+              label: t('menu.inventoryTankComparison', '罐存比对'),
+            },
+            {
+              key: '/energy-trade/inventory/alerts',
+              icon: <AlertOutlined />,
+              label: (
+                <span>
+                  {t('menu.inventoryAlerts', '预警管理')}
+                  {getActiveAlertCount('station-001') > 0 && (
+                    <Badge count={getActiveAlertCount('station-001')} size="small" style={{ marginLeft: 8 }} />
+                  )}
+                </span>
+              ),
+            },
+          ],
+        },
+        {
           key: '/energy-trade/order',
           icon: <ShoppingCartOutlined />,
           label: t('menu.orderTransaction', '订单交易'),
@@ -305,7 +356,8 @@ const AppLayout: React.FC = () => {
   const isInspectionPage = location.pathname.startsWith('/operations/inspection');
   const isPriceManagementPage = location.pathname.startsWith('/energy-trade/price-management');
   const isOrderTransactionPage = location.pathname.startsWith('/energy-trade/order');
-  const showStationSelector = isShiftHandoverPage || isDeviceLedgerPage || isInspectionPage || isPriceManagementPage || isOrderTransactionPage;
+  const isInventoryPage = location.pathname.startsWith('/energy-trade/inventory');
+  const showStationSelector = isShiftHandoverPage || isDeviceLedgerPage || isInspectionPage || isPriceManagementPage || isOrderTransactionPage || isInventoryPage;
 
   // 生成当前路径的面包屑
   const getBreadcrumbItems = () => {
@@ -498,6 +550,26 @@ const AppLayout: React.FC = () => {
           items.push({ title: t('menu.orderSettings', '订单设置') as string });
         }
       }
+      if (pathSegments.includes('inventory')) {
+        items.push({
+          title: t('menu.inventoryManagement', '库存管理') as string,
+          onClick: () => navigate('/energy-trade/inventory/overview'),
+          className: 'breadcrumb-link'
+        });
+        if (pathSegments.includes('overview')) {
+          items.push({ title: t('menu.inventoryOverview', '库存总览') as string });
+        } else if (pathSegments.includes('inbound')) {
+          items.push({ title: t('menu.inventoryInbound', '入库管理') as string });
+        } else if (pathSegments.includes('outbound')) {
+          items.push({ title: t('menu.inventoryOutbound', '出库记录') as string });
+        } else if (pathSegments.includes('ledger')) {
+          items.push({ title: t('menu.inventoryLedger', '进销存流水') as string });
+        } else if (pathSegments.includes('tank-comparison')) {
+          items.push({ title: t('menu.inventoryTankComparison', '罐存比对') as string });
+        } else if (pathSegments.includes('alerts')) {
+          items.push({ title: t('menu.inventoryAlerts', '预警管理') as string });
+        }
+      }
     }
 
     return items;
@@ -536,7 +608,7 @@ const AppLayout: React.FC = () => {
         <Menu
           mode="inline"
           selectedKeys={getSelectedKeys()}
-          defaultOpenKeys={['/operations', '/operations/shift-handover', '/operations/device-ledger', '/operations/inspection', '/energy-trade', '/energy-trade/price-management', '/energy-trade/order']}
+          defaultOpenKeys={['/operations', '/operations/shift-handover', '/operations/device-ledger', '/operations/inspection', '/energy-trade', '/energy-trade/price-management', '/energy-trade/order', '/energy-trade/inventory']}
           items={menuItems}
           onClick={handleMenuClick}
         />

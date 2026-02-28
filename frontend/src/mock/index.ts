@@ -74,3 +74,16 @@ export {
   getOrderDetail,
   getOrderTagConfigs,
 } from './orderTransaction';
+export {
+  inboundRecords,
+  outboundRecords,
+  inventoryLedgerEntries,
+  tankComparisonLogs,
+  stockAdjustments,
+  inventoryAlerts,
+  alertConfigs,
+  getInventoryOverview,
+  getTankComparisonRealtime,
+  getLossAnalysis,
+  getActiveAlertCount,
+} from './inventory';

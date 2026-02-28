@@ -9,6 +9,7 @@
  * - 1.4 巡检安检管理 (Inspection)
  * - 2.1 价格管理 (Price Management)
  * - 2.2 订单与交易 (Order & Transaction)
+ * - 2.3 库存管理 (Inventory Management)
  */
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
@@ -2099,6 +2100,370 @@ const orderTransactionModule: ApiModule = {
 };
 
 // ============================================================
+// 模块 2.3 — 库存管理
+// ============================================================
+const inventoryModule: ApiModule = {
+  id: 'inventory-management',
+  name: '库存管理',
+  nameEn: 'Inventory Management',
+  description: '库存总览、入库管理、出库记录、进销存流水、罐存比对、盘点调整、库存预警',
+  baseUrl: '/api/v1',
+  color: '#13c2c2',
+  endpoints: [
+    // --- 库存总览 ---
+    {
+      id: 'inventory-overview',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/inventory/overview',
+      summary: '库存总览聚合',
+      description: '聚合所有燃料类型的库存卡片数据和趋势数据',
+      tags: ['库存总览'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      queryParams: [
+        { name: 'trendDays', type: 'number', required: false, description: '趋势数据天数', example: '7' },
+      ],
+      responseFields: ['cards[]', 'cards[].fuelTypeId', 'cards[].fuelTypeName', 'cards[].currentStock', 'cards[].ratedCapacity', 'cards[].tankLevelRatio', 'cards[].todayInbound', 'cards[].todayOutbound', 'cards[].netChange', 'trendData[]'],
+    },
+    // --- 入库管理 ---
+    {
+      id: 'inbound-record-list',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/inventory/inbound-records',
+      summary: '入库记录列表',
+      tags: ['入库管理'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      queryParams: [
+        { name: 'fuelTypeId', type: 'string', required: false, description: '燃料类型ID', example: 'ft-lng' },
+        { name: 'auditStatus', type: 'string', required: false, description: '审核状态：pending_review / approved / rejected', example: 'pending_review' },
+        { name: 'dateFrom', type: 'string', required: false, description: '开始日期', example: '2026-02-01' },
+        { name: 'dateTo', type: 'string', required: false, description: '结束日期', example: '2026-02-28' },
+        { name: 'keyword', type: 'string', required: false, description: '搜索关键词（匹配入库单号、供应商）', example: 'RK' },
+        { name: 'page', type: 'number', required: false, description: '页码', example: '1' },
+        { name: 'pageSize', type: 'number', required: false, description: '每页数量', example: '20' },
+      ],
+      responseFields: ['items[]', 'items[].id', 'items[].inboundNo', 'items[].supplierName', 'items[].fuelTypeName', 'items[].plannedQuantity', 'items[].actualQuantity', 'items[].variance', 'items[].varianceRate', 'items[].auditStatus', 'items[].inboundTime', 'pagination'],
+    },
+    {
+      id: 'inbound-record-detail',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/inventory/inbound-records/:id',
+      summary: '入库记录详情',
+      tags: ['入库管理'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '入库记录ID', example: 'inb-001' },
+      ],
+      responseFields: ['id', 'inboundNo', 'tankId', 'tankName', 'fuelTypeId', 'fuelTypeName', 'supplierName', 'deliveryNo', 'plannedQuantity', 'actualQuantity', 'variance', 'varianceRate', 'auditStatus', 'auditorName', 'auditedAt', 'rejectReason', 'operatorName', 'inboundTime', 'remark'],
+    },
+    {
+      id: 'create-inbound-record',
+      method: 'POST',
+      path: '/api/v1/stations/:stationId/inventory/inbound-records',
+      summary: '创建入库单',
+      tags: ['入库管理'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [
+          { name: 'tankId', type: 'string', required: true, description: '目标储罐ID', example: 'tank-001' },
+          { name: 'supplierName', type: 'string', required: true, description: '供应商名称', example: '中石化供应' },
+          { name: 'deliveryNo', type: 'string', required: false, description: '送货单号', example: 'DL-20260225-001' },
+          { name: 'plannedQuantity', type: 'number', required: true, description: '计划量(kg)', example: '5000.000' },
+          { name: 'actualQuantity', type: 'number', required: true, description: '实收量(kg)', example: '4985.500' },
+          { name: 'inboundTime', type: 'string', required: true, description: '入库时间(ISO)', example: '2026-02-25T10:00:00' },
+          { name: 'remark', type: 'string', required: false, description: '备注' },
+        ],
+      },
+      responseFields: ['id', 'inboundNo'],
+    },
+    {
+      id: 'approve-inbound-record',
+      method: 'PATCH',
+      path: '/api/v1/stations/:stationId/inventory/inbound-records/:id/approve',
+      summary: '审核通过入库单',
+      description: '更新审核状态为 approved，同时更新理论库存',
+      tags: ['入库管理'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '入库记录ID', example: 'inb-001' },
+      ],
+      notes: '权限：station_master',
+    },
+    {
+      id: 'reject-inbound-record',
+      method: 'PATCH',
+      path: '/api/v1/stations/:stationId/inventory/inbound-records/:id/reject',
+      summary: '审核驳回入库单',
+      tags: ['入库管理'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '入库记录ID', example: 'inb-001' },
+      ],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [
+          { name: 'reason', type: 'string', required: true, description: '驳回原因', example: '数量偏差过大' },
+        ],
+      },
+    },
+    // --- 出库管理 ---
+    {
+      id: 'outbound-record-list',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/inventory/outbound-records',
+      summary: '出库记录列表',
+      tags: ['出库管理'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      queryParams: [
+        { name: 'outboundType', type: 'string', required: false, description: '出库类型：sales / loss / reversal', example: 'loss' },
+        { name: 'fuelTypeId', type: 'string', required: false, description: '燃料类型ID', example: 'ft-lng' },
+        { name: 'source', type: 'string', required: false, description: '操作来源：auto / manual', example: 'manual' },
+        { name: 'dateFrom', type: 'string', required: false, description: '开始日期', example: '2026-02-01' },
+        { name: 'dateTo', type: 'string', required: false, description: '结束日期', example: '2026-02-28' },
+        { name: 'page', type: 'number', required: false, description: '页码', example: '1' },
+        { name: 'pageSize', type: 'number', required: false, description: '每页数量', example: '20' },
+      ],
+      responseFields: ['items[]', 'items[].id', 'items[].outboundNo', 'items[].outboundType', 'items[].fuelTypeName', 'items[].quantity', 'items[].amount', 'items[].source', 'items[].auditStatus', 'items[].outboundTime', 'pagination'],
+    },
+    {
+      id: 'create-loss-outbound',
+      method: 'POST',
+      path: '/api/v1/stations/:stationId/inventory/outbound-records',
+      summary: '创建损耗出库',
+      tags: ['出库管理'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [
+          { name: 'fuelTypeId', type: 'string', required: true, description: '燃料类型ID', example: 'ft-lng' },
+          { name: 'quantity', type: 'number', required: true, description: '损耗量(kg)', example: '15.500' },
+          { name: 'lossReason', type: 'string', required: true, description: '损耗原因：evaporation / leakage / transfer / other', example: 'evaporation' },
+          { name: 'lossReasonDetail', type: 'string', required: false, description: '原因说明（选other时必填）' },
+        ],
+      },
+      responseFields: ['id', 'outboundNo'],
+    },
+    {
+      id: 'approve-loss-outbound',
+      method: 'PATCH',
+      path: '/api/v1/stations/:stationId/inventory/outbound-records/:id/approve',
+      summary: '损耗审批通过',
+      tags: ['出库管理'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '出库记录ID', example: 'out-001' },
+      ],
+      notes: '权限：shift_leader, station_master',
+    },
+    {
+      id: 'reject-loss-outbound',
+      method: 'PATCH',
+      path: '/api/v1/stations/:stationId/inventory/outbound-records/:id/reject',
+      summary: '损耗审批驳回',
+      tags: ['出库管理'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '出库记录ID', example: 'out-001' },
+      ],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [
+          { name: 'reason', type: 'string', required: true, description: '驳回原因' },
+        ],
+      },
+    },
+    // --- 进销存流水 ---
+    {
+      id: 'transaction-ledger-list',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/inventory/transactions',
+      summary: '流水明细列表',
+      tags: ['进销存流水'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      queryParams: [
+        { name: 'transactionType', type: 'string[]', required: false, description: '流水类型(多选)：inbound / sales_outbound / loss_outbound / stock_adjustment / reversal', example: 'inbound' },
+        { name: 'fuelTypeId', type: 'string', required: false, description: '燃料类型ID', example: 'ft-lng' },
+        { name: 'dateFrom', type: 'string', required: false, description: '开始日期', example: '2026-02-01' },
+        { name: 'dateTo', type: 'string', required: false, description: '结束日期', example: '2026-02-28' },
+        { name: 'page', type: 'number', required: false, description: '页码', example: '1' },
+        { name: 'pageSize', type: 'number', required: false, description: '每页数量', example: '20' },
+      ],
+      responseFields: ['items[]', 'items[].id', 'items[].transactionType', 'items[].fuelTypeName', 'items[].quantity', 'items[].amount', 'items[].stockBalance', 'items[].relatedNo', 'items[].transactionTime', 'pagination'],
+    },
+    {
+      id: 'transaction-ledger-export',
+      method: 'POST',
+      path: '/api/v1/stations/:stationId/inventory/transactions/export',
+      summary: '导出流水',
+      tags: ['进销存流水'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [
+          { name: 'transactionType', type: 'string[]', required: false, description: '流水类型' },
+          { name: 'fuelTypeId', type: 'string', required: false, description: '燃料类型ID' },
+          { name: 'dateFrom', type: 'string', required: false, description: '开始日期' },
+          { name: 'dateTo', type: 'string', required: false, description: '结束日期' },
+        ],
+      },
+      responseFields: ['Blob (Excel)'],
+      notes: '返回 Excel 文件流',
+    },
+    // --- 罐存比对 ---
+    {
+      id: 'tank-comparison-realtime',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/inventory/tank-comparison/realtime',
+      summary: '实时罐存比对',
+      tags: ['罐存比对'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      responseFields: ['tanks[]', 'tanks[].tankId', 'tanks[].tankName', 'tanks[].fuelTypeName', 'tanks[].ratedCapacity', 'tanks[].theoreticalStock', 'tanks[].actualLevel', 'tanks[].deviation', 'tanks[].deviationRate', 'tanks[].lastUpdated'],
+    },
+    {
+      id: 'tank-comparison-loss-analysis',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/inventory/tank-comparison/loss-analysis',
+      summary: '损耗分类分析',
+      tags: ['罐存比对'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      responseFields: ['transportLoss[]', 'transportLoss[].supplierName', 'transportLoss[].batchCount', 'transportLoss[].avgDeviation', 'stationLoss[]', 'stationLoss[].tankName', 'stationLoss[].avgDailyDeviation'],
+    },
+    {
+      id: 'tank-comparison-history',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/inventory/tank-comparison/history',
+      summary: '比对历史',
+      tags: ['罐存比对'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      queryParams: [
+        { name: 'tankId', type: 'string', required: false, description: '储罐ID', example: 'tank-001' },
+        { name: 'dateFrom', type: 'string', required: false, description: '开始日期', example: '2026-02-01' },
+        { name: 'dateTo', type: 'string', required: false, description: '结束日期', example: '2026-02-28' },
+        { name: 'page', type: 'number', required: false, description: '页码', example: '1' },
+        { name: 'pageSize', type: 'number', required: false, description: '每页数量', example: '20' },
+      ],
+      responseFields: ['items[]', 'items[].snapshotDate', 'items[].tankName', 'items[].theoreticalStock', 'items[].actualLevel', 'items[].deviation', 'items[].deviationRate', 'pagination', 'trendData[]'],
+    },
+    // --- 盘点调整 [MVP+] ---
+    {
+      id: 'create-stock-adjustment',
+      method: 'POST',
+      path: '/api/v1/stations/:stationId/inventory/stock-adjustments',
+      summary: '创建盘点调整',
+      tags: ['盘点调整'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [
+          { name: 'tankId', type: 'string', required: true, description: '储罐ID', example: 'tank-001' },
+          { name: 'adjustedStock', type: 'number', required: true, description: '调整后理论库存(kg)', example: '14850.000' },
+          { name: 'reason', type: 'string', required: true, description: '调整原因', example: '月度盘点，仪表偏差校正' },
+        ],
+      },
+      responseFields: ['id'],
+      notes: '[MVP+] 调整 >1% 需站长审批',
+    },
+    {
+      id: 'approve-stock-adjustment',
+      method: 'PATCH',
+      path: '/api/v1/stations/:stationId/inventory/stock-adjustments/:id/approve',
+      summary: '调整审核通过',
+      tags: ['盘点调整'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '调整记录ID', example: 'adj-001' },
+      ],
+      notes: '[MVP+]',
+    },
+    {
+      id: 'reject-stock-adjustment',
+      method: 'PATCH',
+      path: '/api/v1/stations/:stationId/inventory/stock-adjustments/:id/reject',
+      summary: '调整审核驳回',
+      tags: ['盘点调整'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '调整记录ID', example: 'adj-001' },
+      ],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [
+          { name: 'reason', type: 'string', required: true, description: '驳回原因' },
+        ],
+      },
+      notes: '[MVP+]',
+    },
+    // --- 预警管理 ---
+    {
+      id: 'alert-list',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/inventory/alerts',
+      summary: '预警列表',
+      tags: ['预警管理'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      queryParams: [
+        { name: 'status', type: 'string', required: false, description: '状态筛选：active / history', example: 'active' },
+        { name: 'page', type: 'number', required: false, description: '页码', example: '1' },
+        { name: 'pageSize', type: 'number', required: false, description: '每页数量', example: '20' },
+      ],
+      responseFields: ['items[]', 'items[].id', 'items[].alertLevel', 'items[].alertType', 'items[].fuelTypeName', 'items[].currentValue', 'items[].threshold', 'items[].triggeredAt', 'items[].handleStatus', 'activeCount', 'pagination'],
+    },
+    {
+      id: 'acknowledge-alert',
+      method: 'PATCH',
+      path: '/api/v1/stations/:stationId/inventory/alerts/:id/acknowledge',
+      summary: '确认预警',
+      tags: ['预警管理'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '预警ID', example: 'alert-001' },
+      ],
+    },
+    {
+      id: 'dismiss-alert',
+      method: 'PATCH',
+      path: '/api/v1/stations/:stationId/inventory/alerts/:id/dismiss',
+      summary: '忽略预警',
+      tags: ['预警管理'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'id', type: 'string', required: true, description: '预警ID', example: 'alert-001' },
+      ],
+    },
+    {
+      id: 'alert-config-get',
+      method: 'GET',
+      path: '/api/v1/stations/:stationId/inventory/alert-config',
+      summary: '预警规则配置',
+      tags: ['预警管理'],
+      pathParams: [{ name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' }],
+      responseFields: ['rules[]', 'rules[].fuelTypeId', 'rules[].fuelTypeName', 'rules[].safeThreshold', 'rules[].warningThreshold', 'rules[].criticalThreshold', 'rules[].lossDeviationThreshold', 'rules[].thresholdType'],
+    },
+    {
+      id: 'alert-config-update',
+      method: 'PUT',
+      path: '/api/v1/stations/:stationId/inventory/alert-config/:fuelTypeId',
+      summary: '更新预警规则',
+      tags: ['预警管理'],
+      pathParams: [
+        { name: 'stationId', type: 'string', required: true, description: '站点ID', example: 'station-001' },
+        { name: 'fuelTypeId', type: 'string', required: true, description: '燃料类型ID', example: 'ft-lng' },
+      ],
+      requestBody: {
+        contentType: 'application/json',
+        fields: [
+          { name: 'safeThreshold', type: 'number', required: true, description: '安全阈值', example: '50' },
+          { name: 'warningThreshold', type: 'number', required: true, description: '预警阈值', example: '30' },
+          { name: 'criticalThreshold', type: 'number', required: true, description: '紧急阈值', example: '15' },
+          { name: 'lossDeviationThreshold', type: 'number', required: true, description: '损耗偏差阈值(%)', example: '3' },
+          { name: 'thresholdType', type: 'string', required: true, description: '阈值类型：percentage / absolute', example: 'percentage' },
+        ],
+      },
+    },
+  ],
+};
+
+// ============================================================
 // 导出所有模块
 // ============================================================
 export const API_MODULES: ApiModule[] = [
@@ -2108,6 +2473,7 @@ export const API_MODULES: ApiModule[] = [
   inspectionModule,
   priceManagementModule,
   orderTransactionModule,
+  inventoryModule,
 ];
 
 export const API_VERSION = 'v1';

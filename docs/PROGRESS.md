@@ -1,9 +1,10 @@
 ## Current Module Status
 
 - **当前模块：** 2.3 库存管理 (inventory-management)
-- **当前步骤：** AGENT-PLAN Step 5（用户确认 architecture.md — 文档套件 5/5 完成，待用户审阅）
+- **当前步骤：** AGENT-PLAN Step 10 前端工程 ✅ 完成，待 UI 评审（Step 11）
 - **已完成文档：** requirements.md ✅ | user-stories.md ✅ | ux-design.md ✅ | ui-schema.md ✅ | architecture.md ✅
-- **阻塞项：** 等待用户确认 architecture.md
+- **已完成前端：** 6 页面 + 3 抽屉 + 2 弹窗 + types + constants + mock + i18n + 路由 + API 文档
+- **阻塞项：** 无（等待 UI 评审）
 - **上次 Session：** 2026-02-28
 - **操作人：** Roger
 
@@ -11,7 +12,7 @@
 
 # 高层进度说明
 
-截至 2026-02-28，前端 UI 整体进展约为 **23%**（6/26 模块），Phase 1 全部完成，Phase 2 模块 2.1 + 2.2 前端 UI 已交付并完成评审。
+截至 2026-02-28，前端 UI 整体进展约为 **27%**（7/26 模块），Phase 1 全部完成，Phase 2 模块 2.1 + 2.2 + 2.3 前端 UI 已交付。
 
 - **阶段 1（基础运营）：✅ 全部完成**
   - 1.1 站点管理 ✅ (4.15) | 1.2 交接班管理 ✅ (3.55) | 1.3 设备设施管理 ✅ (3.35) | 1.4 巡检安检管理 ✅ (3.45)
@@ -21,7 +22,7 @@
 - **阶段 2（能源交易）：🔧 进行中**
   - 2.1 价格管理 ✅ (3.94) — 前端 UI 完成 + UI 评审修复 + P1 补充修复
   - 2.2 订单与交易 ✅ (3.71) — 文档套件 5/5 + 前端 UI 交付 + UI 评审两轮完成（P1=0）
-  - 2.3 库存管理 🔧 — 文档 5/5 ✅（requirements + user-stories + ux-design + ui-schema + architecture），待用户确认 architecture.md
+  - 2.3 库存管理 🔧 — 文档 5/5 ✅ + 前端 UI 交付（6 页面 + 5 组件），待 UI 评审
 - 阶段 2.3 后续 ~ 阶段 7 尚未启动。
 
 # 项目进展追踪（Progress Tracker）
@@ -38,6 +39,79 @@
 ---
 
 ## 进展记录
+
+### 2026-02-28 Session 3（Module 2.3 前端工程完成 — AGENT-PLAN Step 10）
+
+#### Module 2.3 库存管理 — 前端工程实施
+
+**交付概况：**
+
+| 类别 | 数量 | 说明 |
+|------|------|------|
+| 新建文件 | ~16 | types + constants + userStoryMapping + mock + 6 pages + barrel export + 5 components |
+| 修改文件 | 7 | router + AppLayout + RequirementTag + i18n×2 + mock/index + apiData |
+| API 文档端点 | 22 | 7 分类（总览/入库/出库/流水/罐存比对/盘点调整/预警） |
+| i18n 键 | ~80+ | inventory.* 命名空间（zh-CN + en-US） |
+| User Story 覆盖 | 19/19 | 100% |
+
+**页面清单：**
+
+| 页面 | 路由 | 核心功能 |
+|------|------|---------|
+| P01 InventoryOverview | /inventory/overview | 库存卡片 + 趋势图占位 |
+| P02 InboundManagement | /inventory/inbound | 入库表格 + 新增抽屉 + 详情抽屉 + 审核弹窗 |
+| P03 OutboundRecords | /inventory/outbound | 出库表格 + 损耗登记抽屉 + 审核弹窗 |
+| P04 TransactionLedger | /inventory/ledger | 流水明细 + 多类型筛选 + 导出 |
+| P05 TankComparison | /inventory/tank-comparison | 实时比对 + 损耗分析 + 比对历史 + 盘点调整 |
+| P06 AlertManagement | /inventory/alerts | 预警通知(Badge) + 阈值配置(可编辑行) |
+
+**组件清单：**
+
+| 组件 | 类型 | 功能 |
+|------|------|------|
+| D01 CreateInboundDrawer | 抽屉 | 新增入库单，偏差计算，容量校验 |
+| D02 LossOutboundDrawer | 抽屉 | 损耗登记，自动金额，库存校验 |
+| D03 InboundDetailDrawer | 抽屉 | 入库详情 Steps + Descriptions + 审核记录 |
+| M01 StockAdjustmentModal | 弹窗 | 盘点调整，审批路由提示 [MVP+] |
+| M02 AuditModal | 弹窗 | 通用驳回弹窗，原因必填 |
+
+**构建修复（3 轮）：**
+1. zh-CN 重复属性名（`inbound`/`outbound`/`ledger` 同时为 string 和 object）→ 移除 string 版本
+2. LayoutContext 导入错误（8 文件）→ 改为本地 interface 定义
+3. Props 不匹配（InboundManagement/OutboundRecords）→ 移除多余 props
+
+**交付 Checklist 9/9 PASS**
+
+**用户 Review 修复：**
+- P9 新增纠偏模式：`t('inventory.action')` 指向嵌套对象 → 改为 `t('common.actions')`
+
+#### 影响文件汇总
+
+| 类别 | 文件 | 变更 |
+|------|------|------|
+| 基础 | `inventory-management/types.ts` | 新建，7 实体接口 + 枚举 + 表单类型 |
+| 基础 | `inventory-management/constants.ts` | 新建，8 个 CONFIG 记录 + getLabel() |
+| 基础 | `inventory-management/userStoryMapping.ts` | 新建，19 个 US 映射 |
+| Mock | `mock/inventory.ts` | 新建，~558 行 mock 数据 + 查询函数 |
+| 页面×6 | `pages/*.tsx` | 新建，6 个功能页面 |
+| 组件×5 | `components/*.tsx` | 新建，3 抽屉 + 2 弹窗 |
+| 路由 | `router.tsx` | 6 lazy imports + 路由树 |
+| 布局 | `AppLayout.tsx` | 菜单 + Badge + 面包屑 + 站点选择器 |
+| 追踪 | `RequirementTag.tsx` | +inventoryUserStories |
+| i18n | `zh-CN/index.ts` + `en-US/index.ts` | +inventory.* 命名空间 |
+| Mock | `mock/index.ts` | +inventory exports |
+| API | `apiData.ts` | +inventoryModule (22 endpoints) |
+| 纠偏 | `CORRECTIONS.md` + `CORRECTIONS-ARCHIVE.md` | +P9 模式 + #28 记录 |
+
+#### 下一步
+
+1. **Module 2.3 UI 评审**（AGENT-PLAN Step 11）
+2. P1/P2 修复迭代（Step 12）
+3. 模块交付 Checklist 复核（Step 12i）
+4. ROADMAP / PROGRESS 最终更新
+5. Phase 2 完结后进入 Phase 3（安全合规）
+
+---
 
 ### 2026-02-28 Session 2（Module 2.3 architecture.md 创建 + cross-module-erd 更新）
 

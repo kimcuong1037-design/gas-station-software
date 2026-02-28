@@ -273,6 +273,28 @@
 
 ---
 
+## 2026-02-28 i18n 嵌套命名空间键名冲突
+
+- **修正内容：** 预警管理页面（AlertManagement.tsx）Table 的"操作"列标题使用了 `t('inventory.action', '操作')`，但 `inventory.action` 在 zh-CN/index.ts 中定义为嵌套对象 `{ save: '保存', cancel: '取消', edit: '编辑' }`，i18next 返回整个对象而非字符串，页面上显示 "key 'inventory.action(zh-CN)' returned an object instead of string." 错误提示。
+
+- **原因分析：**
+  1. **命名空间层级冲突**：`inventory.action` 同时用作"操作"列标题的翻译键和嵌套子键的容器（`inventory.action.save`、`inventory.action.cancel`）。i18next 的规则是：如果某个键是对象，`t()` 返回该对象而非字符串
+  2. **未复用通用键**：Table 的"操作"列标题是跨模块通用词汇，已有 `common.actions` 键可用，不需要在模块内重新定义
+  3. **缺少 i18n 运行时校验**：zh-CN 翻译文件的 TypeScript 类型检查只能发现 JS 语法错误（如重复属性名），无法检测 i18next 运行时的"对象当字符串用"问题
+
+- **经验总结：**
+  1. i18n 键设计必须遵循"叶子节点纯字符串"原则——如果 `a.b` 已是对象容器（有 `a.b.c` 子键），则 `t('a.b')` 不可用于文本渲染
+  2. 通用 UI 词汇（操作、状态、类型等 Table 列标题）应统一使用 `common.*` 命名空间，避免各模块重复定义导致命名冲突
+  3. 新模块的 i18n 键设计应画出层级树，确认每个被 `t()` 调用的键都指向字符串叶子节点
+  4. 建立新的检查习惯：开发完成后在浏览器中快速过一遍所有页面，检查控制台有无 i18next 警告
+
+- **修正文件清单：**
+  - `frontend/src/features/energy-trade/inventory-management/pages/AlertManagement.tsx` — 两处 `t('inventory.action')` → `t('common.actions')`
+  - `docs/CORRECTIONS.md` — 新增 P9 模式 + 摘要表 #28
+  - `docs/CORRECTIONS-ARCHIVE.md` — 新增本条完整记录
+
+---
+
 *创建时间：2026-02-27*
 *最后更新：2026-02-28*
 *内容来源：docs/CORRECTIONS.md 原始内容 (2026-02-07 ~ 2026-02-25) + auto-memory corrections (2026-02-25 ~ 2026-02-28)*

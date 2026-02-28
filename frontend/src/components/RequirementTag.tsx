@@ -8,6 +8,7 @@ import { deviceLedgerUserStories } from '../features/operations/device-ledger/us
 import { inspectionUserStories } from '../features/operations/inspection/userStoryMapping';
 import { priceManagementUserStories } from '../features/energy-trade/price-management/userStoryMapping';
 import { orderTransactionUserStories } from '../features/energy-trade/order-transaction/userStoryMapping';
+import { inventoryUserStories } from '../features/energy-trade/inventory-management/userStoryMapping';
 
 // 合并所有模块的 User Story 映射
 const allUserStories: Record<string, UserStoryMapping> = {
@@ -17,6 +18,7 @@ const allUserStories: Record<string, UserStoryMapping> = {
   ...inspectionUserStories,
   ...priceManagementUserStories,
   ...orderTransactionUserStories,
+  ...inventoryUserStories,
 };
 
 // 模块映射表，用于按模块筛选
@@ -27,6 +29,7 @@ const moduleStories = {
   inspection: inspectionUserStories,
   'price-management': priceManagementUserStories,
   'order-transaction': orderTransactionUserStories,
+  'inventory-management': inventoryUserStories,
   all: allUserStories,
 } as const;
 
