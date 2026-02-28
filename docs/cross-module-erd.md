@@ -1,9 +1,9 @@
 # wend
 
 **项目：** 加气站运营管理系统
-**覆盖范围：** Phase 1 基础运营（1.1~1.4）+ Phase 2.1 价格管理（已确认）+ Phase 2.2~2.3（预览）
+**覆盖范围：** Phase 1 基础运营（1.1~1.4）+ Phase 2.1 价格管理 ✅ + Phase 2.2 订单交易（预览）+ Phase 2.3 库存管理 ✅
 **创建日期：** 2026-02-24
-**版本：** 1.3（2026-02-24 §8 扩展 Phase 1 四模块依赖详情）
+**版本：** 1.4（2026-02-28 新增 Module 2.3 库存管理实体关系）
 
 ---
 
@@ -75,6 +75,18 @@
 | PriceDefenseConfig | 调价防御配置 | 仅内部 |
 | MemberPriceRule | 会员专享价规则 [⚠️ Phase 4 依赖] | 2.2 订单引用 |
 | PriceAgreement | 大客户价格协议 [⚠️ Phase 4 依赖] | 2.2 订单引用 |
+
+### 2.3 库存管理 (Inventory Management) ✅ 已确认
+
+| 实体 | 说明 | 被引用次数 |
+|------|------|-----------|
+| **InboundRecord** | 入库记录（审计不可变） | InventoryLedger 引用 |
+| **OutboundRecord** | 出库记录（销售/损耗/冲红） | InventoryLedger 引用 |
+| **InventoryLedger** | 进销存流水（只追加，不可改删） | 仅内部 |
+| **TankComparisonLog** | 罐存比对每日快照 | 仅内部 |
+| StockAdjustment | 盘点调整 [MVP+] | InventoryLedger 引用 |
+| **InventoryAlert** | 库存预警（低库存/损耗异常） | 仅内部 |
+| AlertConfig | 预警规则配置（每站每燃料类型） | 仅内部 |
 
 ---
 
@@ -272,11 +284,53 @@
 | PriceAgreement | fuel_type_id | FuelType | id | N:1 | 适用燃料类型 |
 | PriceAgreement | created_by | StationEmployee | employee_id | N:1 | 创建人 |
 
+### 3.6 模块 2.3 → 1.1（库存管理 → 站点管理）✅ 已确认
+
+| 源实体 | 源字段 | 目标实体 | 目标字段 | 关系 | 说明 |
+|--------|--------|---------|---------|------|------|
+| InboundRecord | station_id | Station | id | N:1 | 入库所属站点 |
+| InboundRecord | fuel_type_id | FuelType | id | N:1 | 燃料类型（储罐自动带出） |
+| InboundRecord | operator_id | StationEmployee | employee_id | N:1 | 操作员 |
+| InboundRecord | audited_by | StationEmployee | employee_id | N:1 | 审核人（可空） |
+| OutboundRecord | station_id | Station | id | N:1 | 出库所属站点 |
+| OutboundRecord | fuel_type_id | FuelType | id | N:1 | 燃料类型 |
+| OutboundRecord | operator_id | StationEmployee | employee_id | N:1 | 操作员（auto 时为 null） |
+| OutboundRecord | approved_by | StationEmployee | employee_id | N:1 | 损耗审批人（可空） |
+| InventoryLedger | station_id | Station | id | N:1 | 流水所属站点 |
+| InventoryLedger | fuel_type_id | FuelType | id | N:1 | 燃料类型 |
+| TankComparisonLog | station_id | Station | id | N:1 | 比对所属站点 |
+| TankComparisonLog | fuel_type_id | FuelType | id | N:1 | 燃料类型 |
+| StockAdjustment | station_id | Station | id | N:1 | 调整所属站点 |
+| StockAdjustment | fuel_type_id | FuelType | id | N:1 | 燃料类型 |
+| StockAdjustment | applied_by | StationEmployee | employee_id | N:1 | 发起人 |
+| StockAdjustment | audited_by | StationEmployee | employee_id | N:1 | 审核人（可空） |
+| InventoryAlert | station_id | Station | id | N:1 | 预警所属站点 |
+| InventoryAlert | fuel_type_id | FuelType | id | N:1 | 燃料类型 |
+| InventoryAlert | handled_by | StationEmployee | employee_id | N:1 | 处理人（可空） |
+| AlertConfig | station_id | Station | id | N:1 | 配置所属站点 |
+| AlertConfig | fuel_type_id | FuelType | id | N:1 | 燃料类型 |
+
+### 3.7 模块 2.3 → 1.3（库存管理 → 设备设施）✅ 已确认
+
+| 源实体 | 源字段 | 目标实体 | 目标字段 | 关系 | 说明 |
+|--------|--------|---------|---------|------|------|
+| InboundRecord | tank_id | Equipment | id | N:1 | 目标储罐（type=tank） |
+| TankComparisonLog | tank_id | Equipment | id | N:1 | 比对储罐 |
+| TankComparisonLog | actual_level | EquipmentMonitoring | level_volume | 数据读取 | 实际罐存来源 |
+| StockAdjustment | tank_id | Equipment | id | N:1 | 调整储罐 |
+| InventoryAlert | tank_id | Equipment | id | N:1 | 损耗异常关联储罐（可空） |
+
+### 3.8 模块 2.3 → 2.2（库存管理 → 订单交易）✅ 已确认
+
+| 源实体 | 源字段 | 目标实体 | 目标字段 | 关系 | 说明 |
+|--------|--------|---------|---------|------|------|
+| OutboundRecord | order_id | FuelingOrder | id | N:1 | 销售出库/冲红关联订单（可空） |
+
 ---
 
 ## 4. Phase 2 能源交易 — 预期跨模块引用
 
-> 模块 2.1 价格管理已确认，见 §3.5。以下为 2.2/2.3 的预判，具体外键关系将在各模块 architecture.md 中正式定义。
+> 模块 2.1 价格管理已确认（§3.5）。模块 2.3 库存管理已确认（§3.6~3.8）。以下 2.2 为预判，具体外键关系将在 architecture.md 中正式定义。
 
 ### 4.2 模块 2.2 订单与交易 → Phase 1
 
@@ -290,15 +344,9 @@
 | FuelingOrder | handover_id | ShiftHandover | 1.2 | 关联交接班（用于班次汇总） |
 | PaymentRecord | order_id | FuelingOrder | 2.2 | 支付记录关联订单 |
 
-### 4.3 模块 2.3 库存管理 → Phase 1
+### ~~4.3 模块 2.3 库存管理~~ → 已确认
 
-| 预期实体 | 预期字段 | 目标实体 | 目标模块 | 说明 |
-|---------|---------|---------|---------|------|
-| InventoryRecord | station_id | Station | 1.1 | 库存所属站点 |
-| InventoryRecord | fuel_type_id | FuelType | 1.1 | 燃料类型 |
-| InventoryRecord | tank_equipment_id | Equipment | 1.3 | 关联储罐设备 |
-| TankComparison | equipment_id | Equipment | 1.3 | 罐存比对关联储罐 |
-| TankComparison | monitoring_id | EquipmentMonitoring | 1.3 | 引用实测液位数据 |
+> ✅ **已正式定义。** 详见 §3.6（→ 1.1 站点管理）、§3.7（→ 1.3 设备设施）、§3.8（→ 2.2 订单交易）。
 
 ---
 
@@ -310,10 +358,10 @@
 |------|-----------|------|
 | **Station** | 6+ | 系统核心实体，所有模块引用 |
 | **StationEmployee** (Employee) | 5+ | 所有需要人员关联的模块 |
-| **FuelType** | 3+ (1.1, 2.1, 2.2, 2.3) | 价格/订单/库存均引用 |
+| **FuelType** | 4+ (1.1, 2.1, 2.2, 2.3) | 价格/订单/库存均引用 |
 | **Nozzle** | 3+ (1.1, 2.1, 2.2) | 价格/订单引用 |
 | **Shift** | 2+ (1.1, 1.2, 2.2) | 交接班/订单引用 |
-| **Equipment** | 2+ (1.3, 1.4, 2.3) | 巡检/库存引用 |
+| **Equipment** | 3+ (1.3, 1.4, 2.3) | 巡检/库存引用（储罐） |
 
 ### 5.1 建议的 Shared Types 目录结构
 
@@ -337,12 +385,12 @@ shared/
 
 | 约束规则 | 说明 |
 |---------|------|
-| Station 软删除前检查 | 站点设为 inactive 前，必须检查是否有进行中的交接班、未完成的巡检任务、未关闭的问题记录 |
+| Station 软删除前检查 | 站点设为 inactive 前，必须检查是否有进行中的交接班、未完成的巡检任务、未关闭的问题记录、**未审核的入库/出库/盘点记录、活跃预警** |
 | Employee 离职前检查 | 员工标记离职前，必须检查是否有未完成的巡检任务分配、未完成的维保工单 |
-| Equipment 停用前检查 | 设备停用前，必须检查是否有未完成的维保工单、关联的活跃巡检检查项 |
+| Equipment 停用前检查 | 设备停用前，必须检查是否有未完成的维保工单、关联的活跃巡检检查项、**未审核的入库记录（tank_id）、活跃预警（tank_id）** |
 | Shift 删除前检查 | 班次删除前，必须检查是否有未完成的排班计划引用 |
 | Nozzle 停用前检查 | 枪停用前，必须检查是否有进行中的订单（Phase 2）、**活跃的枪覆盖价（NozzlePriceOverride）** |
-| FuelType 停用前检查 | 燃料类型停用前，必须检查是否有活跃的枪绑定、**有效的基准价（FuelTypePrice active）、活跃的价格协议** |
+| FuelType 停用前检查 | 燃料类型停用前，必须检查是否有活跃的枪绑定、有效的基准价（FuelTypePrice active）、活跃的价格协议、**未审核的入库/出库记录、活跃预警（InventoryAlert）** |
 | FuelTypePrice 停用前检查 | 基准价停用前，必须检查是否有 pending_approval/approved 的调价记录 |
 | PriceAgreement 到期检查 | 协议到期时（valid_to 到达），自动将 status 设为 expired |
 
@@ -401,11 +449,18 @@ shared/
   → MemberPriceRule (→ Station, FuelType) [⚠️ Phase 4 member_tier 依赖]
   → PriceAgreement (→ Station, FuelType, StationEmployee) [⚠️ Phase 4 enterprise_id 依赖]
 
-第 8 层（Phase 2.2~2.3 预期 — 依赖 Phase 1 + 2.1 实体）：
+第 8 层（Phase 2.2 预期 — 依赖 Phase 1 + 2.1 实体）：
   → FuelingOrder (→ Station, Nozzle, FuelType, Shift, StationEmployee, FuelTypePrice?)
   → PaymentRecord (→ FuelingOrder)
-  → InventoryRecord (→ Station, FuelType, Equipment)
-  → TankComparison (→ Equipment, EquipmentMonitoring)
+
+第 9 层（Phase 2.3 库存管理 ✅ — 依赖 Phase 1 + 2.2 实体）：
+  → AlertConfig (→ Station, FuelType)
+  → InboundRecord (→ Station, Equipment, FuelType, StationEmployee)
+  → OutboundRecord (→ Station, FuelType, StationEmployee, FuelingOrder?)
+  → InventoryLedger (→ Station, FuelType)
+  → TankComparisonLog (→ Station, Equipment, FuelType)
+  → StockAdjustment (→ Station, Equipment, FuelType, StationEmployee) [MVP+]
+  → InventoryAlert (→ Station, FuelType, Equipment?, StationEmployee?)
 ```
 
 ---
@@ -423,6 +478,7 @@ shared/
 | 1.3 设备台账 | 18 个 | §7.1 权限列表 + §6.1 系统权限依赖声明 | 前端硬编码 | 同上 |
 | 1.4 巡检管理 | 50+ 个 | 各 API 接口内联权限声明，**缺少角色→权限映射矩阵**（P0，见 DF-001） | 前端硬编码 | 补充权限矩阵 + 导入 RBAC |
 | **2.1 价格管理** | 12 个 | §2.3 权限矩阵（4 角色 × 12 权限） | architecture.md 权限矩阵约定，前端硬编码 | 权限矩阵导入 RBAC 系统，前端改用动态权限指令 |
+| **2.3 库存管理** | 15 个 | §2.3 权限矩阵（4 角色 × 15 权限） | architecture.md 权限矩阵约定，前端硬编码 | 权限矩阵导入 RBAC 系统，前端改用动态权限指令 |
 | 所有模块 | — | StationEmployee → User 关联 | StationEmployee 作为用户代理 | 建立 User ↔ StationEmployee 正式关联 |
 
 ### 8.2 审批流程引擎 (9.5) 依赖清单
@@ -433,9 +489,10 @@ shared/
 | 1.3 设备台账 | 维保工单审批（§0.4 已声明对接统一审批模块） | 未实现 | 纳入审批引擎 |
 | 1.4 巡检管理 | 问题闭环确认（pending_review → closed，reviewer_id）、巡检计划审批（需求中提及但未定义流程） | 简单 reviewer_id 字段 | 纳入审批引擎 |
 | **2.1 价格管理** | 调价审批（PriceAdjustment: pending_approval → approved/rejected） | PriceDefenseConfig 阈值触发 + 单级硬编码审批（ops_manager/admin） | 对接审批引擎：可配置审批节点、多级审批链、审批通知 |
+| **2.3 库存管理** | 入库审核（InboundRecord: pending_review → approved/rejected）、损耗出库审批（OutboundRecord: pending_approval → approved/rejected）、盘点调整审核（StockAdjustment: pending_review → approved/rejected, MVP+） | 单级硬编码审批（金额/比例阈值路由） | 对接审批引擎：可配置审批节点、审批路由规则、审批通知 |
 
 ---
 
 *创建时间：2026-02-24*
-*版本：1.3*
-*最后更新：2026-02-24（§8 扩展 Phase 1 四模块依赖详情）*
+*版本：1.4*
+*最后更新：2026-02-28（新增 Module 2.3 库存管理实体关系 §1/§3.6~3.8/§6~8）*

@@ -1,9 +1,9 @@
 ## Current Module Status
 
 - **当前模块：** 2.3 库存管理 (inventory-management)
-- **当前步骤：** AGENT-PLAN Step 2（需求分析 — requirements.md + user-stories.md 已创建，待用户确认后进入 Step 4）
-- **已完成文档：** requirements.md ✅ | user-stories.md ✅ | ux-design.md ✅
-- **阻塞项：** 无
+- **当前步骤：** AGENT-PLAN Step 5（用户确认 architecture.md — 文档套件 5/5 完成，待用户审阅）
+- **已完成文档：** requirements.md ✅ | user-stories.md ✅ | ux-design.md ✅ | ui-schema.md ✅ | architecture.md ✅
+- **阻塞项：** 等待用户确认 architecture.md
 - **上次 Session：** 2026-02-28
 - **操作人：** Roger
 
@@ -21,7 +21,7 @@
 - **阶段 2（能源交易）：🔧 进行中**
   - 2.1 价格管理 ✅ (3.94) — 前端 UI 完成 + UI 评审修复 + P1 补充修复
   - 2.2 订单与交易 ✅ (3.71) — 文档套件 5/5 + 前端 UI 交付 + UI 评审两轮完成（P1=0）
-  - 2.3 库存管理 🔧 — 文档 3/5（requirements + user-stories + ux-design）
+  - 2.3 库存管理 🔧 — 文档 5/5 ✅（requirements + user-stories + ux-design + ui-schema + architecture），待用户确认 architecture.md
 - 阶段 2.3 后续 ~ 阶段 7 尚未启动。
 
 # 项目进展追踪（Progress Tracker）
@@ -38,6 +38,70 @@
 ---
 
 ## 进展记录
+
+### 2026-02-28 Session 2（Module 2.3 architecture.md 创建 + cross-module-erd 更新）
+
+#### Module 2.3 库存管理 — architecture.md 创建（AGENT-PLAN Step 4）
+
+**文档套件完成：5/5**
+
+| 文档 | 内容概要 | 状态 |
+|------|---------|------|
+| `requirements.md` | 25 个功能点，4 大分类 | ✅ 已确认 |
+| `user-stories.md` | 19 个 User Story，6 个 Epic | ✅ 已确认 |
+| `ux-design.md` | 4 种角色，6 个核心任务流 | ✅ 已确认 |
+| `ui-schema.md` | 6 页面 + 3 抽屉 + 2 弹窗 | ✅ 已确认 |
+| `architecture.md` | 7 实体，20+ API，3 状态机 | ⏳ 待用户确认 |
+
+**architecture.md 核心设计：**
+
+| 项目 | 数据 |
+|------|------|
+| 实体数量 | 7 个（InboundRecord, OutboundRecord, InventoryLedger, TankComparisonLog, StockAdjustment, InventoryAlert, AlertConfig） |
+| API 端点 | 20+ 个，6 分类（总览/入库/出库/流水/罐存比对/预警） |
+| 权限代码 | 15 个，4 角色 |
+| 状态机 | 3 个（入库审核/损耗出库审批/预警处理） |
+| 业务规则 | 13 条（BR-01~BR-13） |
+| PostgreSQL Schema | 10 ENUM + 7 CREATE TABLE |
+| User Story 覆盖率 | 19/19 (100%) |
+
+**设计原则：**
+- 数量精度 NUMERIC(10,3)、金额精度 NUMERIC(12,2)
+- 审计不可变（进出库记录只追加，不可修改）
+- 理论库存由系统自动维护（公式：期初 + Σ入库 - Σ出库 ± Σ调整）
+- 实际罐存来自 Module 1.3（EquipmentMonitoring.level_volume）
+- 跨模块 FK 使用 UUID 无约束 + COMMENT 注释策略
+
+#### cross-module-erd.md 更新（v1.3 → v1.4）
+
+| 更新内容 | 说明 |
+|---------|------|
+| §1 新增 2.3 实体总览 | 7 个实体 + 引用关系 |
+| §3.6 新增 2.3 → 1.1 FK 表 | 21 条外键关系（Station/FuelType/StationEmployee） |
+| §3.7 新增 2.3 → 1.3 FK 表 | 5 条外键关系（Equipment/EquipmentMonitoring） |
+| §3.8 新增 2.3 → 2.2 FK 表 | 1 条外键关系（FuelingOrder） |
+| §4.3 更新 | 预测 → 已确认（指向 §3.6~3.8） |
+| §5 共享类型更新 | FuelType 3+ → 4+, Equipment 2+ → 3+ |
+| §6 完整性约束更新 | Station/Equipment/FuelType 停用前检查增加库存相关条件 |
+| §7 迁移顺序更新 | Layer 8 预测 → Layer 9 正式（7 个表） |
+| §8.1 RBAC 依赖 | 新增 Module 2.3（15 个权限代码） |
+| §8.2 审批引擎依赖 | 新增 Module 2.3（入库审核/损耗审批/盘点审核） |
+
+#### 影响文件汇总
+
+| 类别 | 文件 | 变更 |
+|------|------|------|
+| 架构 | `inventory-management/architecture.md` | 新建，932 行 |
+| 跨模块 | `cross-module-erd.md` | v1.3 → v1.4，+10 处更新 |
+| 进度 | `PROGRESS.md` | 当前步骤更新 |
+
+#### 下一步
+
+1. **用户确认 architecture.md**（AGENT-PLAN Step 5）
+2. 确认后进入 **Step 9.5 术语一致性扫描**
+3. 然后 **Step 10 前端工程**
+
+---
 
 ### 2026-02-28（Module 2.2 UI 评审 + P1 修复 + ROADMAP 更新）
 
@@ -719,22 +783,21 @@
 |------|---------|-----|-----------|------|
 | 2.1 价格管理 | 3.94 | 0 | 70.6% (12/17) | ✅ 前端 UI 交付 + 评审完成 |
 | 2.2 订单与交易 | 3.71 | 0 | 92.9% (13/14 MVP) | ✅ 前端 UI 交付 + 评审两轮完成 |
-| 2.3 库存管理 | - | - | - | 未启动 |
+| 2.3 库存管理 | - | - | - | 🔧 文档 5/5，architecture.md 待确认 |
 
 **流程体系：** agent-plan v1.7 + glossary-management skill + RequirementTag Protocol + 跨模块一致性检查 + 术语检查流程
 
 ### 下一步建议（与用户确认）
 
-1. **Module 2.3 库存管理 — 文档套件**
-   - 按 AGENT-PLAN Steps 0-9 执行
-   - requirements.md → user-stories.md → ux-design.md → ui-schema.md → architecture.md
-   - 步骤 9.5 术语一致性扫描（glossary-management skill 首次正式应用）
-   - 每份文档需用户确认
+1. **Module 2.3 architecture.md 用户确认**（AGENT-PLAN Step 5）
+   - 7 实体 + 20+ API + 3 状态机 + PostgreSQL Schema
+   - 文档路径：`docs/features/energy-trade/inventory-management/architecture.md`
 
-2. **Module 2.3 前端开发** — 按 AGENT-PLAN Step 10 执行
-   - 文档套件确认后启动前端实现
+2. **Step 9.5 术语一致性扫描** — glossary-management skill 首次正式应用
 
-3. **Commit** — 2026-02-28 工作待提交（UI 评审报告 + P1 修复 + ROADMAP 更新）
+3. **Module 2.3 前端工程**（Step 10）— 确认后启动前端实现
+
+4. **Commit** — 2026-02-28 工作待提交（architecture.md + cross-module-erd 更新）
 
 ---
 

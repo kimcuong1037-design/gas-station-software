@@ -1,8 +1,8 @@
 # 项目规范 (Project Standards)
 
 **项目：** 加气站运营管理系统 (Gas Station Operations Management System)
-**版本：** 1.1
-**更新日期：** 2026-02-27
+**版本：** 1.2
+**更新日期：** 2026-02-28
 
 ---
 
@@ -36,6 +36,14 @@
 | 挂账 | Credit Account | creditAccount | 企业客户赊账 |
 | 数据大屏 | Data Dashboard | dataDashboard | 全屏可视化展示 |
 | 非油业务 | Non-fuel Business | nonFuel | 便利店、洗车、充电等 |
+| 入库 | Inbound | inbound | 燃料到货入库记录 |
+| 出库 | Outbound | outbound | 燃料出库（销售/损耗/调拨） |
+| 进销存 | Inventory Ledger | inventoryLedger | 库存流水账，逐笔记录进出 |
+| 罐容比 | Tank Level Ratio | tankLevelRatio | 当前罐存 / 储罐容量（百分比） |
+| 盘点调整 | Stock Adjustment | stockAdjustment | 实盘与理论库存差异的调整记录 |
+| 冲红 | Reversal | reversal | 红字冲销已入账记录 |
+| 预警 | Alert | alert | 库存异常自动触发的预警通知 |
+| 损耗 | Loss | loss | 蒸发、泄漏等非销售性燃料减少 |
 
 #### 术语使用规则
 
@@ -61,6 +69,8 @@
 | 操作员 / 充装员 | Operator | operator | 负责加注操作的一线员工 |
 | 运维工程师 | Maintenance Engineer | maintenance_engineer | 设备维保执行人 |
 | 财务 | Finance | finance | 财务审核与结算 |
+| 班组长 | Shift Leader | shift_leader | 日常入库操作、损耗登记、小额审批 |
+| 运营经理 | Operations Manager | ops_manager | 多站点库存监控、偏差分析、损耗追踪 |
 | 管理员 | Admin | admin | 系统管理员 |
 
 > **安全主管 vs 安全员**：这是两个不同层级的角色。安全主管负责计划制定与审批，安全员负责执行。小站点中两个角色可由同一人兼任，通过组织架构管理模块（Phase 9 系统与权限）实现角色权限控制。
