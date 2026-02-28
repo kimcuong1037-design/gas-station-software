@@ -63,9 +63,9 @@ skills/
 | P0 | ui/ux-design.md | ✅ 已创建 |
 | P0 | ui/ui-schema-design.md | ✅ 已创建 |
 | P0 | ui/ui-eval.md | ✅ 已创建 |
-| P1 | frontend/mock-data-creation.md | ☐ 待创建 |
-| P1 | frontend/react-component-development.md | ☐ 待创建 |
-| P1 | frontend/i18n-integration.md | ☐ 待创建 |
+| P1 | frontend/react-component-development.md | ✅ 已创建（含 Import 规范、状态管理、Ant Design 模式、交互规则） |
+| P1 | frontend/mock-data-creation.md | ✅ 已创建（含生命周期覆盖、数据质量验证、常见错误防范） |
+| P1 | frontend/i18n-integration.md | ✅ 已创建（含键命名规范、状态标签处理、完整性验证） |
 | P2 | architecture/workflow-design.md | ☐ 待创建 |
 | P2 | frontend/chart-visualization.md | ☐ 待创建 |
 | P3 | 其余 Skills | ☐ 按需创建 |
@@ -73,4 +73,4 @@ skills/
 ---
 
 *创建时间：2026-02-07*
-*最后更新：2026-02-22*
+*最后更新：2026-02-28*

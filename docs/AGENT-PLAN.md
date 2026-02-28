@@ -100,12 +100,13 @@
 
 - **SubAgent 类型：** `general-purpose`（编码任务可用 `Bash` 类型辅助）
 - **负责 Skills：**
-  - `react-component-development` — React 组件开发
-  - `i18n-integration` — 国际化集成
-  - `mock-data-creation` — 模拟数据创建
-  - `chart-visualization` — 图表可视化实现
-- **输入：** UI Schema、数据模型、API 定义、模拟数据规范
+  - `react-component-development` — React 组件开发（✅ 含 Import 12 层规范、状态管理模式、Ant Design 组件模式、交互完整性规则、18 项检查清单）
+  - `mock-data-creation` — 模拟数据创建（✅ 含生命周期全覆盖、数据质量 8 项验证、常见错误防范）
+  - `i18n-integration` — 国际化集成（✅ 含键命名规范、状态标签处理、完整性验证）
+  - `chart-visualization` — 图表可视化实现（☐ Phase 3 前创建）
+- **输入：** UI Schema、数据模型（architecture.md）、API 定义、术语规范（STANDARDS.md §1）
 - **输出：** React 组件代码、i18n 翻译文件、模拟数据文件
+- **执行顺序：** `react-component-development`（步骤 1-3: types.ts → constants.ts → 目录结构）→ `mock-data-creation` → `react-component-development`（步骤 4-6: 页面组件 → userStoryMapping → 路由注册）→ `i18n-integration` → `react-component-development`（步骤 7: 编译验证）
 
 #### Agent 5：UI 评审 Agent (UI Evaluator)
 
@@ -247,11 +248,22 @@
           → 如有不一致 → 修正文档后继续
           → 如有新增术语 → 更新 STANDARDS.md 后继续
           ↓
-步骤 10: 前端工程 Agent
-          → 创建模拟数据
-          → 实现 React 组件
-          → 集成 i18n
-          → 输出: src/features/operations/station/ 下的代码文件
+步骤 10: 前端工程 Agent（按 3 个 Skill 分步执行）
+          → 10a: `react-component-development` 步骤 1-3
+            → 搭建模块目录结构
+            → 编写 types.ts（以 architecture.md 为唯一真相来源）
+            → 编写 constants.ts（状态配置 + getLabel）
+          → 10b: `mock-data-creation`
+            → 创建 mock 数据（生命周期全覆盖、数据质量验证）
+          → 10c: `react-component-development` 步骤 4-6
+            → 实现页面组件（Import 12 层顺序、交互完整性规则）
+            → 编写 userStoryMapping.ts + 注册到 RequirementTag.tsx
+            → 路由注册 + 侧边栏菜单（3 层模式）
+          → 10d: `i18n-integration`
+            → 提取翻译键、编写 zh-CN/en-US、组件 t() 集成
+          → 10e: `react-component-development` 步骤 7
+            → npm run build 编译验证
+          → 输出: frontend/src/features/{domain}/{module}/ 下的代码文件
           ↓
 步骤 11: UI 评审 Agent
           → 按六大维度评估 UI 质量
@@ -361,9 +373,9 @@ docs/skills/
 │   └── component-specification.md     # ☐ 组件规格定义
 │
 ├── frontend/                          # 前端工程类 Skills
-│   ├── react-component-development.md # ☐ React 组件开发
-│   ├── i18n-integration.md            # ☐ 国际化集成
-│   ├── mock-data-creation.md          # ☐ 模拟数据创建
+│   ├── react-component-development.md # ✅ React 组件开发（Import 规范 + 状态管理 + 交互规则）
+│   ├── mock-data-creation.md          # ✅ 模拟数据创建（生命周期覆盖 + 质量验证）
+│   ├── i18n-integration.md            # ✅ 国际化集成（键命名 + 状态标签处理）
 │   └── chart-visualization.md         # ☐ 图表可视化实现
 │
 ├── backend/                           # 后端工程类 Skills
@@ -434,9 +446,9 @@ docs/skills/
 | P0 | `ux-design` | 用户体验设计，ui-schema-design 的前置输入 | ✅ 已创建 |
 | P0 | `ui-schema-design` | 前端开发的直接输入 | ✅ 已创建 |
 | P0 | `ui-eval` | 前端实现后的质量门禁（Phase 1 验证为关键环节） | ✅ 已创建 |
-| P1 | `mock-data-creation` | MVP 阶段的数据来源 | ☐ 待创建 |
-| P1 | `react-component-development` | 核心编码 Skill | ☐ 待创建 |
-| P1 | `i18n-integration` | 贯穿所有页面 | ☐ 待创建 |
+| P1 | `react-component-development` | 核心编码 Skill（含 Import 规范、状态管理、Ant Design 模式、交互规则） | ✅ 已创建 |
+| P1 | `mock-data-creation` | MVP 阶段的数据来源（含生命周期覆盖、数据质量验证） | ✅ 已创建 |
+| P1 | `i18n-integration` | 贯穿所有页面（含键命名规范、状态标签处理） | ✅ 已创建 |
 | P2 | `workflow-design` | 复杂业务流程需要 | ☐ 待创建 |
 | P2 | `chart-visualization` | 数据分析模块需要 | ☐ 待创建 |
 | P3 | 其余 Skills | 按需创建 | ☐ |
