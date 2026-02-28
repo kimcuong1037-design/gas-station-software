@@ -1,8 +1,8 @@
 # Agent 结构计划 (Agent Architecture Plan)
 
 **项目：** 加气站运营管理系统
-**版本：** 1.6
-**更新日期：** 2026-02-25
+**版本：** 1.8
+**更新日期：** 2026-02-28
 
 ---
 
@@ -196,6 +196,12 @@
          ↓
 步骤 3: [用户确认 User Story]
          ↓
+步骤 3.5: 反向影响审查（Orchestrator 执行）
+          → 检查本模块的 requirements.md 中所有跨模块依赖（§跨模块依赖）
+          → 对每个上游模块，检查其 architecture.md 是否已声明本模块为下游消费者
+          → 如未声明 → 记录待补充项，在本模块 architecture.md 编写时一并处理
+          → 输出: 上游模块待补充清单（哪些 architecture.md 需要回溯更新）
+         ↓
 步骤 4: 架构设计 Agent
          → 执行"实体三问"分析（每个核心实体）
          → 设计数据模型（Station, Nozzle, Employee 等）
@@ -204,6 +210,11 @@
          → 绘制业务流程
          → 生成 PostgreSQL Schema 草案（ENUM 类型 + CREATE TABLE + 索引 + 约束）
          → 更新 docs/cross-module-erd.md（新增实体、跨模块 FK、迁移层级）
+         → 跨模块数据流定义（CORRECTIONS P7 规则 5-6）：
+           - 列出所有下游消费者（谁消费本模块的数据、消费方式）
+           - 定义跨模块触发机制（事件/轮询/同步调用）、触发条件、数据契约
+           - 如步骤 3.5 识别出上游待补充项 → 在本模块 architecture.md
+             的"跨模块依赖"章节中补充完整数据流定义
          → 输出: docs/features/operations/station/architecture.md
          ↓
 步骤 5: [用户确认架构设计]
@@ -281,6 +292,10 @@
             ☐ PostgreSQL Schema 草案已包含在 architecture.md 中
             ☐ cross-module-erd.md 已更新（新模块实体 + 跨模块 FK）
             ☐ API Docs 页面数据同步更新（apiData.ts）
+            ☐ 跨模块数据流完整性（CORRECTIONS P7 规则 5-7）：
+              ☐ a. architecture.md 已列出所有下游消费者（不仅"我依赖谁"，还有"谁依赖我"）
+              ☐ b. 每条跨模块数据流已定义触发机制（事件/轮询/同步）和数据契约（字段列表）
+              ☐ c. 上游模块 architecture.md 已回溯补充本模块为消费者（步骤 3.5 识别项已处理）
             ☐ 术语合规（Terminology Compliance，详见 `docs/skills/analysis/glossary-management.md`）：
               ☐ a. 所有新增术语已录入 STANDARDS.md §1（含中英文 + 代码命名）
               ☐ b. 文档间术语命名一致（页面名称、组件名、路由、菜单、面包屑在 5 份文档中统一）
@@ -511,6 +526,47 @@ grep "{module}UserStories" frontend/src/components/RequirementTag.tsx
 
 ---
 
+## 8. 团队协作协议
+
+### 8.1 新成员启动
+
+当新的团队成员加入项目开发时：
+
+1. **确认 `CLAUDE.md` 存在于项目根目录** — 这是 Claude Code 自动加载的入口指令，包含项目约定、流程摘要和禁止事项
+2. **首次启动 Claude Code 后**，按 `docs/SESSION-PROTOCOL.md` 执行 Session 启动检查
+3. **首次开发新模块前**，完整阅读一个已完成模块的全套文档作为参考范例（推荐：`docs/features/energy-trade/price-management/`，文档最完整）
+4. **阅读 `docs/CORRECTIONS.md` 全文**（非仅 §1 速查表），理解项目积累的 27 条纠偏经验
+
+### 8.2 多人并行开发
+
+| 规则 | 说明 |
+|------|------|
+| 模块互斥 | 同一时间只有一人开发同一模块，避免文件冲突 |
+| 共享文档锁 | 修改 `cross-module-erd.md`、`STANDARDS.md`、`router.tsx`、`AppLayout.tsx` 前先 `git pull` |
+| 进度标注 | `PROGRESS.md` 每条记录注明操作人（如 `[Roger]`、`[Alice]`） |
+| 术语新增 | 新增术语需同步通知其他开发者，避免命名冲突 |
+
+### 8.3 知识传递路径
+
+新成员按以下顺序阅读项目文档（从全局到局部）：
+
+```
+CLAUDE.md（入口指令，自动加载）
+  → CONSTITUTION.md（最高准则）
+  → AGENT-PLAN.md（本文档，编排蓝图）
+  → CORRECTIONS.md（纠偏模式，防止重复犯错）
+  → STANDARDS.md（术语 + 技术规范）
+  → SESSION-PROTOCOL.md（会话协议）
+  → Skills 文件（按需阅读当前阶段涉及的 Skill）
+  → 目标模块的 features/{domain}/{module}/ 文档套件
+```
+
+### 8.4 模块交接
+
+当模块开发中途需要换人继续时，参考 `docs/SESSION-PROTOCOL.md` §3 的交接清单模板，在 `PROGRESS.md` 中记录交接信息。
+
+---
+
 *创建时间：2026-02-07*
-*最后更新：2026-02-25*
-*版本：1.6*
+*最后更新：2026-02-28*
+*版本：1.8*

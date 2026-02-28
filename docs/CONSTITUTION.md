@@ -59,7 +59,7 @@
   - **架构类**：architecture.md（任何模块）
   - **需求类**：requirements.md、user-stories.md（任何模块）
   - **Skills 定义**：docs/skills/ 下的所有 Skill 文件
-  - **协作规范**：CONSTITUTION.md、STANDARDS.md、AGENT-PLAN.md
+  - **协作规范**：CONSTITUTION.md、STANDARDS.md、AGENT-PLAN.md、CLAUDE.md、SESSION-PROTOCOL.md
 - 工作流程：完成修改 → 向用户展示变更内容 → 用户 approve → 执行 git commit
 - 纯前端代码修改（组件、样式、i18n、mock 数据等）不受此限制，可直接提交
 - 此原则旨在确保项目方向性决策始终由用户把控
@@ -67,5 +67,5 @@
 ---
 
 *创建时间：2026-02-07*
-*最后更新：2026-02-27*
+*最后更新：2026-02-28*
 *版本：1.3*

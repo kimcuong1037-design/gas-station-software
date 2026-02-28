@@ -1,17 +1,28 @@
+## Current Module Status
+
+- **当前模块：** 2.3 库存管理 (inventory-management)
+- **当前步骤：** AGENT-PLAN Step 2（需求分析 — requirements.md + user-stories.md 已创建，待用户确认后进入 Step 4）
+- **已完成文档：** requirements.md ✅ | user-stories.md ✅ | ux-design.md ✅
+- **阻塞项：** 无
+- **上次 Session：** 2026-02-28
+- **操作人：** Roger
+
+---
 
 # 高层进度说明
 
-截至 2026-02-25，前端 UI 整体进展约为 **19%**（5/26 模块），Phase 1 全部完成，Phase 2 模块 2.1 已交付、模块 2.2 文档套件已确认。
+截至 2026-02-28，前端 UI 整体进展约为 **23%**（6/26 模块），Phase 1 全部完成，Phase 2 模块 2.1 + 2.2 前端 UI 已交付并完成评审。
 
 - **阶段 1（基础运营）：✅ 全部完成**
   - 1.1 站点管理 ✅ (4.15) | 1.2 交接班管理 ✅ (3.55) | 1.3 设备设施管理 ✅ (3.35) | 1.4 巡检安检管理 ✅ (3.45)
   - Phase 1 scroll.x 批量修复完成（14 个表格，4 模块）
 - **后端准备工作：✅ 完成**（跨模块 ERD + PostgreSQL Schema 草案 + API 路径一致性修复）
-- **流程体系升级：✅ 完成**（agent-plan v1.6 + architecture skill v1.2 + Phase 1 复盘 + RequirementTag Protocol + 跨模块一致性检查）
+- **流程体系升级：✅ 完成**（agent-plan v1.8 + glossary-management skill + RequirementTag Protocol + 跨模块一致性检查 + 术语检查流程 + 团队交接协议）
 - **阶段 2（能源交易）：🔧 进行中**
   - 2.1 价格管理 ✅ (3.94) — 前端 UI 完成 + UI 评审修复 + P1 补充修复
-  - 2.2 订单与交易 📋 文档套件完成（5/5 已确认）— 待前端开发
-- 阶段 2.3~7 尚未启动。
+  - 2.2 订单与交易 ✅ (3.71) — 文档套件 5/5 + 前端 UI 交付 + UI 评审两轮完成（P1=0）
+  - 2.3 库存管理 🔧 — 文档 3/5（requirements + user-stories + ux-design）
+- 阶段 2.3 后续 ~ 阶段 7 尚未启动。
 
 # 项目进展追踪（Progress Tracker）
 
@@ -27,6 +38,134 @@
 ---
 
 ## 进展记录
+
+### 2026-02-28（Module 2.2 UI 评审 + P1 修复 + ROADMAP 更新）
+
+#### Module 2.2 订单与交易 — UI 评审 v1 + P1 修复 + v2 评审
+
+**UI 评审 v1：3.51/5.0**
+
+| 维度 | 分数 |
+|------|------|
+| 视觉保真度 | 3.8 |
+| 功能正确性 | 3.5 |
+| 无障碍 | 2.5 |
+| 代码质量 | 3.8 |
+| 性能 | 4.0 |
+| UX 交互 | 4.0 |
+
+**P1 问题（2 项，全部修复）：**
+- P1-1：RefundManagement 未按站点过滤 — 添加 `useOutletContext` + `stationOrderIds`/`stationRefunds` useMemo 过滤链
+- P1-2：驳回弹窗未关联目标记录 — 新增 `rejectingRecord` state，Modal title 显示目标订单号
+
+**UI 评审 v2：3.71/5.0（v1: 3.51 → v2: 3.71, +0.20）**
+- P1 问题：2 → **0**
+- 功能正确性：3.5 → **4.2**（+0.7，最大提升维度）
+- 代码质量：3.8 → **4.0**（+0.2）
+- P2 问题：16 项（与全项目通病一致，延迟处理）
+- MVP 覆盖率：13/14 = 92.9%
+
+**Module 2.2 标记 ✅ 完成**
+
+#### ROADMAP.md 更新
+
+- Module 2.2 状态：「☐ 待开发」→「✅ 已完成（3.71/5.0）」
+- 进度表 Phase 2 行：2.2 ☐ → 2.2 ✅
+- 版本号 1.4 → 1.5
+
+#### apiData.ts 确认
+
+- Module 2.2 API 端点（30 个，5 分类）已在前一 session 中添加，确认存在
+
+#### 影响文件汇总
+
+| 类别 | 文件 | 变更 |
+|------|------|------|
+| P1 修复 | `pages/RefundManagement.tsx` | +useOutletContext 站点过滤 + rejectingRecord 关联 |
+| 评审报告 | `ui-evaluation-report-order-transaction-v1.md` | 新建，6 维度评审 |
+| 评审报告 | `ui-evaluation-report-order-transaction-v2.md` | 新建，P1 修复验证 |
+| 文档 | `ROADMAP.md` | Module 2.2 状态更新 |
+| 文档 | `PROGRESS.md` | 今日进展记录 |
+
+---
+
+### 2026-02-27（Module 2.2 前端 UI 交付 + 术语管理流程 + CORRECTIONS 压缩）
+
+#### Module 2.2 订单与交易 — 前端 UI 完整交付（commit `89e69ff`）
+
+**页面组件（4 个）：**
+
+| Page ID | 组件名 | 功能描述 |
+|---------|--------|----------|
+| P01 | OrderList | 订单列表 — 多条件筛选 + 状态 Tab + 支付方式过滤 |
+| P02 | ExceptionOrderList | 异常订单 — 挂起/争议订单处理 |
+| P03 | RefundManagement | 退款管理 — 退款申请列表 + 审批流程 |
+| P04 | OrderSettings | 订单设置 — 标签管理 + 全局配置 |
+
+**抽屉/弹窗组件（6 个）：**
+
+| 组件 | 功能描述 |
+|------|----------|
+| OrderDetailDrawer (D01) | 订单详情 — 基本信息 + 支付记录 + 操作时间线 |
+| CreateOrderDrawer (D02) | 手动创建订单 — 表单 + 枪号选择 + 油品自动填充 |
+| SupplementDrawer (D03) | 补录信息 — 车牌/司机/备注补充录入 |
+| PaymentModal (M01) | 支付处理 — 现金/电子支付 + 倒计时 + 超时提示 |
+| RefundModal (M02) | 退款申请 — 金额校验 + 原因选择 |
+| ReceiptPreviewModal (M03) | 小票预览 — 打印布局 + 二维码占位 |
+
+**基础文件：**
+- `types.ts` — 160 行，FuelingOrder, PaymentRecord, RefundRecord, OrderTag 等类型
+- `constants.ts` — 74 行，状态配置 + 支付方式 + 颜色映射
+- `userStoryMapping.ts` — 21 条 User Story 映射
+- `mock/orderTransaction.ts` — 442 行，30 订单 + 25 支付 + 5 退款 + 5 标签
+
+**集成更新：**
+- `router.tsx` — 4 个 lazy-loaded 路由
+- `AppLayout.tsx` — 菜单组 + 面包屑 + defaultOpenKeys
+- `zh-CN/index.ts` + `en-US/index.ts` — `order.*` 命名空间（~23 key/语言）
+- `RequirementTag.tsx` — order-transaction 模块注册
+- `STANDARDS.md` — 术语表批量更新（+81 行，术语一致性扫描结果）
+- `cross-module-erd.md` — Module 2.2 实体关系更新
+
+**P1 修复（2/2）：**
+- 所有页面 stationId 改用 `useOutletContext<LayoutContext>()` 替代硬编码
+
+**P2 修复（6 项）：**
+- RangePicker ×3 接入 dateRange 状态 + useMemo 过滤
+- 支付方式筛选实现（join paymentRecords）
+- PaymentModal 电子支付倒计时 + 超时提示
+- PaymentModal "确认收到" 按钮接入 handleConfirm
+- 移除未用 import + unused state 清理
+
+**交付 Checklist 8/8 PASS**，`npm run build` 通过
+
+#### Glossary Management Skill + AGENT-PLAN 术语检查流程（commit `6be3051`）
+
+- 创建 `docs/skills/analysis/glossary-management.md`（188 行，6 步流程 + Prompt 模板 + 检查清单）
+- `AGENT-PLAN.md` 步骤 9.5：文档阶段出口术语一致性扫描节点
+- `AGENT-PLAN.md` 步骤 12i：模块交付 Checklist 新增术语合规检查项（3 子项）
+- Skills 目录标记 glossary-management 为 ✅
+
+#### CORRECTIONS.md 压缩 + 归档（commit `c94eed6`）
+
+- `CORRECTIONS.md` 重构：357→120 行
+  - §1 模式速查表（8 个 Pattern，快速索引常见错误模式）
+  - §2 摘要表（26 条纠错条目一行一条）
+- 新建 `CORRECTIONS-ARCHIVE.md` — 保存全部原始详细记录（253 行）
+- `CONSTITUTION.md` 原则六更新为双文件引用（v1.2→v1.3）
+
+#### 影响文件汇总（31+2+3 = 36 个文件）
+
+| 类别 | 文件 | 变更 |
+|------|------|------|
+| 前端新增 | 10 个 order-transaction 组件 + types/constants/mapping/mock | +3282 行 |
+| 集成 | router.tsx, AppLayout.tsx, RequirementTag.tsx, i18n ×2, mock/index.ts | 路由/菜单/注册 |
+| 文档 | STANDARDS.md, cross-module-erd.md | 术语表 + ERD 更新 |
+| 流程 | AGENT-PLAN.md, glossary-management.md | 术语管理 Skill |
+| 纠错 | CORRECTIONS.md, CORRECTIONS-ARCHIVE.md, CONSTITUTION.md | 压缩 + 归档 |
+| 跨模块修正 | 6 个已有模块文档 | 术语一致性批量修正 |
+
+---
 
 ### 2026-02-25 Session 2（ROADMAP 更新 + scroll.x 批量修复 + API Docs 同步 + Module 2.2 文档套件）
 
@@ -561,7 +700,7 @@
 
 ---
 
-## 下次继续的起点（2026-02-26 CST）
+## 下次继续的起点（2026-03-01 CST）
 
 ### 当前状态总结
 
@@ -574,41 +713,28 @@
 | 1.3 设备设施管理 | 3.35 | 0 | 100% | — |
 | 1.4 巡检安检管理 | 3.45 | 0 | 100% | — |
 
-- Phase 1 scroll.x 批量修复已完成（14 个表格）
-
 **Phase 2 能源交易：🔧 进行中**
 
 | 模块 | UI 评分 | P1 | US 覆盖率 | 状态 |
 |------|---------|-----|-----------|------|
-| 2.1 价格管理 | 3.94 | 0 | 70.6% (12/17) | ✅ 前端 UI 交付 + P1 补充修复完成 |
-| 2.2 订单与交易 | - | - | - | 📋 文档套件 5/5 已确认，待前端开发 |
+| 2.1 价格管理 | 3.94 | 0 | 70.6% (12/17) | ✅ 前端 UI 交付 + 评审完成 |
+| 2.2 订单与交易 | 3.71 | 0 | 92.9% (13/14 MVP) | ✅ 前端 UI 交付 + 评审两轮完成 |
 | 2.3 库存管理 | - | - | - | 未启动 |
 
-**流程体系：** agent-plan v1.6 + ui-eval 跨模块一致性检查 + RequirementTag Protocol
+**流程体系：** agent-plan v1.7 + glossary-management skill + RequirementTag Protocol + 跨模块一致性检查 + 术语检查流程
 
 ### 下一步建议（与用户确认）
 
-1. **术语命名一致性扫描** ⚠️ 用户明确要求
-   - 扫描全项目文档（Phase 1 + Phase 2 已有文档），识别命名不一致但意思相同的情况
-   - 包括但不限于：业务术语 vs UI 命名、中英文对照、代码命名 vs 文档用语
-   - 将确认后的术语统一存储到 `docs/STANDARDS.md` 术语表
-   - 参考 CORRECTIONS.md 中「充装记录→订单列表」的经验
+1. **Module 2.3 库存管理 — 文档套件**
+   - 按 AGENT-PLAN Steps 0-9 执行
+   - requirements.md → user-stories.md → ux-design.md → ui-schema.md → architecture.md
+   - 步骤 9.5 术语一致性扫描（glossary-management skill 首次正式应用）
+   - 每份文档需用户确认
 
-2. **Module 2.2 订单与交易 — 前端开发** — 按 AGENT-PLAN Step 10 执行
-   - types.ts — FuelingOrder, PaymentRecord, RefundRecord, OrderTag 等类型定义
-   - constants.ts — 状态配置、支付方式配置、颜色映射
-   - userStoryMapping.ts — 21 stories 映射
-   - Mock data — 30 orders + 25 payments + 5 refunds + 5 tags
-   - Pages: OrderList (P01), ExceptionOrderList (P02), RefundManagement (P03), OrderSettings (P04)
-   - Drawers: OrderDetailDrawer (D01), CreateOrderDrawer (D02), SupplementDrawer (D03)
-   - Modals: PaymentModal (M01), RefundModal (M02), ReceiptPreviewModal (M03)
-   - Route registration + sidebar menu registration
-   - RequirementTag integration (follow §7 protocol)
-   - i18n keys (order.* namespace)
+2. **Module 2.3 前端开发** — 按 AGENT-PLAN Step 10 执行
+   - 文档套件确认后启动前端实现
 
-3. **cross-module-erd.md 更新** — 新增 Module 2.2 实体关系（FuelingOrder, PaymentRecord, RefundRecord 等）
-
-4. **Commit** — Session 2 工作尚未提交（文档套件 + scroll.x fix + apiData.ts + ROADMAP + CORRECTIONS）
+3. **Commit** — 2026-02-28 工作待提交（UI 评审报告 + P1 修复 + ROADMAP 更新）
 
 ---
 
