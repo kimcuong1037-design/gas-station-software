@@ -1051,7 +1051,10 @@ export default {
   // 库存管理模块
   inventory: {
     title: '库存管理',
-    overview: '库存总览',
+    overview: {
+      title: '库存总览',
+      empty: '暂无库存数据，请先完成入库操作',
+    },
     tankComparison: '罐存比对',
     alerts: '预警管理',
 
@@ -1061,6 +1064,14 @@ export default {
       tank: '储罐',
       remark: '备注',
       remarkPlaceholder: '可选填',
+      actions: '操作',
+      amount: '金额(元)',
+      auditStatus: '审核状态',
+      detail: '详情',
+      inboundTime: '入库时间',
+      operator: '操作员',
+      outboundTime: '出库时间',
+      quantity: '数量(kg)',
     },
     action: {
       save: '保存',
@@ -1091,13 +1102,17 @@ export default {
 
     // 趋势
     trend: {
+      title: '库存趋势',
       '7days': '近 7 天',
       '30days': '近 30 天',
       placeholder: '库存趋势折线图（ECharts）',
+      dataPoints: '个数据点',
     },
 
     // 入库管理
     inbound: {
+      title: '入库管理',
+      searchPlaceholder: '入库单号/供应商/送货单号',
       inboundNo: '入库单号',
       supplier: '供应商',
       deliveryNo: '送货单号',
@@ -1135,6 +1150,9 @@ export default {
 
     // 出库记录
     outbound: {
+      title: '出库记录',
+      relatedOrder: '关联单号',
+      approvalStatus: '审批状态',
       outboundNo: '出库单号',
       outboundType: '出库类型',
       salesOutbound: '销售出库',
@@ -1167,6 +1185,11 @@ export default {
 
     // 进销存流水
     ledger: {
+      title: '进销存流水',
+      time: '时间',
+      operatorSource: '操作人/来源',
+      exportItems: '条记录',
+      noExtra: '无附加信息',
       transactionType: '流水类型',
       stockBalance: '库存余量',
       export: '导出',
@@ -1189,6 +1212,7 @@ export default {
 
     // 罐存比对
     tank: {
+      empty: '暂无储罐数据，请在设备设施中配置储罐',
       realtimeTab: '实时比对',
       historyTab: '比对历史',
       surplus: '盈余',
@@ -1230,6 +1254,8 @@ export default {
 
     // 审核
     audit: {
+      reason: '原因',
+      stockUpdated: '库存已更新',
       pendingReview: '待审核',
       approved: '已通过',
       rejected: '已驳回',
@@ -1303,6 +1329,7 @@ export default {
 
     // tooltip
     tooltip: {
+      tankLevelRatio: '罐容比 = 实际罐存 ÷ 储罐额定容量 × 100%',
       theoreticalFormula: '理论库存 = 期初 + Σ入库 − Σ销售出库 − Σ损耗出库 ± Σ盘点调整',
       deviationFormula: '偏差率 = (实际罐存 − 理论库存) ÷ 理论库存 × 100%',
     },

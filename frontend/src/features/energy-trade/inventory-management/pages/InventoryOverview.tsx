@@ -35,15 +35,15 @@ const InventoryOverview: React.FC = () => {
 
   const getAlertTag = (level: 'safe' | 'warning' | 'critical') => {
     if (level === 'safe') return null;
-    if (level === 'warning') return <span style={{ color: '#faad14', fontSize: 12 }}>({t('inventory.alert.level.warning', '预警')})</span>;
-    return <span style={{ color: '#ff4d4f', fontSize: 12 }}>({t('inventory.alert.level.critical', '紧急')})</span>;
+    if (level === 'warning') return <span style={{ color: '#faad14', fontSize: 12 }}>({t('inventory.alert.level_warning', '预警')})</span>;
+    return <span style={{ color: '#ff4d4f', fontSize: 12 }}>({t('inventory.alert.level_critical', '紧急')})</span>;
   };
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <Space>
-          <Title level={4} style={{ margin: 0 }}>{t('inventory.overview', '库存总览')}</Title>
+          <Title level={4} style={{ margin: 0 }}>{t('inventory.overview.title', '库存总览')}</Title>
           <RequirementTag componentIds={['inventory-overview', 'inventory-trend']} module="inventory-management" showDetail />
         </Space>
       </div>

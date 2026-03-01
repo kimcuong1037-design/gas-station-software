@@ -1047,7 +1047,10 @@ export default {
   // Inventory Management module
   inventory: {
     title: 'Inventory Management',
-    overview: 'Inventory Overview',
+    overview: {
+      title: 'Inventory Overview',
+      empty: 'No inventory data, please complete inbound first',
+    },
     tankComparison: 'Tank Comparison',
     alerts: 'Alert Management',
 
@@ -1056,6 +1059,14 @@ export default {
       tank: 'Tank',
       remark: 'Remark',
       remarkPlaceholder: 'Optional',
+      actions: 'Actions',
+      amount: 'Amount (CNY)',
+      auditStatus: 'Audit Status',
+      detail: 'Detail',
+      inboundTime: 'Inbound Time',
+      operator: 'Operator',
+      outboundTime: 'Outbound Time',
+      quantity: 'Quantity (kg)',
     },
     action: {
       save: 'Save',
@@ -1084,12 +1095,16 @@ export default {
     },
 
     trend: {
+      title: 'Inventory Trend',
       '7days': 'Last 7 Days',
       '30days': 'Last 30 Days',
       placeholder: 'Inventory Trend Chart (ECharts)',
+      dataPoints: 'data points',
     },
 
     inbound: {
+      title: 'Inbound Management',
+      searchPlaceholder: 'Inbound No./Supplier/Delivery No.',
       inboundNo: 'Inbound No.',
       supplier: 'Supplier',
       deliveryNo: 'Delivery No.',
@@ -1126,6 +1141,9 @@ export default {
     },
 
     outbound: {
+      title: 'Outbound Records',
+      relatedOrder: 'Related Order',
+      approvalStatus: 'Approval Status',
       outboundNo: 'Outbound No.',
       outboundType: 'Outbound Type',
       salesOutbound: 'Sales Outbound',
@@ -1157,6 +1175,11 @@ export default {
     },
 
     ledger: {
+      title: 'Transaction Ledger',
+      time: 'Time',
+      operatorSource: 'Operator/Source',
+      exportItems: 'records',
+      noExtra: 'No extra info',
       transactionType: 'Transaction Type',
       stockBalance: 'Stock Balance',
       export: 'Export',
@@ -1177,6 +1200,7 @@ export default {
     },
 
     tank: {
+      empty: 'No tank data, please configure tanks in equipment',
       realtimeTab: 'Real-time Comparison',
       historyTab: 'History',
       surplus: 'Surplus',
@@ -1216,6 +1240,8 @@ export default {
     },
 
     audit: {
+      reason: 'Reason',
+      stockUpdated: 'Stock Updated',
       pendingReview: 'Pending Review',
       approved: 'Approved',
       rejected: 'Rejected',
@@ -1286,6 +1312,7 @@ export default {
     },
 
     tooltip: {
+      tankLevelRatio: 'Tank Level Ratio = Actual Level ÷ Rated Capacity × 100%',
       theoreticalFormula: 'Theoretical Stock = Opening + ΣInbound − ΣSales Outbound − ΣLoss Outbound ± ΣAdjustments',
       deviationFormula: 'Deviation Rate = (Actual Level − Theoretical Stock) ÷ Theoretical Stock × 100%',
     },
