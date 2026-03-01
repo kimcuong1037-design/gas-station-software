@@ -657,7 +657,6 @@ const AppLayout: React.FC = () => {
       >
         <div style={{
           height: 64,
-          margin: 16,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -665,7 +664,7 @@ const AppLayout: React.FC = () => {
           {collapsed ? (
             <span style={{
               fontFamily: 'FangSong, STFangsong, "仿宋", serif',
-              fontSize: 18,
+              fontSize: 15,
               fontWeight: 600,
               color: '#333',
               letterSpacing: 2,
@@ -676,10 +675,10 @@ const AppLayout: React.FC = () => {
           ) : (
             <span style={{
               fontFamily: 'FangSong, STFangsong, "仿宋", serif',
-              fontSize: 20,
+              fontSize: 17,
               fontWeight: 600,
               color: '#333',
-              letterSpacing: 4,
+              letterSpacing: 3,
               lineHeight: 1,
             }}>
               万山智慧气站
