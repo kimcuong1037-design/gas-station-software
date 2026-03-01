@@ -2,7 +2,7 @@
 export default {
   // App
   app: {
-    title: 'Gas Station Management',
+    title: 'WanShan Smart Gas',
   },
 
   // Common

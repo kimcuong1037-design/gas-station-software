@@ -428,10 +428,10 @@ export default function ApiDocs() {
         <ApiOutlined style={{ fontSize: 24, color: '#1677ff' }} />
         <div>
           <Title level={4} style={{ margin: 0, color: '#fff', lineHeight: 1.2 }}>
-            Gas Station API Docs
+            WanShan Smart Gas API Docs
           </Title>
           <Text style={{ color: '#888', fontSize: 12 }}>
-            加气站运营管理系统 — 内部 API 文档 v1.1
+            万山智慧气站 — 内部 API 文档 v1.1
           </Text>
         </div>
         <div style={{ flex: 1 }} />
@@ -622,7 +622,7 @@ export default function ApiDocs() {
           <Divider />
           <div style={{ textAlign: 'center', padding: '16px 0', color: '#aaa', fontSize: 12 }}>
             <Text type="secondary">
-              Gas Station Operations Management System — Internal API Documentation
+              WanShan Smart Gas — Internal API Documentation
             </Text>
             <br />
             <Text type="secondary">

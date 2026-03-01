@@ -2,7 +2,7 @@
 export default {
   // 应用
   app: {
-    title: '加气站管理系统',
+    title: '万山智慧气站',
   },
 
   // 通用

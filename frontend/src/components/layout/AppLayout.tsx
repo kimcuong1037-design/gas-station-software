@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Badge, Layout, Menu, Select, theme, Typography, Breadcrumb, Dropdown, Avatar, Tag, Space, message } from 'antd';
 import {
   HomeOutlined,
@@ -321,6 +321,60 @@ const AppLayout: React.FC = () => {
     },
   ];
 
+  // --- Sidebar accordion: only one submenu open per level ---
+  const rootSubmenuKeys = menuItems.map(item => item.key);
+
+  const computeOpenKeys = (pathname: string): string[] => {
+    const keys: string[] = [];
+    for (const item of menuItems) {
+      if (pathname.startsWith(item.key)) {
+        keys.push(item.key);
+        if (item.children) {
+          for (const child of item.children) {
+            if ('children' in child && child.children && pathname.startsWith(child.key)) {
+              keys.push(child.key);
+              break;
+            }
+          }
+        }
+        break;
+      }
+    }
+    return keys;
+  };
+
+  const [openKeys, setOpenKeys] = useState<string[]>(() => computeOpenKeys(location.pathname));
+
+  // Sync open keys when route changes (e.g. breadcrumb / direct navigation)
+  useEffect(() => {
+    setOpenKeys(computeOpenKeys(location.pathname));
+  }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const onMenuOpenChange = (keys: string[]) => {
+    const latestOpenKey = keys.find(key => !openKeys.includes(key));
+    if (!latestOpenKey) {
+      // User is closing a submenu
+      setOpenKeys(keys);
+      return;
+    }
+
+    if (rootSubmenuKeys.includes(latestOpenKey)) {
+      // Opening a domain — close other domains and their descendants
+      setOpenKeys([latestOpenKey]);
+    } else {
+      // Opening a sub-group — close sibling sub-groups under the same domain
+      const parentRoot = rootSubmenuKeys.find(rk => latestOpenKey.startsWith(rk));
+      if (parentRoot) {
+        const siblingKeys = (menuItems.find(item => item.key === parentRoot)?.children || [])
+          .filter(child => 'children' in child)
+          .map(child => child.key);
+        setOpenKeys(keys.filter(key => !siblingKeys.includes(key) || key === latestOpenKey));
+      } else {
+        setOpenKeys(keys);
+      }
+    }
+  };
+
   const handleMenuClick = (e: { key: string }) => {
     navigate(e.key);
   };
@@ -587,28 +641,56 @@ const AppLayout: React.FC = () => {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider 
-        collapsible 
-        collapsed={collapsed} 
+      <Sider
+        collapsible
+        collapsed={collapsed}
         onCollapse={setCollapsed}
         theme="light"
         width={240}
+        style={{
+          overflow: 'auto',
+          height: '100vh',
+          position: 'sticky',
+          top: 0,
+          scrollbarWidth: 'thin',
+        }}
       >
-        <div style={{ 
-          height: 64, 
+        <div style={{
+          height: 64,
           margin: 16,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
         }}>
-          <Text strong style={{ fontSize: collapsed ? 14 : 16 }}>
-            {collapsed ? 'GS' : t('app.title')}
-          </Text>
+          {collapsed ? (
+            <span style={{
+              fontFamily: 'FangSong, STFangsong, "仿宋", serif',
+              fontSize: 18,
+              fontWeight: 600,
+              color: '#333',
+              letterSpacing: 2,
+              lineHeight: 1,
+            }}>
+              万山
+            </span>
+          ) : (
+            <span style={{
+              fontFamily: 'FangSong, STFangsong, "仿宋", serif',
+              fontSize: 20,
+              fontWeight: 600,
+              color: '#333',
+              letterSpacing: 4,
+              lineHeight: 1,
+            }}>
+              万山智慧气站
+            </span>
+          )}
         </div>
         <Menu
           mode="inline"
           selectedKeys={getSelectedKeys()}
-          defaultOpenKeys={['/operations', '/operations/shift-handover', '/operations/device-ledger', '/operations/inspection', '/energy-trade', '/energy-trade/price-management', '/energy-trade/order', '/energy-trade/inventory']}
+          openKeys={openKeys}
+          onOpenChange={onMenuOpenChange}
           items={menuItems}
           onClick={handleMenuClick}
         />
