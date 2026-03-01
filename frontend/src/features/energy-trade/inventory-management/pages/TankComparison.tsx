@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Button, Card, Col, Collapse, DatePicker, Progress, Row, Select, Space, Table, Tabs, Tag, Tooltip, Typography } from 'antd';
+import { Button, Card, Col, Collapse, DatePicker, Empty, Progress, Row, Select, Space, Table, Tabs, Tag, Tooltip, Typography } from 'antd';
 import { ExclamationCircleOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useTranslation } from 'react-i18next';
@@ -52,6 +52,10 @@ const TankComparison: React.FC = () => {
 
   const renderRealtimeTab = () => (
     <div>
+      {tanks.length === 0 ? (
+        <Empty description={t('inventory.tank.empty', '暂无储罐数据，请在设备设施中配置储罐')} style={{ padding: 48 }} />
+      ) : (
+      <>
       {/* Tank cards */}
       <Row gutter={16} style={{ marginBottom: 24 }}>
         {tanks.map(tank => {
@@ -237,6 +241,8 @@ const TankComparison: React.FC = () => {
           </Col>
         </Row>
       </Card>
+      </>
+      )}
     </div>
   );
 

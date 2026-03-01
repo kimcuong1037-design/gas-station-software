@@ -21,7 +21,6 @@ const AuditModal: React.FC<AuditModalProps> = ({ open, onClose, onConfirm, title
       return;
     }
     onConfirm?.(reason);
-    message.success(t('inventory.audit.rejected', '已驳回'));
     setReason('');
     onClose();
   };

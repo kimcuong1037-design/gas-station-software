@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { Card, Col, Progress, Radio, Row, Space, Statistic, Typography } from 'antd';
-import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
+import { Button, Card, Col, Empty, Progress, Radio, Row, Space, Statistic, Tooltip, Typography } from 'antd';
+import { ArrowUpOutlined, ArrowDownOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { useOutletContext } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 interface LayoutContext {
   selectedStationId: string;
 }
@@ -14,6 +14,7 @@ const { Title, Text } = Typography;
 const InventoryOverview: React.FC = () => {
   const { t } = useTranslation();
   const { selectedStationId } = useOutletContext<LayoutContext>();
+  const navigate = useNavigate();
   const [trendRange, setTrendRange] = useState<'7d' | '30d'>('7d');
 
   const { cards, trendData } = useMemo(
@@ -40,7 +41,7 @@ const InventoryOverview: React.FC = () => {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <Space>
           <Title level={4} style={{ margin: 0 }}>{t('inventory.overview', '库存总览')}</Title>
           <RequirementTag componentIds={['inventory-overview', 'inventory-trend']} module="inventory-management" showDetail />
@@ -48,51 +49,66 @@ const InventoryOverview: React.FC = () => {
       </div>
 
       {/* 库存卡片区 */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        {cards.map(card => (
-          <Col span={8} key={card.fuelTypeId}>
-            <Card size="small">
-              <div style={{ marginBottom: 12 }}>
-                <Space>
-                  <Text strong style={{ fontSize: 16 }}>{card.fuelTypeName}</Text>
-                  {getAlertTag(card.alertLevel)}
-                </Space>
-              </div>
-              <div style={{ marginBottom: 12 }}>
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  {t('inventory.card.tankLevelRatio', '罐容比')}
-                </Text>
-                <Progress
-                  percent={card.tankLevelRatio}
-                  strokeColor={getProgressColor(card.tankLevelRatio)}
-                  format={p => `${p?.toFixed(1)}%`}
-                  size="small"
+      {cards.length === 0 ? (
+        <div style={{ marginBottom: 24, textAlign: 'center', padding: 48 }}>
+          <Empty description={t('inventory.overview.empty', '暂无库存数据，请先完成入库操作')}>
+            <Button type="primary" onClick={() => navigate('/energy-trade/inventory/inbound')}>
+              {t('inventory.inbound.createInbound', '新增入库')}
+            </Button>
+          </Empty>
+        </div>
+      ) : (
+        <Row gutter={16} style={{ marginBottom: 24 }}>
+          {cards.map(card => (
+            <Col span={8} key={card.fuelTypeId}>
+              <Card size="small">
+                <div style={{ marginBottom: 12 }}>
+                  <Space>
+                    <Text strong style={{ fontSize: 16 }}>{card.fuelTypeName}</Text>
+                    {getAlertTag(card.alertLevel)}
+                  </Space>
+                </div>
+                <div style={{ marginBottom: 12 }}>
+                  <Space size={4}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {t('inventory.card.tankLevelRatio', '罐容比')}
+                    </Text>
+                    <Tooltip title={t('inventory.tooltip.tankLevelRatio', '罐容比 = 实际罐存 ÷ 储罐额定容量 × 100%')}>
+                      <InfoCircleOutlined style={{ color: '#999', fontSize: 12 }} />
+                    </Tooltip>
+                  </Space>
+                  <Progress
+                    percent={card.tankLevelRatio}
+                    strokeColor={getProgressColor(card.tankLevelRatio)}
+                    format={p => `${p?.toFixed(1)}%`}
+                    size="small"
+                  />
+                </div>
+                <Statistic
+                  title={t('inventory.card.currentStock', '当前库存')}
+                  value={card.currentStock}
+                  precision={3}
+                  suffix="kg"
+                  valueStyle={{ fontSize: 20 }}
                 />
-              </div>
-              <Statistic
-                title={t('inventory.card.currentStock', '当前库存')}
-                value={card.currentStock}
-                precision={3}
-                suffix="kg"
-                valueStyle={{ fontSize: 20 }}
-              />
-              <div style={{ marginTop: 12 }}>
-                <Space size={16}>
-                  <Text style={{ color: '#52c41a', fontSize: 12 }}>
-                    <ArrowUpOutlined /> {t('inventory.card.todayInbound', '入库')} {card.todayInbound.toFixed(1)} kg
-                  </Text>
-                  <Text style={{ color: '#1890ff', fontSize: 12 }}>
-                    <ArrowDownOutlined /> {t('inventory.card.todayOutbound', '出库')} {card.todayOutbound.toFixed(1)} kg
-                  </Text>
-                  <Text style={{ color: card.todayNetChange >= 0 ? '#52c41a' : '#ff4d4f', fontSize: 12 }}>
-                    {t('inventory.card.netChange', '净变化')} {card.todayNetChange >= 0 ? '+' : ''}{card.todayNetChange.toFixed(1)} kg
-                  </Text>
-                </Space>
-              </div>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+                <div style={{ marginTop: 12 }}>
+                  <Space size={16}>
+                    <Text style={{ color: '#52c41a', fontSize: 12 }}>
+                      <ArrowUpOutlined /> {t('inventory.card.todayInbound', '入库')} {card.todayInbound.toFixed(1)} kg
+                    </Text>
+                    <Text style={{ color: '#1890ff', fontSize: 12 }}>
+                      <ArrowDownOutlined /> {t('inventory.card.todayOutbound', '出库')} {card.todayOutbound.toFixed(1)} kg
+                    </Text>
+                    <Text style={{ color: card.todayNetChange >= 0 ? '#52c41a' : '#ff4d4f', fontSize: 12 }}>
+                      {t('inventory.card.netChange', '净变化')} {card.todayNetChange >= 0 ? '+' : ''}{card.todayNetChange.toFixed(1)} kg
+                    </Text>
+                  </Space>
+                </div>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      )}
 
       {/* 趋势图区域 */}
       <Card
