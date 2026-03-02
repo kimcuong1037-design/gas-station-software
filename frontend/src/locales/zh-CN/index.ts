@@ -52,6 +52,10 @@ export default {
     records: '条',
     comingSoon: '功能即将上线',
     exportTodo: '导出功能即将上线',
+    chart: {
+      empty: '暂无图表数据',
+      noData: '暂无数据',
+    },
   },
 
   // 导航菜单
@@ -506,6 +510,7 @@ export default {
       pressure: '压力',
       temperature: '温度',
       trend: '趋势图',
+      alertLine: '20% 预警线',
     },
     // 设备台账
     equipment: {

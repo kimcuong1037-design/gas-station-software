@@ -52,6 +52,10 @@ export default {
     records: '',
     comingSoon: 'Coming soon',
     exportTodo: 'Export coming soon',
+    chart: {
+      empty: 'No chart data',
+      noData: 'No data',
+    },
   },
 
   // Navigation menu
@@ -505,6 +509,7 @@ export default {
       pressure: 'Pressure',
       temperature: 'Temperature',
       trend: 'Trend Chart',
+      alertLine: '20% Alert Line',
     },
     equipment: {
       title: 'Equipment Ledger',

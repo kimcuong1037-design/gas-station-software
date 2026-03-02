@@ -9,7 +9,8 @@ interface LayoutContext {
   selectedStationId: string;
 }
 import { RequirementTag } from '../../../../components/RequirementTag';
-import type { TankComparisonCard, TankComparisonLog } from '../types';
+import { LineChart, MiniChart, Sparkline } from '../../../../components/Charts';
+import type { TankComparisonCard, TankComparisonLog, TankLoss } from '../types';
 import { getTankComparisonRealtime, getLossAnalysis, tankComparisonLogs } from '../../../../mock/inventory';
 import StockAdjustmentModal from '../components/StockAdjustmentModal';
 
@@ -175,11 +176,11 @@ const TankComparison: React.FC = () => {
                               ? t('inventory.tank.suggestCheck', '建议检查储罐密封性并执行盘点调整')
                               : t('inventory.tank.normalRange', '偏差在正常范围内')}
                           </Text>
-                          <div style={{ height: 80, marginTop: 8, background: '#fafafa', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Text type="secondary" style={{ fontSize: 11 }}>
-                              {t('inventory.tank.trend7d', '近 7 天偏差趋势图（ECharts）')}
-                            </Text>
-                          </div>
+                          <MiniChart
+                            data={tank.trend7d.map(p => ({ date: p.date, value: p.deviationRate }))}
+                            height={80}
+                            referenceValue={2}
+                          />
                         </div>
                       ),
                     }]}
@@ -230,10 +231,8 @@ const TankComparison: React.FC = () => {
                 },
                 {
                   title: t('inventory.tank.lossTrend', '损耗趋势'), width: 120,
-                  render: () => (
-                    <div style={{ width: 100, height: 24, background: '#fafafa', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Text type="secondary" style={{ fontSize: 10 }}>Sparkline</Text>
-                    </div>
+                  render: (_: unknown, record: TankLoss) => (
+                    <Sparkline data={record.trend.map(p => p.deviationRate)} width={100} height={24} />
                   ),
                 },
               ]}
@@ -286,8 +285,20 @@ const TankComparison: React.FC = () => {
   const renderHistoryTab = () => (
     <div>
       {historyTankFilter && (
-        <div style={{ height: 200, marginBottom: 16, background: '#fafafa', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Text type="secondary">{t('inventory.tank.deviationTrendChart', '偏差率趋势折线图（ECharts）')} — {t('inventory.tank.refLine', '参考线 ±2%')}</Text>
+        <div style={{ marginBottom: 16 }}>
+          <LineChart
+            data={historyRecords.map(r => ({
+              date: r.snapshotDate,
+              value: r.deviationRate,
+              seriesName: r.tankName,
+            }))}
+            height={200}
+            yAxisUnit="%"
+            referenceLines={[
+              { value: 2, label: '+2%' },
+              { value: -2, label: '-2%' },
+            ]}
+          />
         </div>
       )}
       <Space wrap style={{ marginBottom: 16 }}>

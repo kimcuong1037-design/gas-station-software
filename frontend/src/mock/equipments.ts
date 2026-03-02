@@ -534,4 +534,35 @@ export const getPendingActions = (): PendingAction[] => {
 
 const MAINTENANCE_LABEL = '维保';
 
+/** 生成储罐液位历史时序数据（用于趋势图） */
+export function generateTankLevelHistory(
+  tanks: Equipment[],
+  timeRange: string,
+): { date: string; value: number; seriesName: string }[] {
+  const result: { date: string; value: number; seriesName: string }[] = [];
+  const tankList = tanks.filter(t => t.deviceType === 'tank' && t.monitoring?.levelPercent != null);
+
+  const points = timeRange === '24h' ? 24 : timeRange === '7d' ? 7 : 30;
+
+  for (const tank of tankList) {
+    const baseLevel = tank.monitoring!.levelPercent!;
+    for (let i = points - 1; i >= 0; i--) {
+      const date = timeRange === '24h'
+        ? `${String(23 - i).padStart(2, '0')}:00`
+        : (() => {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            return d.toISOString().slice(0, 10);
+          })();
+      // Simulate historical level with gradual drift + noise
+      const drift = (i / points) * 8;
+      const noise = Math.sin(i * 0.7 + tankList.indexOf(tank)) * 3 + (Math.random() - 0.5) * 2;
+      const value = Math.max(0, Math.min(100, Math.round((baseLevel + drift + noise) * 10) / 10));
+      result.push({ date, value, seriesName: tank.name });
+    }
+  }
+
+  return result;
+}
+
 export default equipments;

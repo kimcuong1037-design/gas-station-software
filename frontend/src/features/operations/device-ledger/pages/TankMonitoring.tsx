@@ -1,11 +1,12 @@
 // P02: 储罐监控详情
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Card, Row, Col, Typography, Button, Space, Progress, Tag, Segmented } from 'antd';
 import { ArrowLeftOutlined, ReloadOutlined } from '@ant-design/icons';
-import { getTanks } from '../../../../mock/equipments';
+import { getTanks, generateTankLevelHistory } from '../../../../mock/equipments';
 import type { Equipment } from '../types';
+import { LineChart } from '../../../../components/Charts';
 import { getTankLevelColor, AUTO_REFRESH_INTERVAL } from '../constants';
 import { RequirementTag } from '../../../../components/RequirementTag';
 
@@ -16,6 +17,8 @@ const TankMonitoring: React.FC = () => {
   const navigate = useNavigate();
   const [tanks, setTanks] = useState<Equipment[]>(getTanks());
   const [timeRange, setTimeRange] = useState<string>('24h');
+
+  const chartData = useMemo(() => generateTankLevelHistory(tanks, timeRange), [tanks, timeRange]);
 
   const refreshData = useCallback(() => {
     setTanks(
@@ -133,30 +136,14 @@ const TankMonitoring: React.FC = () => {
         }
         style={{ marginTop: 16 }}
       >
-        <div
-          style={{
-            height: 240,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: '#fafafa',
-            borderRadius: 8,
-          }}
-        >
-          <div style={{ textAlign: 'center' }}>
-            <Text type="secondary">📈 液位趋势图</Text>
-            <br />
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              (ECharts 图表 - 显示各储罐{timeRange === '24h' ? '24小时' : timeRange === '7d' ? '7天' : '30天'}液位变化)
-            </Text>
-            <br />
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              ── 储罐#1 ({Math.round(tanks[0]?.monitoring?.levelPercent ?? 0)}%)
-              &nbsp;&nbsp;─ ─ 储罐#2 ({Math.round(tanks[1]?.monitoring?.levelPercent ?? 0)}%)
-              &nbsp;&nbsp;═══ ⚠ 20%阈值线
-            </Text>
-          </div>
-        </div>
+        <LineChart
+          data={chartData}
+          height={240}
+          yAxisUnit="%"
+          referenceLines={[
+            { value: 20, label: t('deviceLedger.monitoring.alertLine', '20% 预警线') },
+          ]}
+        />
       </Card>
     </div>
   );

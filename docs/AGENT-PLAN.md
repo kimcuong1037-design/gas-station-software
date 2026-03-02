@@ -103,7 +103,7 @@
   - `react-component-development` — React 组件开发（✅ 含 Import 12 层规范、状态管理模式、Ant Design 组件模式、交互完整性规则、18 项检查清单）
   - `mock-data-creation` — 模拟数据创建（✅ 含生命周期全覆盖、数据质量 8 项验证、常见错误防范）
   - `i18n-integration` — 国际化集成（✅ 含键命名规范、状态标签处理、完整性验证）
-  - `chart-visualization` — 图表可视化实现（☐ Phase 3 前创建）
+  - `chart-visualization` — 图表可视化实现（✅ 已创建）
 - **输入：** UI Schema、数据模型（architecture.md）、API 定义、术语规范（STANDARDS.md §1）
 - **输出：** React 组件代码、i18n 翻译文件、模拟数据文件
 - **执行顺序：** `react-component-development`（步骤 1-3: types.ts → constants.ts → 目录结构）→ `mock-data-creation` → `react-component-development`（步骤 4-6: 页面组件 → userStoryMapping → 路由注册）→ `i18n-integration` → `react-component-development`（步骤 7: 编译验证）
@@ -376,7 +376,7 @@ docs/skills/
 │   ├── react-component-development.md # ✅ React 组件开发（Import 规范 + 状态管理 + 交互规则）
 │   ├── mock-data-creation.md          # ✅ 模拟数据创建（生命周期覆盖 + 质量验证）
 │   ├── i18n-integration.md            # ✅ 国际化集成（键命名 + 状态标签处理）
-│   └── chart-visualization.md         # ☐ 图表可视化实现
+│   └── chart-visualization.md         # ✅ 图表可视化实现
 │
 ├── backend/                           # 后端工程类 Skills
 │   ├── api-implementation.md          # ☐ API 实现
@@ -450,7 +450,7 @@ docs/skills/
 | P1 | `mock-data-creation` | MVP 阶段的数据来源（含生命周期覆盖、数据质量验证） | ✅ 已创建 |
 | P1 | `i18n-integration` | 贯穿所有页面（含键命名规范、状态标签处理） | ✅ 已创建 |
 | P2 | `workflow-design` | 复杂业务流程需要 | ☐ 待创建 |
-| P2 | `chart-visualization` | 数据分析模块需要 | ☐ 待创建 |
+| P2 | `chart-visualization` | 数据分析模块需要（含 ECharts 共享组件层、主题集成、占位符替换流程） | ✅ 已创建 |
 | P3 | 其余 Skills | 按需创建 | ☐ |
 
 ### 6.2 后续演进

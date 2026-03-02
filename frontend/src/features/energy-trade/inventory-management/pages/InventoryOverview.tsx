@@ -7,6 +7,7 @@ interface LayoutContext {
   selectedStationId: string;
 }
 import { RequirementTag } from '../../../../components/RequirementTag';
+import { LineChart } from '../../../../components/Charts';
 import { getInventoryOverview } from '../../../../mock/inventory';
 
 const { Title, Text } = Typography;
@@ -26,6 +27,11 @@ const InventoryOverview: React.FC = () => {
     const days = trendRange === '7d' ? 7 : 30;
     return trendData.slice(0, days * 3);
   }, [trendData, trendRange]);
+
+  const chartData = useMemo(() =>
+    filteredTrend.map(p => ({ date: p.date, value: p.stock, seriesName: p.fuelTypeName })),
+    [filteredTrend],
+  );
 
   const getProgressColor = (ratio: number) => {
     if (ratio <= 10) return '#ff4d4f';
@@ -120,20 +126,12 @@ const InventoryOverview: React.FC = () => {
           </Radio.Group>
         }
       >
-        <div
-          style={{
-            height: 300,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: '#fafafa',
-            borderRadius: 8,
-          }}
-        >
-          <Text type="secondary">
-            {t('inventory.trend.placeholder', '库存趋势折线图（ECharts）')} — {filteredTrend.length} {t('inventory.trend.dataPoints', '个数据点')}
-          </Text>
-        </div>
+        <LineChart
+          data={chartData}
+          height={300}
+          yAxisUnit="kg"
+          emptyText={t('common.chart.empty', '暂无图表数据')}
+        />
       </Card>
     </div>
   );
