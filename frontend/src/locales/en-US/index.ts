@@ -32,6 +32,9 @@ export default {
     detail: 'Detail',
     export: 'Export',
     import: 'Import',
+    close: 'Close',
+    create: 'Create',
+    totalItems: 'Total {{total}} items',
     pageNotFound: 'Sorry, the page you visited does not exist',
     backToHome: 'Back to Home',
     resetFilters: 'Reset Filters',
@@ -292,6 +295,7 @@ export default {
     shiftTime: 'Shift Time',
     shiftDuration: 'Running',
     hoursUnit: 'hours',
+    minutes: 'min',
     startHandover: 'Start Handover',
     viewHistory: 'View History',
     cashSettlement: 'Cash Settlement',
@@ -313,6 +317,7 @@ export default {
     seconds: 's',
     unsettledCash: 'Unsettled Cash',
     autoRefreshInterval: 'Auto Refresh Interval',
+    autoRefresh: 'Auto Refresh',
     
     // Amount display
     hideAmount: 'Hide Amount',
@@ -348,6 +353,12 @@ export default {
     receivedBy: 'Received By',
     recordsUnit: '',
     viewDetail: 'View Detail',
+    selectShift: 'Select Shift',
+    selectHandoverBy: 'Select Handover By',
+    totalRecords: 'Total Records',
+    totalAmountSum: 'Total Sales',
+    issues: 'Issues',
+    issuesCount: 'issue(s)',
     
     // Status
     initiated: 'Initiated',
@@ -504,7 +515,9 @@ export default {
       pendingActions: 'Pending Actions',
       autoRefresh: 'Auto Refreshing',
       tankDetail: 'Tank Monitoring',
+      tankTitle: 'Tank Monitoring',
       dispenserDetail: 'Dispenser Status Board',
+      dispenserTitle: 'Dispenser Status',
       level: 'Level',
       pressure: 'Pressure',
       temperature: 'Temperature',

@@ -311,7 +311,7 @@ const StationForm: React.FC = () => {
           </Form.Item>
         </Col>
         <Col xs={24} md={12}>
-          <Form.Item name="regionId" label={t('station.region')}>
+          <Form.Item name="regionId" label={t('station.regionLabel')}>
             <TreeSelect
               placeholder="请选择所属区域"
               treeData={regionTreeData}
@@ -322,7 +322,7 @@ const StationForm: React.FC = () => {
           </Form.Item>
         </Col>
         <Col xs={24} md={12}>
-          <Form.Item name="groupId" label={t('station.group')}>
+          <Form.Item name="groupId" label={t('station.groupLabel')}>
             <Select
               placeholder="请选择所属分组"
               options={groups.map((g) => ({ label: g.name, value: g.id }))}
@@ -442,10 +442,10 @@ const StationForm: React.FC = () => {
               {allData.latitude}, {allData.longitude}
             </Descriptions.Item>
           )}
-          <Descriptions.Item label={t('station.region')}>
+          <Descriptions.Item label={t('station.regionLabel')}>
             {findRegionName(allData.regionId)}
           </Descriptions.Item>
-          <Descriptions.Item label={t('station.group')}>
+          <Descriptions.Item label={t('station.groupLabel')}>
             {findGroupName(allData.groupId)}
           </Descriptions.Item>
           <Descriptions.Item label={t('station.contact')}>

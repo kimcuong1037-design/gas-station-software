@@ -295,6 +295,111 @@
 
 ---
 
+## 2026-03-01 API 文档写操作端点缺少 JSON 请求体和响应体示例
+
+- **修正内容：** 用户在 review API 文档（截图为"创建损耗出库"POST 端点）时发现，architecture.md 中的 POST/PUT/PATCH 端点只在表格的"请求/响应要点"列用简短文字列出字段名，没有 JSON code block 示例。对比分析发现这是跨模块的系统性缺失：
+  - Module 1.3（设备设施）：POST/PATCH **有** JSON 请求体示例（最佳实践）
+  - Module 2.1（价格管理）：POST/PUT/PATCH 仅表格字段名，**无** JSON 示例
+  - Module 2.2（订单交易）：POST/PATCH 仅表格字段名，**无** JSON 示例
+  - Module 2.3（库存管理）：POST/PUT/PATCH 仅表格字段名，**无** JSON 示例
+  - **所有模块**均缺少 POST/PATCH 的响应体示例（包括 HTTP 状态码和返回字段）
+
+  据此为 Module 2.3 库存管理的 13 个写操作端点全部补齐了：
+  1. **请求 Body JSON 示例**（含贴近真实的示例值）
+  2. **字段描述表格**（类型、必填、说明、枚举值范围）
+  3. **响应示例**（HTTP 状态码 + 关键字段）
+  4. **无 Body 端点的显式说明**（如 approve 类端点注明"无请求 Body"）
+
+  补齐的 13 个端点：
+  - 入库管理：POST /inbound-records, PATCH .../approve, PATCH .../reject
+  - 出库管理：POST /outbound-records, PATCH .../approve, PATCH .../reject
+  - 进销存流水：POST /transactions/export
+  - 盘点调整：POST /stock-adjustments, PATCH .../approve, PATCH .../reject
+  - 预警管理：PATCH /alerts/:id/acknowledge, PATCH /alerts/:id/dismiss, PUT /alert-config/:fuelTypeId
+
+- **原因分析：**
+  1. **格式不对称**：architecture.md 为 GET 响应提供了完整的 TypeScript 接口定义（如 InventoryCard、TankComparisonCard），但写操作端点只在表格的一个 cell 里用逗号分隔列出字段名，没有展开为 JSON code block
+  2. **Module 1.3 是标杆但未被复制**：Module 1.3 的 architecture.md 在 POST/PATCH 端点都有完整的 JSON 请求体示例，但后续模块（2.1、2.2、2.3）没有沿用这个格式标准
+  3. **data-model-design Skill 未约束写操作示例**：当前 Skill 定义可能未将"写操作端点 JSON 示例"作为必选输出项，导致 Agent 在生成 architecture.md 时只关注了 GET 响应类型
+  4. **"表格够用"的错觉**：字段名在表格中列出后，容易误认为已足够，但缺少具体示例值（尤其是枚举值、关联 ID 格式、可选字段处理）会给后端实现者带来歧义
+
+- **经验总结：**
+  1. architecture.md 的 API 端点设计章节必须对 GET 和 POST/PUT/PATCH/DELETE 一视同仁：GET 有响应类型定义 → 写操作也必须有请求体 + 响应体示例
+  2. JSON 示例的价值不在于"完整"，而在于"消歧义"：枚举字段填什么值？可选字段传 null 还是不传？条件必填的触发条件是什么？这些只有示例能直观表达
+  3. 无 Body 端点（如审核通过）也需要显式文档化，否则实现者不确定是否需要传参
+  4. 每个写操作的响应应至少包含：HTTP 状态码、生成的 ID/单号、状态变更后的字段值——便于前端对接时知道要读取哪些响应字段
+  5. Module 1.3 的 API 文档格式应作为所有模块的标准参照，后续模块 architecture.md 生成时应引用
+
+- **修正文件清单：**
+  - `docs/features/energy-trade/inventory-management/architecture.md` — 13 个写操作端点补齐 JSON 示例
+  - `docs/CORRECTIONS.md` — 新增 P10 模式 + 摘要表 #29
+  - `docs/CORRECTIONS-ARCHIVE.md` — 新增本条完整记录
+
+- **待办（其他模块）：**
+  - Module 2.1 price-management/architecture.md — 12 个 POST/PUT/PATCH 待补齐
+  - Module 2.2 order-transaction/architecture.md — 10 个 POST/PATCH 待补齐
+
+---
+
+## 2026-03-02 i18n 全局缺失键（交接历史等 17+ 处）
+
+- **修正内容：** 用户在 review "交接班 → 交接历史"页面时发现多处 UI 显示原始 i18n 键名（如 `shiftHandover.totalRecords`、`shiftHandover.issues`、`shiftHandover.selectHandoverBy`）而非中文翻译。经全局扫描后发现共 114 个缺失键，分布在 6 个模块：
+
+  **HIGH 优先级（无 fallback，直接显示英文键名，已修复 17 个）：**
+  | 缺失键 | 模块 | zh-CN 修复值 |
+  |--------|------|-------------|
+  | `shiftHandover.selectShift` | 交接历史筛选器 | 请选择班次 |
+  | `shiftHandover.selectHandoverBy` | 交接历史筛选器 | 请选择交班人 |
+  | `shiftHandover.totalRecords` | 交接历史统计卡片 | 交接总数 |
+  | `shiftHandover.totalAmountSum` | 交接历史统计卡片 | 销售额合计 |
+  | `shiftHandover.issues` | 交接历史表格列 | 异常 |
+  | `shiftHandover.issuesCount` | 交接历史 tooltip | 条异常 |
+  | `common.totalItems` | 交接历史分页 | 共 {{total}} 条 |
+  | `station.region` | 站点表单 | → 改用已有 `station.regionLabel` |
+  | `station.region.title` | 站点列表/详情 | → 改用已有 `station.regionLabel`（避免 P9 冲突） |
+  | `station.group` | 站点表单 | → 改用已有 `station.groupLabel` |
+  | `station.group.title` | 站点列表/详情 | → 改用已有 `station.groupLabel`（避免 P9 冲突） |
+
+  **MEDIUM 优先级（有 inline fallback，UI 正常但不规范，已修复 5 个）：**
+  | 缺失键 | zh-CN 修复值 |
+  |--------|-------------|
+  | `shiftHandover.autoRefresh` | 自动刷新 |
+  | `shiftHandover.minutes` | 分钟 |
+  | `common.close` | 关闭 |
+  | `common.create` | 创建 |
+  | `deviceLedger.monitoring.tankTitle` / `dispenserTitle` | 储罐监控 / 加气机状态 |
+
+  **LOW 优先级（全部有 inline fallback，约 97 个，未修复）：**
+  - Module 2.2 订单交易的 `order.*`（46 个）、`payment.*`（10 个）、`receipt.*`（14 个）、`refund.*`（18 个）、`supplement.*`（9 个）命名空间整体缺失——代码中使用 `t('key', '默认值')` 形式，UI 正常但未注册到 locale 文件
+
+  **station 模块 P9 冲突修复：**
+  - `t('station.region.title')` 与 `t('station.region')` 同时存在，会导致 `station.region` 既是对象（有 `.title`）又是字符串的冲突
+  - 修复方案：全部改用已有的 `station.regionLabel` / `station.groupLabel`，避免新增冲突键
+
+- **原因分析：**
+  1. **非主体 UI 区域漏检**：前端实现后的 i18n 检查只关注了页面主体内容（表格列、表单标签），遗漏了筛选器 placeholder、统计卡片 title、分页文本等辅助区域
+  2. **缺少自动化验证**：目前无工具自动比对代码中 `t()` 调用与 locale 文件的键集合差异，完全依赖人工目测
+  3. **Module 2.2 的 inline fallback 掩盖了问题**：`t('key', '默认值')` 使 UI 正常运行，但键未注册到 locale 文件，导致英文版翻译缺失且不可维护
+  4. **P9 修复范围不足**：02-28 修复 P9 时只处理了"嵌套命名空间冲突"这一种 i18n 问题，未趁机做全量扫描
+
+- **经验总结：**
+  1. P9 扩展规则 5：每个模块交付前必须**全量扫描** `.tsx` 中的 `t()` 调用 vs locale 文件，不能只靠肉眼检查可见页面
+  2. P9 扩展规则 6：`t('key', '默认值')` 的 inline fallback 不能替代正式注册到 locale 文件
+  3. station 模块案例再次验证了 P9 规则 3：定义 `station.region.title` 会使 `station.region` 变为对象容器，与 `t('station.region')` 作为叶子字符串冲突
+
+- **修正文件清单：**
+  - `frontend/src/locales/zh-CN/index.ts` — 新增 11 个翻译键
+  - `frontend/src/locales/en-US/index.ts` — 新增 11 个翻译键
+  - `frontend/src/features/operations/station/pages/StationForm.tsx` — `t('station.region')` → `t('station.regionLabel')`，`t('station.group')` → `t('station.groupLabel')`
+  - `frontend/src/features/operations/station/pages/StationList.tsx` — `t('station.region.title')` → `t('station.regionLabel')`，`t('station.group.title')` → `t('station.groupLabel')`
+  - `frontend/src/features/operations/station/pages/StationDetail.tsx` — 同上
+  - `docs/CORRECTIONS.md` — P9 新增规则 5/6 + 摘要表 #30
+
+- **待办：**
+  - Module 2.2 订单交易约 97 个 inline fallback 键待注册到 locale 文件（下次迭代时统一补齐）
+
+---
+
 *创建时间：2026-02-27*
-*最后更新：2026-02-28*
-*内容来源：docs/CORRECTIONS.md 原始内容 (2026-02-07 ~ 2026-02-25) + auto-memory corrections (2026-02-25 ~ 2026-02-28)*
+*最后更新：2026-03-02*
+*内容来源：docs/CORRECTIONS.md 原始内容 (2026-02-07 ~ 2026-02-25) + auto-memory corrections (2026-02-25 ~ 2026-03-02)*

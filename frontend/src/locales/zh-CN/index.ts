@@ -32,6 +32,9 @@ export default {
     detail: '详情',
     export: '导出',
     import: '导入',
+    close: '关闭',
+    create: '创建',
+    totalItems: '共 {{total}} 条',
     pageNotFound: '抱歉，您访问的页面不存在',
     backToHome: '返回首页',
     resetFilters: '重置筛选',
@@ -292,6 +295,7 @@ export default {
     shiftTime: '班次时间',
     shiftDuration: '已运营',
     hoursUnit: '小时',
+    minutes: '分钟',
     startHandover: '发起交接',
     viewHistory: '查看历史',
     cashSettlement: '现金解缴',
@@ -313,6 +317,7 @@ export default {
     seconds: '秒',
     unsettledCash: '现金待解缴',
     autoRefreshInterval: '自动刷新间隔',
+    autoRefresh: '自动刷新',
     
     // 金额显示
     hideAmount: '隐藏金额',
@@ -348,6 +353,12 @@ export default {
     receivedBy: '接班人',
     recordsUnit: '条',
     viewDetail: '查看详情',
+    selectShift: '请选择班次',
+    selectHandoverBy: '请选择交班人',
+    totalRecords: '交接总数',
+    totalAmountSum: '销售额合计',
+    issues: '异常',
+    issuesCount: '条异常',
     
     // 状态
     initiated: '已发起',
@@ -505,7 +516,9 @@ export default {
       pendingActions: '待处理事项',
       autoRefresh: '自动刷新中',
       tankDetail: '储罐监控',
+      tankTitle: '储罐监控',
       dispenserDetail: '加气机状态板',
+      dispenserTitle: '加气机状态',
       level: '液位',
       pressure: '压力',
       temperature: '温度',

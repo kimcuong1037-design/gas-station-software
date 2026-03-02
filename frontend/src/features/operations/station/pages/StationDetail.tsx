@@ -629,10 +629,10 @@ const StationDetail: React.FC = () => {
                   '-'
                 )}
               </Descriptions.Item>
-              <Descriptions.Item label={t('station.group.title')}>
+              <Descriptions.Item label={t('station.groupLabel')}>
                 {station.group?.name || '-'}
               </Descriptions.Item>
-              <Descriptions.Item label={t('station.region.title')}>
+              <Descriptions.Item label={t('station.regionLabel')}>
                 {station.region?.name || '-'}
               </Descriptions.Item>
               <Descriptions.Item label={t('station.form.employeeSyncMode')}>

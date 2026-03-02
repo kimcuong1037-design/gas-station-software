@@ -167,13 +167,13 @@ const StationList: React.FC = () => {
       sorter: (a, b) => (a.nozzleCount || 0) - (b.nozzleCount || 0),
     },
     {
-      title: t('station.region.title'),
+      title: t('station.regionLabel'),
       dataIndex: ['region', 'name'],
       key: 'region',
       width: 120,
     },
     {
-      title: t('station.group.title'),
+      title: t('station.groupLabel'),
       dataIndex: ['group', 'name'],
       key: 'group',
       width: 120,
@@ -337,7 +337,7 @@ const StationList: React.FC = () => {
           <Col flex="180px">
             <TreeSelect
               style={{ width: '100%' }}
-              placeholder={t('station.region.title')}
+              placeholder={t('station.regionLabel')}
               value={regionFilter}
               onChange={(value) => {
                 setRegionFilter(value);
@@ -352,7 +352,7 @@ const StationList: React.FC = () => {
           <Col flex="150px">
             <Select
               style={{ width: '100%' }}
-              placeholder={t('station.group.title')}
+              placeholder={t('station.groupLabel')}
               value={groupFilter}
               onChange={(value) => {
                 setGroupFilter(value);
