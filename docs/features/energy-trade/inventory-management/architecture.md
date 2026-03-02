@@ -403,6 +403,86 @@
 | PATCH | `/api/v1/stations/:stationId/inventory/inbound-records/:id/approve` | 审核通过 | 权限: station_master / 更新 audit_status→approved, 理论库存 +actual_qty |
 | PATCH | `/api/v1/stations/:stationId/inventory/inbound-records/:id/reject` | 审核驳回 | Body: `reason` / 更新 audit_status→rejected |
 
+**POST /inbound-records 请求 Body：**
+```json
+{
+  "tankId": "tank-lng-01",
+  "supplierName": "中海石油",
+  "deliveryNo": "DL-20260228-001",
+  "plannedQuantity": 5000.000,
+  "actualQuantity": 4985.500,
+  "inboundTime": "2026-02-28T14:30:00.000Z",
+  "remark": "常规补货"
+}
+```
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `tankId` | string | 是 | 目标储罐 ID（FK → Equipment, type=tank），自动带出 fuel_type_id |
+| `supplierName` | string | 是 | 供应商名称 |
+| `deliveryNo` | string | 否 | 送货单号 |
+| `plannedQuantity` | number | 是 | 计划量（kg），> 0 |
+| `actualQuantity` | number | 是 | 实收量（kg），> 0 |
+| `inboundTime` | string | 是 | 入库时间（ISO 8601） |
+| `remark` | string | 否 | 备注 |
+
+**响应示例（201 Created）：**
+```json
+{
+  "code": 0,
+  "data": {
+    "id": "ib-uuid-0013",
+    "inboundNo": "IB-ST001-20260228-0001",
+    "auditStatus": "pending_review",
+    "variance": -14.500,
+    "varianceRate": -0.29,
+    "createdAt": "2026-02-28T14:30:05.000Z"
+  }
+}
+```
+
+**PATCH /inbound-records/:id/approve 请求 Body：**
+
+> 无请求 Body（审核人信息从当前登录用户上下文获取）。
+
+**响应示例（200 OK）：**
+```json
+{
+  "code": 0,
+  "data": {
+    "id": "ib-uuid-0013",
+    "auditStatus": "approved",
+    "auditedBy": "emp-station-master",
+    "auditedAt": "2026-02-28T16:00:00.000Z"
+  }
+}
+```
+
+**PATCH /inbound-records/:id/reject 请求 Body：**
+```json
+{
+  "reason": "实收量与送货单偏差过大，需重新核验"
+}
+```
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `reason` | string | 是 | 驳回原因 |
+
+**响应示例（200 OK）：**
+```json
+{
+  "code": 0,
+  "data": {
+    "id": "ib-uuid-0013",
+    "auditStatus": "rejected",
+    "rejectReason": "实收量与送货单偏差过大，需重新核验",
+    "auditedBy": "emp-station-master",
+    "auditedAt": "2026-02-28T16:05:00.000Z"
+  }
+}
+```
+
 #### 出库管理
 
 | 方法 | 路径 | 说明 | 请求 / 响应要点 |
@@ -412,12 +492,105 @@
 | PATCH | `/api/v1/stations/:stationId/inventory/outbound-records/:id/approve` | 损耗审批通过 | 权限: shift_leader, station_master |
 | PATCH | `/api/v1/stations/:stationId/inventory/outbound-records/:id/reject` | 损耗审批驳回 | Body: `reason` |
 
+**POST /outbound-records 请求 Body：**
+```json
+{
+  "fuelTypeId": "ft-lng",
+  "quantity": 15.500,
+  "lossReason": "evaporation",
+  "lossReasonDetail": null
+}
+```
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `fuelTypeId` | string | 是 | 燃料类型 ID（FK → FuelType） |
+| `quantity` | number | 是 | 损耗量（kg），> 0，不能超过当前理论库存（BR-11） |
+| `lossReason` | string | 是 | 损耗原因：`evaporation` / `leakage` / `transfer` / `other` |
+| `lossReasonDetail` | string | 条件 | 原因说明（`lossReason=other` 时必填） |
+
+**响应示例（201 Created）：**
+```json
+{
+  "code": 0,
+  "data": {
+    "id": "ob-uuid-0021",
+    "outboundNo": "OB-ST001-20260228-0004",
+    "outboundType": "loss",
+    "source": "manual",
+    "approvalStatus": "pending_approval",
+    "createdAt": "2026-02-28T15:20:00.000Z"
+  }
+}
+```
+
+**PATCH /outbound-records/:id/approve 请求 Body：**
+
+> 无请求 Body（审批人信息从当前登录用户上下文获取）。
+
+**响应示例（200 OK）：**
+```json
+{
+  "code": 0,
+  "data": {
+    "id": "ob-uuid-0021",
+    "approvalStatus": "approved",
+    "approvedBy": "emp-shift-leader",
+    "approvedAt": "2026-02-28T16:10:00.000Z"
+  }
+}
+```
+
+**PATCH /outbound-records/:id/reject 请求 Body：**
+```json
+{
+  "reason": "损耗量异常偏高，请核实后重新提交"
+}
+```
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `reason` | string | 是 | 驳回原因 |
+
+**响应示例（200 OK）：**
+```json
+{
+  "code": 0,
+  "data": {
+    "id": "ob-uuid-0021",
+    "approvalStatus": "rejected",
+    "rejectReason": "损耗量异常偏高，请核实后重新提交",
+    "approvedBy": "emp-shift-leader",
+    "approvedAt": "2026-02-28T16:15:00.000Z"
+  }
+}
+```
+
 #### 进销存流水
 
 | 方法 | 路径 | 说明 | 请求 / 响应要点 |
 |------|------|------|----------------|
 | GET | `/api/v1/stations/:stationId/inventory/transactions` | 流水明细列表 | Query: `transactionType[]`, `fuelTypeId`, `dateFrom`, `dateTo`, `page`, `pageSize` / Resp: `items[]`, `pagination` |
 | POST | `/api/v1/stations/:stationId/inventory/transactions/export` | 导出流水 | Body: `transactionType[]`, `fuelTypeId`, `dateFrom`, `dateTo` / Resp: Blob (Excel) |
+
+**POST /transactions/export 请求 Body：**
+```json
+{
+  "transactionType": ["inbound", "sales_outbound", "loss_outbound"],
+  "fuelTypeId": "ft-lng",
+  "dateFrom": "2026-02-01",
+  "dateTo": "2026-02-28"
+}
+```
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `transactionType` | string[] | 否 | 流水类型筛选，不传则导出全部类型 |
+| `fuelTypeId` | string | 否 | 燃料类型筛选 |
+| `dateFrom` | string | 否 | 起始日期（YYYY-MM-DD） |
+| `dateTo` | string | 否 | 截止日期（YYYY-MM-DD） |
+
+**响应：** `Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`，文件名 `进销存流水_LNG_20260201-20260228.xlsx`
 
 #### 罐存比对
 
@@ -452,6 +625,82 @@
 | PATCH | `/api/v1/stations/:stationId/inventory/stock-adjustments/:id/approve` | 调整审核通过 | [MVP+] |
 | PATCH | `/api/v1/stations/:stationId/inventory/stock-adjustments/:id/reject` | 调整审核驳回 | Body: `reason` / [MVP+] |
 
+**POST /stock-adjustments 请求 Body：** [MVP+]
+```json
+{
+  "tankId": "tank-lng-01",
+  "adjustedStock": 8520.000,
+  "reason": "月度盘点，实际罐存与理论库存偏差 12.5kg，调整理论库存与实际对齐"
+}
+```
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `tankId` | string | 是 | 储罐 ID（FK → Equipment, type=tank），自动带出 fuel_type_id |
+| `adjustedStock` | number | 是 | 调整后理论库存（kg），≥ 0 |
+| `reason` | string | 是 | 调整原因 |
+
+> 系统自动计算 `beforeStock`（当前理论库存）和 `adjustmentQuantity`（= adjustedStock - beforeStock）。
+> 审批路由：|adjustmentQuantity| ≤ 理论库存 1% → 班组长审批；> 1% → 站长审批（BR-08）。
+
+**响应示例（201 Created）：**
+```json
+{
+  "code": 0,
+  "data": {
+    "id": "sa-uuid-0004",
+    "adjustmentNo": "SA-ST001-20260228-0001",
+    "beforeStock": 8507.500,
+    "afterStock": 8520.000,
+    "adjustmentQuantity": 12.500,
+    "auditStatus": "pending_review",
+    "createdAt": "2026-02-28T17:00:00.000Z"
+  }
+}
+```
+
+**PATCH /stock-adjustments/:id/approve 请求 Body：** [MVP+]
+
+> 无请求 Body（审核人信息从当前登录用户上下文获取）。
+
+**响应示例（200 OK）：**
+```json
+{
+  "code": 0,
+  "data": {
+    "id": "sa-uuid-0004",
+    "auditStatus": "approved",
+    "auditedBy": "emp-shift-leader",
+    "auditedAt": "2026-02-28T17:30:00.000Z"
+  }
+}
+```
+
+**PATCH /stock-adjustments/:id/reject 请求 Body：** [MVP+]
+```json
+{
+  "reason": "调整量较大，需提供盘点照片佐证"
+}
+```
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `reason` | string | 是 | 驳回原因 |
+
+**响应示例（200 OK）：**
+```json
+{
+  "code": 0,
+  "data": {
+    "id": "sa-uuid-0004",
+    "auditStatus": "rejected",
+    "rejectReason": "调整量较大，需提供盘点照片佐证",
+    "auditedBy": "emp-station-master",
+    "auditedAt": "2026-02-28T17:35:00.000Z"
+  }
+}
+```
+
 #### 预警管理
 
 | 方法 | 路径 | 说明 | 请求 / 响应要点 |
@@ -461,6 +710,78 @@
 | PATCH | `/api/v1/stations/:stationId/inventory/alerts/:id/dismiss` | 忽略预警 | 更新 handle_status→dismissed |
 | GET | `/api/v1/stations/:stationId/inventory/alert-config` | 预警规则配置 | Resp: `rules: AlertRule[]` |
 | PUT | `/api/v1/stations/:stationId/inventory/alert-config/:fuelTypeId` | 更新预警规则 | Body: `safeThreshold`, `warningThreshold`, `criticalThreshold`, `lossDeviationThreshold`, `thresholdType` |
+
+**PATCH /alerts/:id/acknowledge 请求 Body：**
+
+> 无请求 Body（处理人信息从当前登录用户上下文获取）。
+
+**响应示例（200 OK）：**
+```json
+{
+  "code": 0,
+  "data": {
+    "id": "alert-uuid-001",
+    "handleStatus": "acknowledged",
+    "handledBy": "emp-station-master",
+    "handledAt": "2026-02-28T18:00:00.000Z"
+  }
+}
+```
+
+**PATCH /alerts/:id/dismiss 请求 Body：**
+
+> 无请求 Body（处理人信息从当前登录用户上下文获取）。
+
+**响应示例（200 OK）：**
+```json
+{
+  "code": 0,
+  "data": {
+    "id": "alert-uuid-002",
+    "handleStatus": "dismissed",
+    "handledBy": "emp-station-master",
+    "handledAt": "2026-02-28T18:05:00.000Z"
+  }
+}
+```
+
+**PUT /alert-config/:fuelTypeId 请求 Body：**
+```json
+{
+  "safeThreshold": 35.00,
+  "warningThreshold": 30.00,
+  "criticalThreshold": 10.00,
+  "lossDeviationThreshold": 2.50,
+  "thresholdType": "percentage"
+}
+```
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `safeThreshold` | number | 是 | 安全阈值（%），库存回升至此值以上时预警自动恢复 |
+| `warningThreshold` | number | 是 | 预警阈值（%），罐容比 ≤ 此值触发橙色预警 |
+| `criticalThreshold` | number | 是 | 紧急阈值（%），罐容比 ≤ 此值触发红色紧急 |
+| `lossDeviationThreshold` | number | 是 | 损耗偏差阈值（%），日偏差率 > 此值触发损耗异常 |
+| `thresholdType` | string | 是 | 阈值类型：`percentage` / `absolute` |
+
+> 校验规则：`criticalThreshold < warningThreshold ≤ safeThreshold`，`0 < lossDeviationThreshold ≤ 10`
+
+**响应示例（200 OK）：**
+```json
+{
+  "code": 0,
+  "data": {
+    "id": "ac-uuid-001",
+    "fuelTypeId": "ft-lng",
+    "safeThreshold": 35.00,
+    "warningThreshold": 30.00,
+    "criticalThreshold": 10.00,
+    "lossDeviationThreshold": 2.50,
+    "thresholdType": "percentage",
+    "updatedAt": "2026-02-28T18:10:00.000Z"
+  }
+}
+```
 
 ### 2.3 权限矩阵
 
