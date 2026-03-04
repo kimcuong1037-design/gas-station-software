@@ -5,7 +5,7 @@
 
 | 开发者 | 当前模块 | 当前步骤 | 阻塞项 | 上次活跃 |
 |--------|---------|---------|--------|---------|
-| Roger | Phase 3 规划 | 团队协作文档体系搭建 | 无 | 2026-03-04 |
+| Roger | 7.1 数据分析 | 准备启动 Step 0（文档预检） | 无 | 2026-03-04 |
 
 **Phase 2 最终状态：** 2.1 ✅ (3.94) | 2.2 ✅ (3.71) | 2.3 ✅ (3.77)
 
@@ -41,6 +41,57 @@
 ---
 
 ## 进展记录
+
+### 2026-03-04 [Roger]（治理文档体系升级 — 前后端并行开发支持）
+
+#### 目标与背景
+
+确认后端技术栈（Python Flask + SQLAlchemy + MySQL 8.0），并全面升级 9 份治理/团队协作文档，使前端（Phase 3+）与后端（B0 → B1 → B2）可以由不同团队成员并行推进。
+
+#### 治理文档更新（commit `ead4361`）
+
+| 文档 | 版本 | 核心更新内容 |
+|------|------|------------|
+| `ROADMAP.md` | v1.6 → v1.7 | 新增 §7 后端开发轨道：并行策略、B0/B1/B2/B3+ 里程碑表、B0 基础设施清单（7 项）、技术栈决策记录；§6 进度表拆分为 FE + BE 两行 |
+| `AGENT-PLAN.md` | v1.8 → v1.9 | Agent 6 完整展开 BE Step 1~6（API 合同验证→Models→Schemas→Service→Blueprint→集成测试）；新增 Step 12i-BE 后端交付 Checklist（9 项）；§4 后端 Skill 标记 🔜 |
+| `STANDARDS.md` | v1.2 → v1.3 | §2.2 补全 `backend/` 完整目录树；新增 §8 后端编码规范（Python 3.11+、命名规则、Model/Blueprint/Service 模板）；§9 数据库规范（迁移规则、表设计规则、索引策略）；§10 测试规范（单元/集成分层、≥80% 覆盖率、fixture 模式）|
+| `MODULE-ASSIGNMENTS.md` | v1.0 → v1.1 | §2 所有模块表格拆分 FE/BE 双列；Phase 1/2 显示 "✅ FE 完成 + ☐ BE 待认领"；Phase 3~7 BE 列显示 "☐ FE 完成前不可开始"；新增 B0 独立里程碑节；§3 新增后端共享文件表；§4 PR 模板扩充后端 Checklist |
+| `TEAM-RULES.md` | v1.0 → v1.1 | §1.2 拆分前端/后端通用规则（各 4 条）；§3 新增 X10：禁止直接 ALTER TABLE 不生成迁移文件 |
+| `TEAM-ONBOARDING.md` | v1.0 → v1.1 | §2 新增后端环境搭建（venv + pip + flask db upgrade + pytest）；§3 阅读路径新增 STANDARDS.md §8~10；§5 新增第四步"后端代码走读"（以 Module 1.1 为示例）；自测题扩展至 7 题 |
+| `SESSION-PROTOCOL.md` | v1.1 → v1.2 | Step 4 后端工作上下文检查扩展（ROADMAP §7 里程碑、MODULE-ASSIGNMENTS BE 状态、backend 文件是否已创建）；§3 交接清单新增 4 条后端文件路径 |
+| `CONSTITUTION.md` | v1.3 → v1.4 | 原则八新增"后端关键文档"分类（数据库迁移文件 + API 合同修改） |
+| `CORRECTIONS.md` | — | 在 P10 前预留 P11 占位节（后端反模式，B0 启动后填写） |
+
+#### 历史遗留修改提交（commit `7c7c555`）
+
+| 文件类别 | 文件数量 | 说明 |
+|---------|---------|------|
+| Phase 1 模块 architecture.md | 4 个（station / shift-handover / device-ledger / inspection） | DB Schema 重构为 MySQL 8.0（替换 PostgreSQL），补齐所有写操作端点 JSON 示例 |
+| Phase 2 模块 architecture.md | 3 个（price-management / order-transaction / inventory-management） | 同上：MySQL 8.0 Schema + 写操作 JSON 示例 |
+| analytics architecture.md | 1 个（data-analytics） | Phase 3 架构文档初版，API 示例补齐 |
+| `cross-module-erd.md` | 1 个 | 跨模块实体关系图补充更新 |
+| `docs/skills/architecture/data-model-design.md` | 1 个 | Skill 定义更新 |
+| `phase1-retrospective.md` → `tmp-phase1-retrospective.md` | 重命名 | Phase 1 复盘文档整理 |
+| `PROGRESS.md` | 1 个 | 状态更新 |
+
+#### 影响文件汇总
+
+| commit | 内容 | 文件数 |
+|--------|------|--------|
+| `ead4361` | 9 份治理文档更新 | 9 |
+| `7c7c555` | 历史遗留：8 architecture.md + ERD + Skill + 复盘 | 12 |
+
+#### Next Steps
+
+- **当前模块：** 7.1 数据分析（Phase 3 首个模块）
+- **继续步骤：** AGENT-PLAN Step 0（文档完整性预检）→ Step 1（确认目标模块范围）→ Step 2（需求分析）
+- **待确认事项：** Phase 3 子模块优先级（7.1 数据分析 vs 7.2 报表中心 vs 7.3 数据大屏）— 建议从 7.1 数据分析开始
+- **建议首先阅读的文件：**
+  1. `docs/ROADMAP.md` §3 — Phase 3 模块定义与范围
+  2. `docs/features/analytics/data-analytics/architecture.md` — 已有架构草案（需确认完整性）
+  3. `docs/CORRECTIONS.md` §1 — 模式速查表（P1~P10）
+
+---
 
 ### 2026-03-03（Module 2.3 UI 评审 v2 + Phase 2 完结）
 
@@ -908,7 +959,7 @@
 
 > 每个人维护自己的"起点"区块。新 session 开始时阅读自己的区块恢复上下文。
 
-### Roger（2026-03-04 CST）
+### Roger（2026-03-04 更新）
 
 **已完成阶段总结：**
 
@@ -922,14 +973,22 @@
 | Phase 2 | 2.2 订单与交易 | 3.71 | ✅ |
 | Phase 2 | 2.3 库存管理 | 3.77 | ✅ |
 
-**下一步：**
-1. Phase 3 启动 — 数据分析与报表（7.1 数据分析、7.2 报表中心、7.3 数据大屏）
-2. 确认子模块优先级后进入 AGENT-PLAN Step 0-2
-3. 团队协作文档体系搭建（TEAM-RULES / TEAM-ONBOARDING / MODULE-ASSIGNMENTS）
+**治理文档体系（2026-03-04 完成）：**
+- 9 份治理文档升级（前后端并行开发支持）✅
+- 8 个模块 architecture.md 统一为 MySQL 8.0 Schema ✅
+- 后端技术栈确认：Python Flask + SQLAlchemy + MySQL 8.0 ✅
 
-**关键文件：**
-- `docs/ROADMAP.md` — Phase 3 模块定义
-- `docs/MODULE-ASSIGNMENTS.md` — 模块认领表
+**下一步（Phase 3 启动）：**
+1. 在 `MODULE-ASSIGNMENTS.md §2` 认领模块 7.1 数据分析
+2. 执行 AGENT-PLAN Step 0 文档完整性预检
+3. Step 1 确认目标模块范围（7.1 子功能：经营看板、多维分析、客户分析）
+4. Step 2 需求分析 → requirements.md + user-stories.md
+
+**明天启动时必读（按顺序）：**
+1. `docs/CORRECTIONS.md` §1 — 模式速查表（P1~P10），5 分钟
+2. `docs/ROADMAP.md` §3 — Phase 3 模块定义
+3. `docs/features/analytics/data-analytics/architecture.md` — 架构草案现状确认
+4. `docs/MODULE-ASSIGNMENTS.md` §2 Phase 3 行 — 认领 7.1
 
 ---
 
