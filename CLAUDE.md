@@ -6,13 +6,17 @@
 
 开始任何模块工作前，必须按顺序阅读：
 
-1. **`docs/CONSTITUTION.md`** — 8 条最高准则（拆解优先、规范先行、不确定必确认、文件删除双重确认等）
-2. **`docs/AGENT-PLAN.md`** — 模块开发 14 步流程 + Agent/Skill 体系 + RequirementTag 协议（§7）+ 团队协作（§8）
-3. **`docs/CORRECTIONS.md`** — 8 大纠偏模式（P1~P8），27 条历史修正。**每次开发新模块前必须重读 §1 模式速查表**
-4. **`docs/STANDARDS.md`** — 术语表（§1）+ 技术规范
-5. **`docs/SESSION-PROTOCOL.md`** — Session 启动/结束标准流程
-6. **`docs/ROADMAP.md`** — 7 个阶段 26 个模块的总路线图
-7. **`docs/PROGRESS.md`** — 精细进度追踪，顶部有 "Current Module Status" 快速定位
+1. **`docs/TEAM-RULES.md`** — 三级行为准则（推荐/不建议/禁止），团队行为边界速查
+2. **`docs/CONSTITUTION.md`** — 8 条最高准则（拆解优先、规范先行、不确定必确认、文件删除双重确认等）
+3. **`docs/AGENT-PLAN.md`** — 模块开发 14 步流程 + Agent/Skill 体系 + RequirementTag 协议（§7）+ 团队协作（§8）
+4. **`docs/CORRECTIONS.md`** — 10 大纠偏模式（P1~P10），30 条历史修正。**每次开发新模块前必须重读 §1 模式速查表**
+5. **`docs/STANDARDS.md`** — 术语表（§1）+ 技术规范
+6. **`docs/SESSION-PROTOCOL.md`** — Session 启动/结束标准流程
+7. **`docs/ROADMAP.md`** — 7 个阶段 26 个模块的总路线图
+8. **`docs/PROGRESS.md`** — 精细进度追踪，顶部有 "Current Module Status" 快速定位
+9. **`docs/MODULE-ASSIGNMENTS.md`** — 模块认领表 + 共享文件修改协议 + Git 分支与 PR 流程
+
+> **首次加入项目？** 请先通读 `docs/TEAM-ONBOARDING.md`（新成员引导手册），按 Day 0→Day 1→Day 2 节奏入门。
 
 ## 模块开发流程（AGENT-PLAN 14 步摘要）
 
@@ -73,6 +77,13 @@ Step 14: 文档更新
 - 统计卡片与列表筛选双向联动
 - 主列表包含全量数据，专用视图是筛选子集而非互斥分区
 
+### 团队协作
+- **模块认领表**：`docs/MODULE-ASSIGNMENTS.md` — 开始模块前必须认领
+- **行为准则**：`docs/TEAM-RULES.md` — 推荐/不建议/禁止三级分类
+- **分支策略**：feature branch 开发，PR 合入 main，禁止直接 push main
+- **分层审批**：关键文档 PR → Roger 审批；纯代码 PR → 团队互审
+- **共享文件修改协议**：见 `MODULE-ASSIGNMENTS.md §3`
+
 ## 项目结构
 
 ```
@@ -84,6 +95,9 @@ docs/
 ├── SESSION-PROTOCOL.md      # Session 交接协议
 ├── ROADMAP.md               # 总路线图
 ├── PROGRESS.md              # 精细进度
+├── TEAM-RULES.md            # 团队行为准则（推荐/不建议/禁止）
+├── TEAM-ONBOARDING.md       # 新成员引导手册
+├── MODULE-ASSIGNMENTS.md    # 模块认领表 + 共享文件协议 + PR 流程
 ├── cross-module-erd.md      # 跨模块实体关系图
 ├── skills/                  # Skill 定义（8 个已创建）
 │   ├── analysis/            # requirement-decomposition, user-story-writing, glossary-management
@@ -116,3 +130,7 @@ frontend/src/
 - **禁止术语自行发明**，必须查 STANDARDS.md（CORRECTIONS P1-5）
 - **禁止 UI 外观欺骗**：有视觉交互暗示必须有对应行为（CORRECTIONS P4）
 - **禁止关键文档未经用户审批就 commit**（CONSTITUTION 原则八）
+- **禁止直接 push 到 main 分支**，必须通过 PR 合入（TEAM-RULES X7）
+- **禁止未认领就开始模块开发**（TEAM-RULES X8）
+
+> 完整禁止事项清单（9 条）见 `docs/TEAM-RULES.md §3`

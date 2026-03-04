@@ -540,45 +540,69 @@ grep "{module}UserStories" frontend/src/components/RequirementTag.tsx
 
 ## 8. 团队协作协议
 
+> **详细文档：** 团队协作的完整规范分布在三个专项文档中，本节提供摘要和引用。
+> - `docs/TEAM-RULES.md` — 三级行为准则（推荐/不建议/禁止）
+> - `docs/TEAM-ONBOARDING.md` — 新成员引导手册（Day 0→Day 1→Day 2）
+> - `docs/MODULE-ASSIGNMENTS.md` — 模块认领表 + 共享文件协议 + Git 分支与 PR 流程
+
 ### 8.1 新成员启动
 
-当新的团队成员加入项目开发时：
+新成员加入项目时，按 `docs/TEAM-ONBOARDING.md` 引导手册执行：
 
-1. **确认 `CLAUDE.md` 存在于项目根目录** — 这是 Claude Code 自动加载的入口指令，包含项目约定、流程摘要和禁止事项
-2. **首次启动 Claude Code 后**，按 `docs/SESSION-PROTOCOL.md` 执行 Session 启动检查
-3. **首次开发新模块前**，完整阅读一个已完成模块的全套文档作为参考范例（推荐：`docs/features/energy-trade/price-management/`，文档最完整）
-4. **阅读 `docs/CORRECTIONS.md` 全文**（非仅 §1 速查表），理解项目积累的 27 条纠偏经验
+1. **Day 0：环境搭建** — clone 仓库 → `npm install` → `npm run dev` → `npm run build` 验证
+2. **Day 0-1：必读文档** — 按 TEAM-ONBOARDING §3 的人类优化阅读路径（约 2 小时）
+3. **Day 1：范例走读** — 以价格管理模块为范例，端到端走读完整文档套件和代码（TEAM-ONBOARDING §5）
+4. **Day 1-2：认领第一个模块** — 在 `MODULE-ASSIGNMENTS.md` 认领 → 创建 feature branch → 执行 AGENT-PLAN Step 0
 
-### 8.2 多人并行开发
+### 8.2 行为准则
 
-| 规则 | 说明 |
-|------|------|
-| 模块互斥 | 同一时间只有一人开发同一模块，避免文件冲突 |
-| 共享文档锁 | 修改 `cross-module-erd.md`、`STANDARDS.md`、`router.tsx`、`AppLayout.tsx` 前先 `git pull` |
-| 进度标注 | `PROGRESS.md` 每条记录注明操作人（如 `[Roger]`、`[Alice]`） |
-| 术语新增 | 新增术语需同步通知其他开发者，避免命名冲突 |
+所有团队成员必须遵守 `docs/TEAM-RULES.md` 定义的三级行为准则：
 
-### 8.3 知识传递路径
+| 级别 | 说明 | 条目数 |
+|------|------|--------|
+| §1 推荐做法 (MUST DO) | 流程纪律、代码规范、协作纪律、AI 使用 | 16 条 |
+| §2 不建议做法 (DON'T) | 不会立即出问题但增加风险的行为 | 8 条 |
+| §3 禁止事项 (PROHIBITED) | 硬性红线，违规必须 revert | 9 条 |
 
-新成员按以下顺序阅读项目文档（从全局到局部）：
+### 8.3 多人并行开发
+
+| 规则 | 说明 | 详见 |
+|------|------|------|
+| 模块互斥 | 同一时间只有一人开发同一模块 | `MODULE-ASSIGNMENTS.md §1` |
+| 模块认领 | 开始前必须在认领表登记 | `MODULE-ASSIGNMENTS.md §2` |
+| 共享文件协议 | 修改共享文件前 `git pull`，只改自己模块区块 | `MODULE-ASSIGNMENTS.md §3` |
+| 分支策略 | feature branch 开发，PR 合入 main，禁止直接 push | `MODULE-ASSIGNMENTS.md §4` |
+| 分层审批 | 关键文档→Roger 审批；纯代码→团队互审 | `TEAM-RULES.md §4` |
+| 进度标注 | `PROGRESS.md` 每条记录标注作者 `[姓名]` | `SESSION-PROTOCOL.md §4` |
+| 术语新增 | 新增术语先注册 STANDARDS.md，再通知团队 | `TEAM-RULES.md §1.3` |
+
+### 8.4 知识传递路径
+
+**AI Agent 阅读顺序**（Claude Code 自动加载 CLAUDE.md 后按以下顺序）：
 
 ```
 CLAUDE.md（入口指令，自动加载）
+  → TEAM-RULES.md（行为边界）
   → CONSTITUTION.md（最高准则）
   → AGENT-PLAN.md（本文档，编排蓝图）
   → CORRECTIONS.md（纠偏模式，防止重复犯错）
   → STANDARDS.md（术语 + 技术规范）
   → SESSION-PROTOCOL.md（会话协议）
+  → MODULE-ASSIGNMENTS.md（认领状态 + 共享文件协议）
   → Skills 文件（按需阅读当前阶段涉及的 Skill）
   → 目标模块的 features/{domain}/{module}/ 文档套件
 ```
 
-### 8.4 模块交接
+**人类团队成员阅读顺序**：见 `docs/TEAM-ONBOARDING.md §3`（按时间效益优化，与 AI 顺序不同）。
 
-当模块开发中途需要换人继续时，参考 `docs/SESSION-PROTOCOL.md` §3 的交接清单模板，在 `PROGRESS.md` 中记录交接信息。
+### 8.5 模块认领与交接
+
+- **认领**：在 `docs/MODULE-ASSIGNMENTS.md §2` 登记，认领后 3 个工作日内提交首个 PR
+- **交接**：参考 `docs/SESSION-PROTOCOL.md §3` 的交接清单模板，在 `PROGRESS.md` 中记录交接信息
+- **释放**：如因故无法继续，及时在认领表中释放模块并通知团队
 
 ---
 
 *创建时间：2026-02-07*
-*最后更新：2026-02-28*
-*版本：1.8*
+*最后更新：2026-03-04*
+*版本：1.9*

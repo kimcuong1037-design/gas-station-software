@@ -132,13 +132,44 @@
 
 ## 4. 多人并行开发规则
 
-| 规则 | 说明 |
-|------|------|
-| 模块互斥 | 同一时间只有一人开发同一模块 |
-| 共享文档冲突 | 修改 cross-module-erd.md、STANDARDS.md 前先 `git pull` |
-| PROGRESS.md 标注 | 每条进展记录注明操作人（如 `[Roger]`、`[Alice]`） |
-| 路由注册协调 | 修改 router.tsx / AppLayout.tsx 前确认无冲突 |
+> **完整团队协作规范见：** `TEAM-RULES.md`（行为准则）、`MODULE-ASSIGNMENTS.md`（认领表 + 共享文件协议 + PR 流程）
+
+### 4.1 模块互斥
+
+- 同一时间只有一人开发同一模块
+- 开始前必须在 `MODULE-ASSIGNMENTS.md §2` 认领
+- 认领后 3 个工作日内提交首个 PR，否则认领自动释放
+
+### 4.2 共享文件修改协议
+
+以下文件被多个模块共享，修改前必须 `git pull`：
+
+| 文件 | 冲突风险 | 协议 |
+|------|---------|------|
+| `router.tsx` | 🔴 高 | 只新增自己模块区块，不重排已有路由 |
+| `AppLayout.tsx` | 🔴 高 | 只新增自己模块菜单，不改其他模块 |
+| `RequirementTag.tsx` | 🟡 中 | 只新增自己模块的 import + mapping |
+| `zh-CN/index.ts` / `en-US/index.ts` | 🟡 中 | 只新增自己模块 namespace |
+| `cross-module-erd.md` / `STANDARDS.md` | 🟢 低 | 只新增自己模块章节/术语 |
+
+详细协议和冲突处理方法见 `MODULE-ASSIGNMENTS.md §3`。
+
+### 4.3 Git 分支与 PR 流程
+
+- **分支策略**：`main`（稳定）← PR ← `feature/<module-id>-<desc>`（开发）
+- **禁止直接 push main**，所有变更通过 PR 合入
+- **分层审批**：关键文档 PR → Roger approve；纯代码 PR → 任意团队成员互审
+- 详细流程见 `MODULE-ASSIGNMENTS.md §4`
+
+### 4.4 Progress 标注规则
+
+- Session 日志标题**必须包含作者标注**：`### YYYY-MM-DD [姓名]（描述）`
+- "Current Module Status" 表格每人维护自己的行
+- "下次继续的起点" 每人维护自己的区块
+- 修改 PROGRESS.md 前先 `git pull`，只改自己的区块
 
 ---
 
 *创建时间：2026-02-28*
+*最后更新：2026-03-04*
+*版本：1.1*
