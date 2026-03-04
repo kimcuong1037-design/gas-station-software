@@ -459,84 +459,66 @@
 
 ---
 
-## 6. Database Schema (PostgreSQL)
+## 6. Database Schema (MySQL 8.0)
 
 ```sql
 -- ============================================================
 -- 价格管理 (Price Management) Database Schema
 -- 版本: 草案 v1  |  生成日期: 2026-02-24
 -- ============================================================
-
-BEGIN;
-
 -- ---------- ENUM 类型 ----------
 
-CREATE TYPE price_status AS ENUM ('active', 'inactive');
-
-CREATE TYPE adjustment_type AS ENUM ('immediate', 'scheduled');
-
-CREATE TYPE adjustment_status AS ENUM (
-    'pending_approval',
-    'approved',
-    'rejected',
-    'executed',
-    'cancelled'
-);
-
-CREATE TYPE discount_type AS ENUM ('fixed_amount', 'percentage');
-
-CREATE TYPE member_tier AS ENUM ('normal', 'vip', 'svip');
 -- ⚠️ Phase 4 会员模块上线后，member_tier 可能迁移为关联表
-
-CREATE TYPE agreement_status AS ENUM ('active', 'expired', 'terminated');
 
 -- ---------- 1. FuelTypePrice（燃料类型基准价） ----------
 
 CREATE TABLE fuel_type_price (
-    id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
-    station_id      UUID            NOT NULL,   -- → Station (1.1) 跨模块 FK
-    fuel_type_id    UUID            NOT NULL,   -- → FuelType (1.1) 跨模块 FK
+    id              CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    station_id      CHAR(36)            NOT NULL,   -- → Station (1.1) 跨模块 FK
+    fuel_type_id    CHAR(36)            NOT NULL,   -- → FuelType (1.1) 跨模块 FK
     base_price      NUMERIC(10,2)   NOT NULL,
-    effective_from  TIMESTAMPTZ     NOT NULL DEFAULT now(),
-    status          price_status    NOT NULL DEFAULT 'active',
-    updated_by      UUID,                       -- → StationEmployee (1.1) 跨模块 FK
-    created_at      TIMESTAMPTZ     NOT NULL DEFAULT now(),
-    updated_at      TIMESTAMPTZ     NOT NULL DEFAULT now(),
+    effective_from  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status          ENUM('active', 'inactive')    NOT NULL DEFAULT 'active',
+    updated_by      CHAR(36),                       -- → StationEmployee (1.1) 跨模块 FK
+    created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT chk_fuel_type_price_positive CHECK (base_price > 0)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Column comments for fuel_type_price:
+-- ALTER TABLE fuel_type_price MODIFY COLUMN station_id ... COMMENT '跨模块 FK → module 1.1 Station.id';
+-- ALTER TABLE fuel_type_price MODIFY COLUMN fuel_type_id ... COMMENT '跨模块 FK → module 1.1 FuelType.id';
 
 -- 同一站点同一燃料类型只能有一条 active 记录
 CREATE UNIQUE INDEX uq_fuel_type_price_active
-    ON fuel_type_price (station_id, fuel_type_id) WHERE status = 'active';
+    ON fuel_type_price (station_id, fuel_type_id);
+-- MySQL: partial index (WHERE status = 'active') not supported;
+-- Consider generated column + index or application-level filtering
 
 CREATE INDEX idx_fuel_type_price_station ON fuel_type_price (station_id);
-
-COMMENT ON COLUMN fuel_type_price.station_id IS '跨模块 FK → module 1.1 Station.id';
-COMMENT ON COLUMN fuel_type_price.fuel_type_id IS '跨模块 FK → module 1.1 FuelType.id';
 
 -- ---------- 2. PriceAdjustment（调价记录） ----------
 
 CREATE TABLE price_adjustment (
-    id                  UUID                PRIMARY KEY DEFAULT gen_random_uuid(),
-    station_id          UUID                NOT NULL,   -- → Station (1.1)
-    fuel_type_id        UUID                NOT NULL,   -- → FuelType (1.1)
-    nozzle_id           UUID,                           -- → Nozzle (1.1)，NULL=按燃料类型调价
+    id                  CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    station_id          CHAR(36)                NOT NULL,   -- → Station (1.1)
+    fuel_type_id        CHAR(36)                NOT NULL,   -- → FuelType (1.1)
+    nozzle_id           CHAR(36),                           -- → Nozzle (1.1)，NULL=按燃料类型调价
     old_price           NUMERIC(10,2)       NOT NULL,
     new_price           NUMERIC(10,2)       NOT NULL,
     change_amount       NUMERIC(10,2)       NOT NULL,   -- new_price - old_price
     change_pct          NUMERIC(6,2)        NOT NULL,   -- 变动百分比
-    adjustment_type     adjustment_type     NOT NULL,
-    effective_at        TIMESTAMPTZ         NOT NULL,
-    status              adjustment_status   NOT NULL DEFAULT 'pending_approval',
+    ENUM('immediate', 'scheduled')     adjustment_type     NOT NULL,
+    effective_at        DATETIME         NOT NULL,
+    status              ENUM('pending_approval', 'approved', 'rejected', 'executed', 'cancelled')   NOT NULL DEFAULT 'pending_approval',
     reason              TEXT,
-    adjusted_by         UUID                NOT NULL,   -- → StationEmployee (1.1)
-    approved_by         UUID,                           -- → StationEmployee (1.1)
-    rejected_by         UUID,                           -- → StationEmployee (1.1)
+    adjusted_by         CHAR(36)                NOT NULL,   -- → StationEmployee (1.1)
+    approved_by         CHAR(36),                           -- → StationEmployee (1.1)
+    rejected_by         CHAR(36),                           -- → StationEmployee (1.1)
     rejection_reason    TEXT,
-    executed_at         TIMESTAMPTZ,
-    created_at          TIMESTAMPTZ         NOT NULL DEFAULT now(),
-    updated_at          TIMESTAMPTZ         NOT NULL DEFAULT now(),
+    executed_at         DATETIME,
+    created_at          DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT chk_price_adjustment_positive CHECK (new_price > 0),
     CONSTRAINT chk_price_adjustment_executed CHECK (
@@ -545,57 +527,61 @@ CREATE TABLE price_adjustment (
     CONSTRAINT chk_price_adjustment_scheduled CHECK (
         adjustment_type != 'scheduled' OR effective_at > created_at
     )
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Column comments for price_adjustment:
+-- ALTER TABLE price_adjustment MODIFY COLUMN station_id ... COMMENT '跨模块 FK → module 1.1 Station.id';
+-- ALTER TABLE price_adjustment MODIFY COLUMN fuel_type_id ... COMMENT '跨模块 FK → module 1.1 FuelType.id';
+-- ALTER TABLE price_adjustment MODIFY COLUMN nozzle_id ... COMMENT '跨模块 FK → module 1.1 Nozzle.id (NULL=燃料类型调价)';
+-- ALTER TABLE price_adjustment MODIFY COLUMN adjusted_by ... COMMENT '跨模块 FK → module 1.1 StationEmployee.id';
 
 CREATE INDEX idx_price_adjustment_station ON price_adjustment (station_id);
 CREATE INDEX idx_price_adjustment_status ON price_adjustment (status);
-CREATE INDEX idx_price_adjustment_effective ON price_adjustment (effective_at) WHERE status = 'approved';
+CREATE INDEX idx_price_adjustment_effective ON price_adjustment (effective_at);
+-- MySQL: partial index (WHERE status = 'approved') not supported;
+-- Consider generated column + index or application-level filtering
 CREATE INDEX idx_price_adjustment_time ON price_adjustment (created_at DESC);
-
-COMMENT ON COLUMN price_adjustment.station_id IS '跨模块 FK → module 1.1 Station.id';
-COMMENT ON COLUMN price_adjustment.fuel_type_id IS '跨模块 FK → module 1.1 FuelType.id';
-COMMENT ON COLUMN price_adjustment.nozzle_id IS '跨模块 FK → module 1.1 Nozzle.id (NULL=燃料类型调价)';
-COMMENT ON COLUMN price_adjustment.adjusted_by IS '跨模块 FK → module 1.1 StationEmployee.id';
 
 -- ---------- 3. NozzlePriceOverride（枪独立定价） ----------
 
 CREATE TABLE nozzle_price_override (
-    id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
-    nozzle_id       UUID            NOT NULL UNIQUE,    -- → Nozzle (1.1)，一枪一覆盖价
-    station_id      UUID            NOT NULL,           -- → Station (1.1)
-    fuel_type_id    UUID            NOT NULL,           -- → FuelType (1.1)，冗余便于查询
+    id              CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    nozzle_id       CHAR(36)            NOT NULL UNIQUE,    -- → Nozzle (1.1)，一枪一覆盖价
+    station_id      CHAR(36)            NOT NULL,           -- → Station (1.1)
+    fuel_type_id    CHAR(36)            NOT NULL,           -- → FuelType (1.1)，冗余便于查询
     override_price  NUMERIC(10,2)   NOT NULL,
-    effective_from  TIMESTAMPTZ     NOT NULL DEFAULT now(),
-    created_by      UUID            NOT NULL,           -- → StationEmployee (1.1)
-    created_at      TIMESTAMPTZ     NOT NULL DEFAULT now(),
-    updated_at      TIMESTAMPTZ     NOT NULL DEFAULT now(),
+    effective_from  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by      CHAR(36)            NOT NULL,           -- → StationEmployee (1.1)
+    created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT chk_nozzle_override_positive CHECK (override_price > 0)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Column comments for nozzle_price_override:
+-- ALTER TABLE nozzle_price_override MODIFY COLUMN nozzle_id ... COMMENT '跨模块 FK → module 1.1 Nozzle.id';
+-- ALTER TABLE nozzle_price_override MODIFY COLUMN station_id ... COMMENT '跨模块 FK → module 1.1 Station.id';
 
 CREATE INDEX idx_nozzle_override_station ON nozzle_price_override (station_id);
-
-COMMENT ON COLUMN nozzle_price_override.nozzle_id IS '跨模块 FK → module 1.1 Nozzle.id';
-COMMENT ON COLUMN nozzle_price_override.station_id IS '跨模块 FK → module 1.1 Station.id';
 
 -- ---------- 4. PriceDefenseConfig（调价防御配置） ----------
 
 CREATE TABLE price_defense_config (
-    id                      UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
-    station_id              UUID,                       -- → Station (1.1)，NULL=全局配置
-    fuel_type_id            UUID,                       -- → FuelType (1.1)，NULL=所有类型
+    id                      CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    station_id              CHAR(36),                       -- → Station (1.1)，NULL=全局配置
+    fuel_type_id            CHAR(36),                       -- → FuelType (1.1)，NULL=所有类型
     max_increase_pct        NUMERIC(5,2)    NOT NULL DEFAULT 20.00,
     max_decrease_pct        NUMERIC(5,2)    NOT NULL DEFAULT 20.00,
     require_approval        BOOLEAN         NOT NULL DEFAULT false,
     approval_threshold_pct  NUMERIC(5,2)    NOT NULL DEFAULT 10.00,
-    updated_by              UUID,                       -- → StationEmployee (1.1)
-    created_at              TIMESTAMPTZ     NOT NULL DEFAULT now(),
-    updated_at              TIMESTAMPTZ     NOT NULL DEFAULT now(),
+    updated_by              CHAR(36),                       -- → StationEmployee (1.1)
+    created_at              DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at              DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT chk_defense_increase CHECK (max_increase_pct BETWEEN 1 AND 100),
     CONSTRAINT chk_defense_decrease CHECK (max_decrease_pct BETWEEN 1 AND 100),
     CONSTRAINT chk_defense_threshold CHECK (approval_threshold_pct BETWEEN 0 AND 100)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Column comments for price_defense_config:
+-- ALTER TABLE price_defense_config MODIFY COLUMN station_id ... COMMENT '跨模块 FK → module 1.1 Station.id (NULL=全局)';
 
 -- 同一范围只能有一条配置
 CREATE UNIQUE INDEX uq_defense_config_scope
@@ -603,69 +589,67 @@ CREATE UNIQUE INDEX uq_defense_config_scope
         COALESCE(station_id, '00000000-0000-0000-0000-000000000000'),
         COALESCE(fuel_type_id, '00000000-0000-0000-0000-000000000000')
     );
-
-COMMENT ON COLUMN price_defense_config.station_id IS '跨模块 FK → module 1.1 Station.id (NULL=全局)';
-
 -- ---------- 5. MemberPriceRule（会员专享价规则）⚠️ Phase 4 依赖 ----------
 
 CREATE TABLE member_price_rule (
-    id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
-    station_id      UUID            NOT NULL,           -- → Station (1.1)
-    fuel_type_id    UUID            NOT NULL,           -- → FuelType (1.1)
-    member_tier     member_tier     NOT NULL,           -- ⚠️ Phase 4 后可能改为 FK → MemberTier
-    discount_type   discount_type   NOT NULL,
+    id              CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    station_id      CHAR(36)            NOT NULL,           -- → Station (1.1)
+    fuel_type_id    CHAR(36)            NOT NULL,           -- → FuelType (1.1)
+    member_tier     ENUM('normal', 'vip', 'svip')     NOT NULL,           -- ⚠️ Phase 4 后可能改为 FK → MemberTier
+    ENUM('fixed_amount', 'percentage')   discount_type   NOT NULL,
     discount_value  NUMERIC(10,2)   NOT NULL,
-    status          price_status    NOT NULL DEFAULT 'active',
-    created_at      TIMESTAMPTZ     NOT NULL DEFAULT now(),
-    updated_at      TIMESTAMPTZ     NOT NULL DEFAULT now(),
+    status          ENUM('active', 'inactive')    NOT NULL DEFAULT 'active',
+    created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT chk_member_discount_positive CHECK (discount_value > 0)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT = '⚠️ Phase 4 依赖：member_tier 当前为 ENUM，会员模块上线后考虑改为 FK';
+-- Column comments for member_price_rule:
+-- ALTER TABLE member_price_rule MODIFY COLUMN station_id ... COMMENT '跨模块 FK → module 1.1 Station.id';
 
 CREATE UNIQUE INDEX uq_member_price_rule
-    ON member_price_rule (station_id, fuel_type_id, member_tier) WHERE status = 'active';
-
-COMMENT ON TABLE member_price_rule IS '⚠️ Phase 4 依赖：member_tier 当前为 ENUM，会员模块上线后考虑改为 FK';
-COMMENT ON COLUMN member_price_rule.station_id IS '跨模块 FK → module 1.1 Station.id';
-
+    ON member_price_rule (station_id, fuel_type_id, member_tier);
+-- MySQL: partial index (WHERE status = 'active') not supported;
+-- Consider generated column + index or application-level filtering
 -- ---------- 6. PriceAgreement（大客户价格协议）⚠️ Phase 4 依赖 ----------
 
 CREATE TABLE price_agreement (
-    id                  UUID                PRIMARY KEY DEFAULT gen_random_uuid(),
-    enterprise_id       UUID                NOT NULL,   -- ⚠️ → Enterprise (3.2)，MVP 使用 mock UUID
+    id                  CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    enterprise_id       CHAR(36)                NOT NULL,   -- ⚠️ → Enterprise (3.2)，MVP 使用 mock CHAR(36)
     enterprise_name     VARCHAR(100)        NOT NULL,   -- 冗余字段，便于展示
-    station_id          UUID                NOT NULL,   -- → Station (1.1)
-    fuel_type_id        UUID                NOT NULL,   -- → FuelType (1.1)
+    station_id          CHAR(36)                NOT NULL,   -- → Station (1.1)
+    fuel_type_id        CHAR(36)                NOT NULL,   -- → FuelType (1.1)
     agreed_price        NUMERIC(10,2)       NOT NULL,
     valid_from          DATE                NOT NULL,
     valid_to            DATE                NOT NULL,
-    status              agreement_status    NOT NULL DEFAULT 'active',
-    terminated_at       TIMESTAMPTZ,
+    status              ENUM('active', 'expired', 'terminated')    NOT NULL DEFAULT 'active',
+    terminated_at       DATETIME,
     termination_reason  TEXT,
-    created_by          UUID                NOT NULL,   -- → StationEmployee (1.1)
-    created_at          TIMESTAMPTZ         NOT NULL DEFAULT now(),
-    updated_at          TIMESTAMPTZ         NOT NULL DEFAULT now(),
+    created_by          CHAR(36)                NOT NULL,   -- → StationEmployee (1.1)
+    created_at          DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT chk_agreement_price_positive CHECK (agreed_price > 0),
     CONSTRAINT chk_agreement_date_range CHECK (valid_to > valid_from),
     CONSTRAINT chk_agreement_terminated CHECK (
         status != 'terminated' OR terminated_at IS NOT NULL
     )
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT = '⚠️ Phase 4 依赖：enterprise_id 当前为 mock UUID，大客户模块上线后加 FK';
+-- Column comments for price_agreement:
+-- ALTER TABLE price_agreement MODIFY COLUMN enterprise_id ... COMMENT '⚠️ 跨模块 FK → module 3.2 Enterprise.id (MVP=mock)';
+-- ALTER TABLE price_agreement MODIFY COLUMN station_id ... COMMENT '跨模块 FK → module 1.1 Station.id';
 
 -- 同一企业同一站点同一燃料类型只能有一条 active 协议
 CREATE UNIQUE INDEX uq_price_agreement_active
-    ON price_agreement (enterprise_id, station_id, fuel_type_id) WHERE status = 'active';
+    ON price_agreement (enterprise_id, station_id, fuel_type_id);
+-- MySQL: partial index (WHERE status = 'active') not supported;
+-- Consider generated column + index or application-level filtering
 
 CREATE INDEX idx_agreement_enterprise ON price_agreement (enterprise_id);
 CREATE INDEX idx_agreement_station ON price_agreement (station_id);
-CREATE INDEX idx_agreement_expiry ON price_agreement (valid_to) WHERE status = 'active';
-
-COMMENT ON TABLE price_agreement IS '⚠️ Phase 4 依赖：enterprise_id 当前为 mock UUID，大客户模块上线后加 FK';
-COMMENT ON COLUMN price_agreement.enterprise_id IS '⚠️ 跨模块 FK → module 3.2 Enterprise.id (MVP=mock)';
-COMMENT ON COLUMN price_agreement.station_id IS '跨模块 FK → module 1.1 Station.id';
-
-COMMIT;
+CREATE INDEX idx_agreement_expiry ON price_agreement (valid_to);
+-- MySQL: partial index (WHERE status = 'active') not supported;
+-- Consider generated column + index or application-level filtering
 ```
 
 **Schema 统计：**

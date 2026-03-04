@@ -107,10 +107,10 @@
    - actual_quantity: 实收量（NUMERIC(10,3)，kg）
    - variance: 入库偏差 = actual_quantity - planned_quantity（NUMERIC(10,3)）
    - variance_rate: 偏差率 = variance / planned_quantity × 100%（NUMERIC(5,2)）
-   - inbound_time: 入库时间（TIMESTAMPTZ）
+   - inbound_time: 入库时间（DATETIME）
    - audit_status: 审核状态（枚举: pending_review / approved / rejected）
    - audited_by: 审核人（跨模块 FK → StationEmployee，可选）
-   - audited_at: 审核时间（TIMESTAMPTZ，可选）
+   - audited_at: 审核时间（DATETIME，可选）
    - reject_reason: 驳回原因（TEXT，可选）
    - operator_id: 操作员（跨模块 FK → StationEmployee）
    - remark: 备注（TEXT，可选）
@@ -149,7 +149,7 @@
    - source: 操作来源（枚举: auto / manual）
    - approval_status: 审批状态（枚举: pending_approval / approved / rejected，仅损耗出库）
    - approved_by: 审批人（跨模块 FK → StationEmployee，可选）
-   - approved_at: 审批时间（TIMESTAMPTZ，可选）
+   - approved_at: 审批时间（DATETIME，可选）
    - reject_reason: 驳回原因（TEXT，可选）
    - operator_id: 操作员/来源（跨模块 FK → StationEmployee，自动出库时为 null）
    - related_inbound_id: 关联入库记录（FK → InboundRecord，仅冲红记录）
@@ -190,7 +190,7 @@
    - related_no: 关联单号（VARCHAR(30)，入库单号/出库单号/盘点单号）
    - related_id: 关联记录 ID（UUID，可选）
    - remark: 备注（TEXT，可选）
-   - transaction_time: 流水时间（TIMESTAMPTZ）
+   - transaction_time: 流水时间（DATETIME）
    - created_at: 创建时间
 
 ❓ 问题 2 — 创建触发方式
@@ -244,7 +244,7 @@
    - audit_status: 审核状态（枚举: pending_review / approved / rejected）
    - applied_by: 发起人（跨模块 FK → StationEmployee）
    - audited_by: 审核人（跨模块 FK → StationEmployee，可选）
-   - audited_at: 审核时间（TIMESTAMPTZ，可选）
+   - audited_at: 审核时间（DATETIME，可选）
    - reject_reason: 驳回原因（TEXT，可选）
    - created_at, updated_at: 时间戳
 
@@ -274,10 +274,10 @@
    - current_value: 当前值（VARCHAR(50)，如 "25.3%" 或 "偏差率 3.12%"）
    - threshold_value: 阈值（VARCHAR(50)，如 "≤ 30%" 或 "> ±2%"）
    - handle_status: 处理状态（枚举: active / acknowledged / dismissed / recovered）
-   - triggered_at: 触发时间（TIMESTAMPTZ）
+   - triggered_at: 触发时间（DATETIME）
    - handled_by: 处理人（跨模块 FK → StationEmployee，可选）
-   - handled_at: 处理时间（TIMESTAMPTZ，可选）
-   - resolved_at: 恢复/关闭时间（TIMESTAMPTZ，可选）
+   - handled_at: 处理时间（DATETIME，可选）
+   - resolved_at: 恢复/关闭时间（DATETIME，可选）
    - created_at: 创建时间
 
 ❓ 问题 2 — 创建触发方式
@@ -952,154 +952,110 @@
 
 ---
 
-## 6. Database Schema (PostgreSQL)
+## 6. Database Schema (MySQL 8.0)
 
 ```sql
 -- ============================================================
--- Module 2.3 库存管理 Database Schema (PostgreSQL)
+-- Module 2.3 库存管理 Database Schema (MySQL 8.0)
 -- 版本: 草案 v1  |  生成日期: 2026-02-28
 -- ============================================================
-
-BEGIN;
-
 -- ---------- ENUM 类型 ----------
-
-CREATE TYPE audit_status_inventory AS ENUM (
-  'pending_review', 'approved', 'rejected'
-);
-
-CREATE TYPE outbound_type AS ENUM (
-  'sales', 'loss', 'reversal'
-);
-
-CREATE TYPE outbound_source AS ENUM (
-  'auto', 'manual'
-);
-
-CREATE TYPE loss_reason AS ENUM (
-  'evaporation', 'leakage', 'transfer', 'other'
-);
-
-CREATE TYPE approval_status_inventory AS ENUM (
-  'pending_approval', 'approved', 'rejected'
-);
-
-CREATE TYPE transaction_type_inventory AS ENUM (
-  'inbound', 'sales_outbound', 'loss_outbound',
-  'stock_adjustment', 'reversal'
-);
-
-CREATE TYPE alert_level AS ENUM (
-  'warning', 'critical', 'loss_anomaly'
-);
-
-CREATE TYPE alert_type_inventory AS ENUM (
-  'low_stock', 'loss_anomaly'
-);
-
-CREATE TYPE alert_handle_status AS ENUM (
-  'active', 'acknowledged', 'dismissed', 'recovered'
-);
-
-CREATE TYPE threshold_type AS ENUM (
-  'percentage', 'absolute'
-);
-
 
 -- ---------- 入库记录 ----------
 
 CREATE TABLE inbound_record (
-  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id                CHAR(36) PRIMARY KEY DEFAULT (UUID()),
   inbound_no        VARCHAR(30) NOT NULL UNIQUE,
-  station_id        UUID NOT NULL,       -- → stations.id (1.1)
-  tank_id           UUID NOT NULL,       -- → equipment.id (1.3, type=tank)
-  fuel_type_id      UUID NOT NULL,       -- → fuel_types.id (1.1)
+  station_id        CHAR(36) NOT NULL,       -- → stations.id (1.1)
+  tank_id           CHAR(36) NOT NULL,       -- → equipment.id (1.3, type=tank)
+  fuel_type_id      CHAR(36) NOT NULL,       -- → fuel_types.id (1.1)
   supplier_name     VARCHAR(100) NOT NULL,
   delivery_no       VARCHAR(50),
   planned_quantity  NUMERIC(10,3) NOT NULL CHECK (planned_quantity > 0),
   actual_quantity   NUMERIC(10,3) NOT NULL CHECK (actual_quantity > 0),
   variance          NUMERIC(10,3) NOT NULL,   -- = actual_quantity - planned_quantity
   variance_rate     NUMERIC(5,2) NOT NULL,    -- = variance / planned_quantity × 100
-  inbound_time      TIMESTAMPTZ NOT NULL,
-  audit_status      audit_status_inventory NOT NULL DEFAULT 'pending_review',
-  audited_by        UUID,                -- → station_employees.id (1.1)
-  audited_at        TIMESTAMPTZ,
+  inbound_time      DATETIME NOT NULL,
+  audit_status      ENUM('pending_review', 'approved', 'rejected') NOT NULL DEFAULT 'pending_review',
+  audited_by        CHAR(36),                -- → station_employees.id (1.1)
+  audited_at        DATETIME,
   reject_reason     TEXT,
-  operator_id       UUID NOT NULL,       -- → station_employees.id (1.1)
+  operator_id       CHAR(36) NOT NULL,       -- → station_employees.id (1.1)
   remark            TEXT,
-  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-COMMENT ON COLUMN inbound_record.station_id IS '跨模块引用 → 1.1 stations.id';
-COMMENT ON COLUMN inbound_record.tank_id IS '跨模块引用 → 1.3 equipment.id (type=tank)';
-COMMENT ON COLUMN inbound_record.fuel_type_id IS '跨模块引用 → 1.1 fuel_types.id';
-COMMENT ON COLUMN inbound_record.operator_id IS '跨模块引用 → 1.1 station_employees.id';
-COMMENT ON COLUMN inbound_record.audited_by IS '跨模块引用 → 1.1 station_employees.id';
+  created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Column comments for inbound_record:
+-- ALTER TABLE inbound_record MODIFY COLUMN station_id ... COMMENT '跨模块引用 → 1.1 stations.id';
+-- ALTER TABLE inbound_record MODIFY COLUMN tank_id ... COMMENT '跨模块引用 → 1.3 equipment.id (type=tank)';
+-- ALTER TABLE inbound_record MODIFY COLUMN fuel_type_id ... COMMENT '跨模块引用 → 1.1 fuel_types.id';
+-- ALTER TABLE inbound_record MODIFY COLUMN operator_id ... COMMENT '跨模块引用 → 1.1 station_employees.id';
+-- ALTER TABLE inbound_record MODIFY COLUMN audited_by ... COMMENT '跨模块引用 → 1.1 station_employees.id';
 
 CREATE INDEX idx_inbound_record_station ON inbound_record(station_id);
 CREATE INDEX idx_inbound_record_created ON inbound_record(created_at DESC);
 CREATE INDEX idx_inbound_record_status ON inbound_record(audit_status);
 CREATE INDEX idx_inbound_record_fuel ON inbound_record(fuel_type_id);
 
-
 -- ---------- 出库记录 ----------
 
 CREATE TABLE outbound_record (
-  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id                CHAR(36) PRIMARY KEY DEFAULT (UUID()),
   outbound_no       VARCHAR(30) NOT NULL UNIQUE,
-  station_id        UUID NOT NULL,       -- → stations.id (1.1)
-  fuel_type_id      UUID NOT NULL,       -- → fuel_types.id (1.1)
-  outbound_type     outbound_type NOT NULL,
+  station_id        CHAR(36) NOT NULL,       -- → stations.id (1.1)
+  fuel_type_id      CHAR(36) NOT NULL,       -- → fuel_types.id (1.1)
+  outbound_type     ENUM('sales', 'loss', 'reversal') NOT NULL,
   quantity          NUMERIC(10,3) NOT NULL CHECK (quantity > 0),
   amount            NUMERIC(12,2) NOT NULL DEFAULT 0,
-  order_id          UUID,                -- → fueling_order.id (2.2), 销售出库/冲红时有值
-  loss_reason       loss_reason,         -- 仅损耗出库
+  order_id          CHAR(36),                -- → fueling_order.id (2.2), 销售出库/冲红时有值
+  loss_reason       ENUM('evaporation', 'leakage', 'transfer', 'other'),  -- 仅损耗出库
   loss_reason_detail TEXT,               -- 损耗原因为 other 时详情
-  source            outbound_source NOT NULL,
-  approval_status   approval_status_inventory, -- 仅损耗出库
-  approved_by       UUID,                -- → station_employees.id (1.1)
-  approved_at       TIMESTAMPTZ,
+  source            ENUM('auto', 'manual') NOT NULL,
+  approval_status   ENUM('pending_approval', 'approved', 'rejected'), -- 仅损耗出库
+  approved_by       CHAR(36),                -- → station_employees.id (1.1)
+  approved_at       DATETIME,
   reject_reason     TEXT,
-  operator_id       UUID,                -- → station_employees.id (1.1), auto 时为 null
-  related_inbound_id UUID,               -- 冲红时关联的原出库记录 ID
-  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-COMMENT ON COLUMN outbound_record.station_id IS '跨模块引用 → 1.1 stations.id';
-COMMENT ON COLUMN outbound_record.fuel_type_id IS '跨模块引用 → 1.1 fuel_types.id';
-COMMENT ON COLUMN outbound_record.order_id IS '跨模块引用 → 2.2 fueling_order.id';
-COMMENT ON COLUMN outbound_record.operator_id IS '跨模块引用 → 1.1 station_employees.id';
+  operator_id       CHAR(36),                -- → station_employees.id (1.1), auto 时为 null
+  related_inbound_id CHAR(36),               -- 冲红时关联的原出库记录 ID
+  created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Column comments for outbound_record:
+-- ALTER TABLE outbound_record MODIFY COLUMN station_id ... COMMENT '跨模块引用 → 1.1 stations.id';
+-- ALTER TABLE outbound_record MODIFY COLUMN fuel_type_id ... COMMENT '跨模块引用 → 1.1 fuel_types.id';
+-- ALTER TABLE outbound_record MODIFY COLUMN order_id ... COMMENT '跨模块引用 → 2.2 fueling_order.id';
+-- ALTER TABLE outbound_record MODIFY COLUMN operator_id ... COMMENT '跨模块引用 → 1.1 station_employees.id';
 
 CREATE INDEX idx_outbound_record_station ON outbound_record(station_id);
 CREATE INDEX idx_outbound_record_created ON outbound_record(created_at DESC);
 CREATE INDEX idx_outbound_record_type ON outbound_record(outbound_type);
 CREATE INDEX idx_outbound_record_fuel ON outbound_record(fuel_type_id);
-CREATE INDEX idx_outbound_record_order ON outbound_record(order_id) WHERE order_id IS NOT NULL;
-
+CREATE INDEX idx_outbound_record_order ON outbound_record(order_id);
+-- MySQL: partial index (WHERE order_id IS NOT NULL) not supported;
+-- Consider generated column + index or application-level filtering
 
 -- ---------- 进销存流水 ----------
 
 CREATE TABLE inventory_ledger (
-  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  station_id        UUID NOT NULL,       -- → stations.id (1.1)
-  fuel_type_id      UUID NOT NULL,       -- → fuel_types.id (1.1)
-  transaction_type  transaction_type_inventory NOT NULL,
+  id                CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  station_id        CHAR(36) NOT NULL,       -- → stations.id (1.1)
+  fuel_type_id      CHAR(36) NOT NULL,       -- → fuel_types.id (1.1)
+  transaction_type  ENUM('inbound', 'sales_outbound', 'loss_outbound', 'stock_adjustment', 'reversal') NOT NULL,
   quantity          NUMERIC(10,3) NOT NULL,  -- 入库/冲红为正，出库为负
   amount            NUMERIC(12,2) NOT NULL DEFAULT 0,
   stock_balance     NUMERIC(10,3) NOT NULL,  -- 操作后库存余量
   operator_or_source VARCHAR(50) NOT NULL,
   related_no        VARCHAR(30),         -- 关联单号
-  related_id        UUID,                -- 关联记录 ID
+  related_id        CHAR(36),                -- 关联记录 ID
   remark            TEXT,
-  transaction_time  TIMESTAMPTZ NOT NULL,
-  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  transaction_time  DATETIME NOT NULL,
+  created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
   -- ⚠️ 不设 updated_at — 流水记录不可修改
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Column comments for inventory_ledger:
+-- ALTER TABLE inventory_ledger MODIFY COLUMN station_id ... COMMENT '跨模块引用 → 1.1 stations.id';
+-- ALTER TABLE inventory_ledger MODIFY COLUMN fuel_type_id ... COMMENT '跨模块引用 → 1.1 fuel_types.id';
 
-COMMENT ON COLUMN inventory_ledger.station_id IS '跨模块引用 → 1.1 stations.id';
-COMMENT ON COLUMN inventory_ledger.fuel_type_id IS '跨模块引用 → 1.1 fuel_types.id';
 -- ⚡ 预计超 100 万行时建议按 station_id + transaction_time 分区
 
 CREATE INDEX idx_inventory_ledger_station ON inventory_ledger(station_id);
@@ -1107,115 +1063,110 @@ CREATE INDEX idx_inventory_ledger_time ON inventory_ledger(transaction_time DESC
 CREATE INDEX idx_inventory_ledger_type ON inventory_ledger(transaction_type);
 CREATE INDEX idx_inventory_ledger_fuel ON inventory_ledger(fuel_type_id);
 
-
 -- ---------- 罐存比对快照 ----------
 
 CREATE TABLE tank_comparison_log (
-  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  station_id        UUID NOT NULL,       -- → stations.id (1.1)
-  tank_id           UUID NOT NULL,       -- → equipment.id (1.3)
-  fuel_type_id      UUID NOT NULL,       -- → fuel_types.id (1.1)
+  id                CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  station_id        CHAR(36) NOT NULL,       -- → stations.id (1.1)
+  tank_id           CHAR(36) NOT NULL,       -- → equipment.id (1.3)
+  fuel_type_id      CHAR(36) NOT NULL,       -- → fuel_types.id (1.1)
   snapshot_date     DATE NOT NULL,
   actual_level      NUMERIC(10,3) NOT NULL,
   theoretical_stock NUMERIC(10,3) NOT NULL,
   deviation         NUMERIC(10,3) NOT NULL,
   deviation_rate    NUMERIC(5,2) NOT NULL,
-  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE (station_id, tank_id, snapshot_date)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Column comments for tank_comparison_log:
+-- ALTER TABLE tank_comparison_log MODIFY COLUMN station_id ... COMMENT '跨模块引用 → 1.1 stations.id';
+-- ALTER TABLE tank_comparison_log MODIFY COLUMN tank_id ... COMMENT '跨模块引用 → 1.3 equipment.id';
+-- ALTER TABLE tank_comparison_log MODIFY COLUMN fuel_type_id ... COMMENT '跨模块引用 → 1.1 fuel_types.id';
 
-COMMENT ON COLUMN tank_comparison_log.station_id IS '跨模块引用 → 1.1 stations.id';
-COMMENT ON COLUMN tank_comparison_log.tank_id IS '跨模块引用 → 1.3 equipment.id';
-COMMENT ON COLUMN tank_comparison_log.fuel_type_id IS '跨模块引用 → 1.1 fuel_types.id';
 -- ⚡ TimescaleDB hypertable 推荐: 分区键 snapshot_date
 
 CREATE INDEX idx_tank_comparison_station ON tank_comparison_log(station_id);
 CREATE INDEX idx_tank_comparison_date ON tank_comparison_log(snapshot_date DESC);
 CREATE INDEX idx_tank_comparison_tank ON tank_comparison_log(tank_id);
 
-
 -- ---------- 盘点调整 ----------
 
 CREATE TABLE stock_adjustment (
-  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id                  CHAR(36) PRIMARY KEY DEFAULT (UUID()),
   adjustment_no       VARCHAR(30) NOT NULL UNIQUE,
-  station_id          UUID NOT NULL,       -- → stations.id (1.1)
-  tank_id             UUID NOT NULL,       -- → equipment.id (1.3)
-  fuel_type_id        UUID NOT NULL,       -- → fuel_types.id (1.1)
+  station_id          CHAR(36) NOT NULL,       -- → stations.id (1.1)
+  tank_id             CHAR(36) NOT NULL,       -- → equipment.id (1.3)
+  fuel_type_id        CHAR(36) NOT NULL,       -- → fuel_types.id (1.1)
   before_stock        NUMERIC(10,3) NOT NULL,
   after_stock         NUMERIC(10,3) NOT NULL CHECK (after_stock >= 0),
   adjustment_quantity NUMERIC(10,3) NOT NULL,  -- = after_stock - before_stock
   reason              TEXT NOT NULL,
-  audit_status        audit_status_inventory NOT NULL DEFAULT 'pending_review',
-  applied_by          UUID NOT NULL,       -- → station_employees.id (1.1)
-  audited_by          UUID,                -- → station_employees.id (1.1)
-  audited_at          TIMESTAMPTZ,
+  audit_status        ENUM('pending_review', 'approved', 'rejected') NOT NULL DEFAULT 'pending_review',
+  applied_by          CHAR(36) NOT NULL,       -- → station_employees.id (1.1)
+  audited_by          CHAR(36),                -- → station_employees.id (1.1)
+  audited_at          DATETIME,
   reject_reason       TEXT,
-  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-COMMENT ON COLUMN stock_adjustment.station_id IS '跨模块引用 → 1.1 stations.id';
-COMMENT ON COLUMN stock_adjustment.tank_id IS '跨模块引用 → 1.3 equipment.id';
-COMMENT ON COLUMN stock_adjustment.fuel_type_id IS '跨模块引用 → 1.1 fuel_types.id';
-COMMENT ON COLUMN stock_adjustment.applied_by IS '跨模块引用 → 1.1 station_employees.id';
+  created_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Column comments for stock_adjustment:
+-- ALTER TABLE stock_adjustment MODIFY COLUMN station_id ... COMMENT '跨模块引用 → 1.1 stations.id';
+-- ALTER TABLE stock_adjustment MODIFY COLUMN tank_id ... COMMENT '跨模块引用 → 1.3 equipment.id';
+-- ALTER TABLE stock_adjustment MODIFY COLUMN fuel_type_id ... COMMENT '跨模块引用 → 1.1 fuel_types.id';
+-- ALTER TABLE stock_adjustment MODIFY COLUMN applied_by ... COMMENT '跨模块引用 → 1.1 station_employees.id';
 
 CREATE INDEX idx_stock_adjustment_station ON stock_adjustment(station_id);
 CREATE INDEX idx_stock_adjustment_status ON stock_adjustment(audit_status);
 
-
 -- ---------- 库存预警 ----------
 
 CREATE TABLE inventory_alert (
-  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  station_id        UUID NOT NULL,       -- → stations.id (1.1)
-  fuel_type_id      UUID NOT NULL,       -- → fuel_types.id (1.1)
-  tank_id           UUID,                -- → equipment.id (1.3), 损耗异常时有值
-  alert_level       alert_level NOT NULL,
-  alert_type        alert_type_inventory NOT NULL,
+  id                CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  station_id        CHAR(36) NOT NULL,       -- → stations.id (1.1)
+  fuel_type_id      CHAR(36) NOT NULL,       -- → fuel_types.id (1.1)
+  tank_id           CHAR(36),                -- → equipment.id (1.3), 损耗异常时有值
+  ENUM('warning', 'critical', 'loss_anomaly')       alert_level NOT NULL,
+  alert_type        ENUM('low_stock', 'loss_anomaly') NOT NULL,
   current_value     VARCHAR(50) NOT NULL,
   threshold_value   VARCHAR(50) NOT NULL,
-  handle_status     alert_handle_status NOT NULL DEFAULT 'active',
-  triggered_at      TIMESTAMPTZ NOT NULL,
-  handled_by        UUID,                -- → station_employees.id (1.1)
-  handled_at        TIMESTAMPTZ,
-  resolved_at       TIMESTAMPTZ,
-  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-COMMENT ON COLUMN inventory_alert.station_id IS '跨模块引用 → 1.1 stations.id';
-COMMENT ON COLUMN inventory_alert.fuel_type_id IS '跨模块引用 → 1.1 fuel_types.id';
-COMMENT ON COLUMN inventory_alert.tank_id IS '跨模块引用 → 1.3 equipment.id';
+  handle_status     ENUM('active', 'acknowledged', 'dismissed', 'recovered') NOT NULL DEFAULT 'active',
+  triggered_at      DATETIME NOT NULL,
+  handled_by        CHAR(36),                -- → station_employees.id (1.1)
+  handled_at        DATETIME,
+  resolved_at       DATETIME,
+  created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Column comments for inventory_alert:
+-- ALTER TABLE inventory_alert MODIFY COLUMN station_id ... COMMENT '跨模块引用 → 1.1 stations.id';
+-- ALTER TABLE inventory_alert MODIFY COLUMN fuel_type_id ... COMMENT '跨模块引用 → 1.1 fuel_types.id';
+-- ALTER TABLE inventory_alert MODIFY COLUMN tank_id ... COMMENT '跨模块引用 → 1.3 equipment.id';
 
 CREATE INDEX idx_inventory_alert_station ON inventory_alert(station_id);
 CREATE INDEX idx_inventory_alert_status ON inventory_alert(handle_status);
 CREATE INDEX idx_inventory_alert_triggered ON inventory_alert(triggered_at DESC);
 
-
 -- ---------- 预警规则配置 ----------
 
 CREATE TABLE alert_config (
-  id                       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  station_id               UUID NOT NULL,       -- → stations.id (1.1)
-  fuel_type_id             UUID NOT NULL,       -- → fuel_types.id (1.1)
+  id                       CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  station_id               CHAR(36) NOT NULL,       -- → stations.id (1.1)
+  fuel_type_id             CHAR(36) NOT NULL,       -- → fuel_types.id (1.1)
   safe_threshold           NUMERIC(5,2) NOT NULL DEFAULT 30,
   warning_threshold        NUMERIC(5,2) NOT NULL DEFAULT 30,
   critical_threshold       NUMERIC(5,2) NOT NULL DEFAULT 10,
   loss_deviation_threshold NUMERIC(5,2) NOT NULL DEFAULT 2,
-  threshold_type           threshold_type NOT NULL DEFAULT 'percentage',
-  created_at               TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at               TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  threshold_type           ENUM('percentage', 'absolute') NOT NULL DEFAULT 'percentage',
+  created_at               DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at               DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE (station_id, fuel_type_id),
   CHECK (critical_threshold < warning_threshold),
   CHECK (warning_threshold <= safe_threshold),
   CHECK (loss_deviation_threshold > 0 AND loss_deviation_threshold <= 10)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Column comments for alert_config:
+-- ALTER TABLE alert_config MODIFY COLUMN station_id ... COMMENT '跨模块引用 → 1.1 stations.id';
+-- ALTER TABLE alert_config MODIFY COLUMN fuel_type_id ... COMMENT '跨模块引用 → 1.1 fuel_types.id';
 
-COMMENT ON COLUMN alert_config.station_id IS '跨模块引用 → 1.1 stations.id';
-COMMENT ON COLUMN alert_config.fuel_type_id IS '跨模块引用 → 1.1 fuel_types.id';
-
-
-COMMIT;
 ```
 
 ---

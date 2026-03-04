@@ -55,8 +55,8 @@
 | `total_refund_amount` | `DECIMAL(12, 2)` | NOT NULL, DEFAULT 0 | 退款总额 |
 | `total_refund_orders` | `INTEGER` | NOT NULL, DEFAULT 0 | 退款笔数 |
 | `net_amount` | `DECIMAL(12, 2)` | NOT NULL, DEFAULT 0 | 净营业额（营业额-退款） |
-| `fuel_summary` | `JSONB` | | 按燃料类型汇总：`[{fuelType, quantity, amount, unit}]` |
-| `payment_summary` | `JSONB` | | 按支付方式汇总：`[{paymentMethod, amount, orders}]` |
+| `fuel_summary` | `JSON` | | 按燃料类型汇总：`[{fuelType, quantity, amount, unit}]` |
+| `payment_summary` | `JSON` | | 按支付方式汇总：`[{paymentMethod, amount, orders}]` |
 | `created_at` | `TIMESTAMP` | NOT NULL, DEFAULT NOW() | 创建时间 |
 
 **fuel_summary 示例：**
@@ -162,7 +162,7 @@
 | `check_type` | `VARCHAR(50)` | NOT NULL | 检查类型：pending_orders/unsettled_cash/cash_difference/abnormal_orders |
 | `check_result` | `VARCHAR(20)` | NOT NULL | 检查结果：pass/warning/fail |
 | `check_value` | `VARCHAR(100)` | | 检查数值（如待处理订单数量） |
-| `check_detail` | `JSONB` | | 检查详情 |
+| `check_detail` | `JSON` | | 检查详情 |
 | `created_at` | `TIMESTAMP` | NOT NULL, DEFAULT NOW() | 创建时间 |
 
 ---
@@ -804,110 +804,40 @@ export interface CurrentShiftData {
 
 ---
 
-## 7. Database Schema (PostgreSQL)
+## 7. Database Schema (MySQL 8.0)
 
 > 后端启动时可直接使用的数据库表定义草案。基于 Section 1 数据模型生成。
 > 跨模块外键（Station, Shift, Employee）使用 UUID 类型但不添加 FK 约束，由应用层保证一致性。
 
 ```sql
-BEGIN;
-
 -- ============================================================
 -- ENUM TYPES
 -- ============================================================
-
-CREATE TYPE handover_status AS ENUM (
-  'initiated',
-  'pending_review',
-  'completed',
-  'cancelled'
-);
-
-CREATE TYPE settlement_status AS ENUM (
-  'pending',
-  'approved',
-  'rejected'
-);
-
-CREATE TYPE difference_type AS ENUM (
-  'surplus',
-  'shortage',
-  'balanced'
-);
-
-CREATE TYPE difference_reason AS ENUM (
-  'change_error',
-  'receipt_lost',
-  'equipment_fault',
-  'pending_verify',
-  'other'
-);
-
-CREATE TYPE settlement_method AS ENUM (
-  'safe',
-  'bank',
-  'manager'
-);
-
-CREATE TYPE handover_issue_type AS ENUM (
-  'equipment',
-  'inventory',
-  'cash',
-  'safety',
-  'other'
-);
-
-CREATE TYPE issue_severity AS ENUM (
-  'low',
-  'normal',
-  'high',
-  'critical'
-);
-
-CREATE TYPE precheck_result AS ENUM (
-  'pass',
-  'warning',
-  'fail'
-);
-
-CREATE TYPE payment_method AS ENUM (
-  'cash',
-  'wechat',
-  'alipay',
-  'unionpay',
-  'ic_card',
-  'member_card',
-  'credit',
-  'other'
-);
 
 -- ============================================================
 -- TABLE 1: shift_handover (交接班记录) — 核心父表，无内部 FK 依赖
 -- ============================================================
 
 CREATE TABLE shift_handover (
-  id            UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
+  id            CHAR(36) PRIMARY KEY DEFAULT (UUID()),
   handover_no   VARCHAR(32)   NOT NULL,
-  station_id    UUID          NOT NULL,   -- FK → module 1.1 Station
-  shift_id      UUID          NOT NULL,   -- FK → module 1.1 Shift
+  station_id    CHAR(36)          NOT NULL,   -- FK → module 1.1 Station
+  shift_id      CHAR(36)          NOT NULL,   -- FK → module 1.1 Shift
   shift_date    DATE          NOT NULL,
   handover_time TIMESTAMP     NOT NULL,
-  handover_by   UUID          NOT NULL,   -- FK → module 1.1 Employee
-  received_by   UUID,                     -- FK → module 1.1 Employee (NULL until received)
-  status        handover_status NOT NULL DEFAULT 'initiated',
+  handover_by   CHAR(36)          NOT NULL,   -- FK → module 1.1 Employee
+  received_by   CHAR(36),                     -- FK → module 1.1 Employee (NULL until received)
+  status        ENUM('initiated', 'pending_review', 'completed', 'cancelled') NOT NULL DEFAULT 'initiated',
   is_forced     BOOLEAN       NOT NULL DEFAULT FALSE,
-  forced_by     UUID,                     -- FK → module 9.1 User
+  forced_by     CHAR(36),                     -- FK → module 9.1 User
   forced_reason TEXT,
   remarks       TEXT,
-  created_at    TIMESTAMP     NOT NULL DEFAULT NOW(),
-  updated_at    TIMESTAMP     NOT NULL DEFAULT NOW(),
+  created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   completed_at  TIMESTAMP,
 
   CONSTRAINT uq_handover_no UNIQUE (handover_no)
-);
-
-COMMENT ON TABLE shift_handover IS '交接班记录 — 本模块核心实体，记录每次班次交接的完整信息';
-
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT = '交接班记录 — 本模块核心实体，记录每次班次交接的完整信息';
 -- Indexes (Section 1.1)
 CREATE INDEX idx_handover_no      ON shift_handover (handover_no);
 CREATE INDEX idx_handover_station ON shift_handover (station_id);
@@ -921,51 +851,45 @@ CREATE INDEX idx_handover_time    ON shift_handover (handover_time);
 -- ============================================================
 
 CREATE TABLE shift_summary (
-  id                   UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
-  handover_id          UUID           NOT NULL
+  id                   CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  handover_id          CHAR(36)           NOT NULL
                        REFERENCES shift_handover (id) ON DELETE CASCADE,
   total_amount         DECIMAL(12,2)  NOT NULL DEFAULT 0,
   total_orders         INTEGER        NOT NULL DEFAULT 0,
   total_refund_amount  DECIMAL(12,2)  NOT NULL DEFAULT 0,
   total_refund_orders  INTEGER        NOT NULL DEFAULT 0,
   net_amount           DECIMAL(12,2)  NOT NULL DEFAULT 0,
-  fuel_summary         JSONB,
-  payment_summary      JSONB,
-  created_at           TIMESTAMP      NOT NULL DEFAULT NOW()
-);
-
-COMMENT ON TABLE shift_summary IS '班次汇总 — 交接班时生成的经营数据快照';
-
+  fuel_summary         JSON,
+  payment_summary      JSON,
+  created_at           TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT = '班次汇总 — 交接班时生成的经营数据快照';
 -- ============================================================
 -- TABLE 3: cash_settlement (现金解缴) — 依赖 shift_handover
 -- ============================================================
 
 CREATE TABLE cash_settlement (
-  id                UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
+  id                CHAR(36) PRIMARY KEY DEFAULT (UUID()),
   settlement_no     VARCHAR(32)    NOT NULL,
-  handover_id       UUID           NOT NULL
+  handover_id       CHAR(36)           NOT NULL
                     REFERENCES shift_handover (id) ON DELETE RESTRICT,
-  station_id        UUID           NOT NULL,   -- FK → module 1.1 Station
+  station_id        CHAR(36)           NOT NULL,   -- FK → module 1.1 Station
   expected_amount   DECIMAL(12,2)  NOT NULL,
   actual_amount     DECIMAL(12,2)  NOT NULL,
   difference        DECIMAL(12,2)  NOT NULL,
-  difference_type   difference_type   NOT NULL,
-  difference_reason difference_reason,
+  difference_type   ENUM('surplus', 'shortage', 'balanced')   NOT NULL,
+  difference_reason ENUM('change_error', 'receipt_lost', 'equipment_fault', 'pending_verify', 'other'),
   difference_note   TEXT,
-  settlement_method settlement_method NOT NULL,
-  settled_by        UUID           NOT NULL,   -- FK → module 1.1 Employee
-  status            settlement_status NOT NULL DEFAULT 'pending',
-  reviewed_by       UUID,                      -- FK → module 9.1 User
+  settlement_method ENUM('safe', 'bank', 'manager') NOT NULL,
+  settled_by        CHAR(36)           NOT NULL,   -- FK → module 1.1 Employee
+  status            ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+  reviewed_by       CHAR(36),                      -- FK → module 9.1 User
   reviewed_at       TIMESTAMP,
   review_note       TEXT,
-  created_at        TIMESTAMP      NOT NULL DEFAULT NOW(),
-  updated_at        TIMESTAMP      NOT NULL DEFAULT NOW(),
+  created_at        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   CONSTRAINT uq_settlement_no UNIQUE (settlement_no)
-);
-
-COMMENT ON TABLE cash_settlement IS '现金解缴 — 班次现金收款的解缴与差异记录';
-
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT = '现金解缴 — 班次现金收款的解缴与差异记录';
 -- Indexes (Section 1.3)
 CREATE INDEX idx_settlement_no       ON cash_settlement (settlement_no);
 CREATE INDEX idx_settlement_handover ON cash_settlement (handover_id);
@@ -977,60 +901,50 @@ CREATE INDEX idx_settlement_status   ON cash_settlement (status);
 -- ============================================================
 
 CREATE TABLE settlement_document (
-  id             UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
-  settlement_id  UUID          NOT NULL
+  id             CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  settlement_id  CHAR(36)          NOT NULL
                  REFERENCES cash_settlement (id) ON DELETE CASCADE,
   file_name      VARCHAR(255)  NOT NULL,
   file_path      VARCHAR(500)  NOT NULL,
   file_size      INTEGER       NOT NULL,
   mime_type      VARCHAR(100)  NOT NULL,
   sort_order     INTEGER       NOT NULL DEFAULT 0,
-  uploaded_by    UUID          NOT NULL,   -- FK → module 1.1 Employee
-  created_at     TIMESTAMP     NOT NULL DEFAULT NOW()
-);
-
-COMMENT ON TABLE settlement_document IS '解缴凭证 — 现金解缴的凭证照片附件';
-
+  uploaded_by    CHAR(36)          NOT NULL,   -- FK → module 1.1 Employee
+  created_at     TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT = '解缴凭证 — 现金解缴的凭证照片附件';
 -- ============================================================
 -- TABLE 5: handover_issue (交接班异常) — 依赖 shift_handover
 -- ============================================================
 
 CREATE TABLE handover_issue (
-  id              UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
-  handover_id     UUID           NOT NULL
+  id              CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  handover_id     CHAR(36)           NOT NULL
                   REFERENCES shift_handover (id) ON DELETE CASCADE,
-  issue_type      handover_issue_type NOT NULL,
-  severity        issue_severity NOT NULL DEFAULT 'normal',
+  issue_type      ENUM('equipment', 'inventory', 'cash', 'safety', 'other') NOT NULL,
+  severity        ENUM('low', 'normal', 'high', 'critical') NOT NULL DEFAULT 'normal',
   description     TEXT           NOT NULL,
-  reported_by     UUID           NOT NULL,   -- FK → module 1.1 Employee
+  reported_by     CHAR(36)           NOT NULL,   -- FK → module 1.1 Employee
   resolved        BOOLEAN        NOT NULL DEFAULT FALSE,
-  resolved_by     UUID,                      -- FK → module 1.1 Employee
+  resolved_by     CHAR(36),                      -- FK → module 1.1 Employee
   resolved_at     TIMESTAMP,
   resolution_note TEXT,
-  created_at      TIMESTAMP      NOT NULL DEFAULT NOW(),
-  updated_at      TIMESTAMP      NOT NULL DEFAULT NOW()
-);
-
-COMMENT ON TABLE handover_issue IS '交接班异常 — 交接过程中标注的异常情况';
-
+  created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT = '交接班异常 — 交接过程中标注的异常情况';
 -- ============================================================
 -- TABLE 6: handover_precheck (交接班预检结果) — 依赖 shift_handover
 -- ============================================================
 
 CREATE TABLE handover_precheck (
-  id            UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
-  handover_id   UUID          NOT NULL
+  id            CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  handover_id   CHAR(36)          NOT NULL
                 REFERENCES shift_handover (id) ON DELETE CASCADE,
   check_type    VARCHAR(50)   NOT NULL,
-  check_result  precheck_result NOT NULL,
+  check_result  ENUM('pass', 'warning', 'fail') NOT NULL,
   check_value   VARCHAR(100),
-  check_detail  JSONB,
-  created_at    TIMESTAMP     NOT NULL DEFAULT NOW()
-);
-
-COMMENT ON TABLE handover_precheck IS '交接班预检结果 — 交接前自动检查的结果快照';
-
-COMMIT;
+  check_detail  JSON,
+  created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT = '交接班预检结果 — 交接前自动检查的结果快照';
 ```
 
 ---

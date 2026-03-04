@@ -15,8 +15,8 @@
 
 | 字段 | 类型 | 用途 |
 |------|------|------|
-| `custom_fields` | `JSONB` | 存储外部系统的未知/自定义字段，便于对接时扩展 |
-| `source_doc` | `JSONB` | 保留外部系统的原始报文/数据，用于问题排查和审计 |
+| `custom_fields` | `JSON` | 存储外部系统的未知/自定义字段，便于对接时扩展 |
+| `source_doc` | `JSON` | 保留外部系统的原始报文/数据，用于问题排查和审计 |
 | `tags` | `VARCHAR[]` | 标签数组，支持后续的分类、分组、多维分析 |
 
 **设计理念：**
@@ -53,7 +53,7 @@
 | `longitude` | `DECIMAL(10, 7)` | | 经度坐标 |
 | `contact_phone` | `VARCHAR(20)` | | 联系电话 |
 | `contact_name` | `VARCHAR(50)` | | 联系人姓名 |
-| `business_hours` | `JSONB` | | 营业时间，格式：`{"weekday": "06:00-22:00", "weekend": "07:00-21:00"}` |
+| `business_hours` | `JSON` | | 营业时间，格式：`{"weekday": "06:00-22:00", "weekend": "07:00-21:00"}` |
 | `group_id` | `UUID` | FK → StationGroup | 所属分组（可选） |
 | `region_id` | `UUID` | FK → Region | 所属区域（可选） |
 | `status` | `VARCHAR(20)` | NOT NULL, DEFAULT 'active' | 状态：`active`/`inactive`/`suspended` |
@@ -171,10 +171,10 @@
 | `fueling_status` | `VARCHAR(20)` | NOT NULL, DEFAULT 'idle' | 充装状态：`idle`（空闲）/`fueling`（充装中） |
 | `last_heartbeat_at` | `TIMESTAMP` | | 最后心跳时间（设备通信时间） |
 | `status` | `VARCHAR(20)` | NOT NULL, DEFAULT 'active' | 业务状态：`active`（启用）/`inactive`（停用） |
-| `tags` | `VARCHAR(50)[]` | | 标签数组，用于分类分组分析 |
-| `config` | `JSONB` | | 扩展配置（设备参数、采集协议等） |
-| `custom_fields` | `JSONB` | | 自定义扩展字段，用于对接外部异构系统的未知字段 |
-| `source_doc` | `JSONB` | | 原始数据存储，保留外部系统的原始报文用于排查问题 |
+| `tags` | `JSON` | | 标签数组，用于分类分组分析 |
+| `config` | `JSON` | | 扩展配置（设备参数、采集协议等） |
+| `custom_fields` | `JSON` | | 自定义扩展字段，用于对接外部异构系统的未知字段 |
+| `source_doc` | `JSON` | | 原始数据存储，保留外部系统的原始报文用于排查问题 |
 | `created_at` | `TIMESTAMP` | NOT NULL, DEFAULT NOW() | 创建时间 |
 | `updated_at` | `TIMESTAMP` | NOT NULL, DEFAULT NOW() | 更新时间 |
 
@@ -329,10 +329,10 @@
 | `device_status` | `VARCHAR(20)` | NOT NULL, DEFAULT 'offline' | 设备状态 |
 | `status` | `VARCHAR(20)` | NOT NULL, DEFAULT 'active' | 业务状态 |
 | `external_id` | `VARCHAR(100)` | | 外部系统ID（与充电系统对接） |
-| `tags` | `VARCHAR(50)[]` | | 标签数组，用于分类分组分析 |
-| `config` | `JSONB` | | 扩展配置 |
-| `custom_fields` | `JSONB` | | 自定义扩展字段，用于对接外部异构系统的未知字段 |
-| `source_doc` | `JSONB` | | 原始数据存储，保留外部系统的原始报文用于排查问题 |
+| `tags` | `JSON` | | 标签数组，用于分类分组分析 |
+| `config` | `JSON` | | 扩展配置 |
+| `custom_fields` | `JSON` | | 自定义扩展字段，用于对接外部异构系统的未知字段 |
+| `source_doc` | `JSON` | | 原始数据存储，保留外部系统的原始报文用于排查问题 |
 | `created_at` | `TIMESTAMP` | NOT NULL, DEFAULT NOW() | 创建时间 |
 | `updated_at` | `TIMESTAMP` | NOT NULL, DEFAULT NOW() | 更新时间 |
 
@@ -1946,7 +1946,7 @@ X-Station-Context: <station_id>  // 当前站点上下文（可选）
 
 ---
 
-## 6. Database Schema (PostgreSQL)
+## 6. Database Schema (MySQL 8.0)
 
 > 后端启动时可直接使用的数据库表定义草案。基于 Section 1 数据模型生成。
 
@@ -1956,103 +1956,79 @@ X-Station-Context: <station_id>  // 当前站点上下文（可选）
 -- 生成日期：2026-02-24
 -- 基于：architecture.md Section 1 数据模型
 -- ============================================================================
-
-BEGIN;
-
 -- ----------------------------------------------------------------------------
 -- ENUM Types
 -- ----------------------------------------------------------------------------
-
-CREATE TYPE station_status AS ENUM ('active', 'inactive', 'suspended');
-CREATE TYPE general_status AS ENUM ('active', 'inactive');
-CREATE TYPE fuel_category AS ENUM ('gasoline', 'diesel', 'gas', 'other');
-CREATE TYPE fuel_unit AS ENUM ('L', 'kg', 'm³');
-CREATE TYPE device_status AS ENUM ('online', 'offline', 'error');
-CREATE TYPE fueling_status AS ENUM ('idle', 'fueling');
-CREATE TYPE schedule_status AS ENUM ('scheduled', 'completed', 'cancelled');
-CREATE TYPE employee_source AS ENUM ('sync', 'local');
-CREATE TYPE employee_sync_mode AS ENUM ('sync', 'local');
-CREATE TYPE image_type AS ENUM ('primary', 'environment', 'general');
-CREATE TYPE pile_type AS ENUM ('dc', 'ac');
-CREATE TYPE responsibility_type AS ENUM ('responsible', 'maintenance');
 
 -- ----------------------------------------------------------------------------
 -- 1. StationGroup（站点分组）
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE station_group (
-    id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    id              CHAR(36) PRIMARY KEY DEFAULT (UUID()),
     name            VARCHAR(50)     NOT NULL,
     description     VARCHAR(255),
     sort_order      INTEGER         NOT NULL DEFAULT 0,
-    status          general_status  NOT NULL DEFAULT 'active',
-    created_at      TIMESTAMP       NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMP       NOT NULL DEFAULT NOW(),
+    status          ENUM('active', 'inactive')  NOT NULL DEFAULT 'active',
+    created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT uq_station_group_name UNIQUE (name)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT = '站点分组 — 用于业务分类，如"高速服务区站点"、"城市加气站"';
 
 CREATE INDEX idx_station_group_name ON station_group (name);
 CREATE INDEX idx_station_group_sort ON station_group (sort_order);
-
-COMMENT ON TABLE station_group IS '站点分组 — 用于业务分类，如"高速服务区站点"、"城市加气站"';
-
 -- ----------------------------------------------------------------------------
 -- 2. Region（区域）
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE region (
-    id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    id              CHAR(36) PRIMARY KEY DEFAULT (UUID()),
     name            VARCHAR(50)     NOT NULL,
     code            VARCHAR(32),
-    parent_id       UUID            REFERENCES region (id) ON DELETE RESTRICT,
+    parent_id       CHAR(36)            REFERENCES region (id) ON DELETE RESTRICT,
     level           INTEGER         NOT NULL DEFAULT 1,
     path            VARCHAR(255),
     sort_order      INTEGER         NOT NULL DEFAULT 0,
-    status          general_status  NOT NULL DEFAULT 'active',
-    created_at      TIMESTAMP       NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMP       NOT NULL DEFAULT NOW(),
+    status          ENUM('active', 'inactive')  NOT NULL DEFAULT 'active',
+    created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT uq_region_code UNIQUE (code),
     CONSTRAINT chk_region_level CHECK (level >= 1 AND level <= 10)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT = '区域 — 地理层级管理，支持多级结构（省 → 市 → 区）';
 
 CREATE INDEX idx_region_parent ON region (parent_id);
 CREATE INDEX idx_region_code   ON region (code);
-CREATE INDEX idx_region_path   ON region USING GIN (path gin_trgm_ops);
-
-COMMENT ON TABLE region IS '区域 — 地理层级管理，支持多级结构（省 → 市 → 区）';
-
+-- MySQL: GIN index not supported. Consider FULLTEXT or multi-valued index
+-- Original: CREATE INDEX idx_region_path ON region USING GIN (path gin_trgm_ops);
 -- ----------------------------------------------------------------------------
 -- 3. FuelType（燃料类型）
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE fuel_type (
-    id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    id              CHAR(36) PRIMARY KEY DEFAULT (UUID()),
     code            VARCHAR(20)     NOT NULL,
     name            VARCHAR(50)     NOT NULL,
-    category        fuel_category   NOT NULL,
+    category        ENUM('gasoline', 'diesel', 'gas', 'other')   NOT NULL,
     is_system       BOOLEAN         NOT NULL DEFAULT FALSE,
-    unit            fuel_unit       NOT NULL DEFAULT 'L',
+    unit            ENUM('L', 'kg', 'm³')       NOT NULL DEFAULT 'L',
     sort_order      INTEGER         NOT NULL DEFAULT 0,
-    status          general_status  NOT NULL DEFAULT 'active',
-    created_at      TIMESTAMP       NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMP       NOT NULL DEFAULT NOW(),
+    status          ENUM('active', 'inactive')  NOT NULL DEFAULT 'active',
+    created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT uq_fuel_type_code UNIQUE (code)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT = '燃料类型 — 固定枚举 + 自定义扩展（如 CNG、LNG、92#汽油）';
 
 CREATE INDEX idx_fuel_type_code     ON fuel_type (code);
 CREATE INDEX idx_fuel_type_category ON fuel_type (category);
-
-COMMENT ON TABLE fuel_type IS '燃料类型 — 固定枚举 + 自定义扩展（如 CNG、LNG、92#汽油）';
-
 -- ----------------------------------------------------------------------------
 -- 4. Station（站点）
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE station (
-    id                  UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    id                  CHAR(36) PRIMARY KEY DEFAULT (UUID()),
     code                VARCHAR(32)     NOT NULL,
     name                VARCHAR(100)    NOT NULL,
     address             VARCHAR(255)    NOT NULL,
@@ -2060,21 +2036,21 @@ CREATE TABLE station (
     longitude           DECIMAL(10, 7),
     contact_phone       VARCHAR(20),
     contact_name        VARCHAR(50),
-    business_hours      JSONB,
-    group_id            UUID            REFERENCES station_group (id) ON DELETE RESTRICT,
-    region_id           UUID            REFERENCES region (id) ON DELETE RESTRICT,
-    status              station_status  NOT NULL DEFAULT 'active',
-    primary_image_id    UUID,           -- FK added later (circular ref with station_image)
-    employee_sync_mode  employee_sync_mode NOT NULL DEFAULT 'sync',
-    created_at          TIMESTAMP       NOT NULL DEFAULT NOW(),
-    updated_at          TIMESTAMP       NOT NULL DEFAULT NOW(),
-    created_by          UUID,           -- FK → User (external module)
-    updated_by          UUID,           -- FK → User (external module)
+    business_hours      JSON,
+    group_id            CHAR(36)            REFERENCES station_group (id) ON DELETE RESTRICT,
+    region_id           CHAR(36)            REFERENCES region (id) ON DELETE RESTRICT,
+    status              ENUM('active', 'inactive', 'suspended')  NOT NULL DEFAULT 'active',
+    primary_image_id    CHAR(36),           -- FK added later (circular ref with station_image)
+    employee_sync_mode  ENUM('sync', 'local') NOT NULL DEFAULT 'sync',
+    created_at          TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by          CHAR(36),           -- FK → User (external module)
+    updated_by          CHAR(36),           -- FK → User (external module)
 
     CONSTRAINT uq_station_code UNIQUE (code),
     CONSTRAINT chk_station_latitude  CHECK (latitude  IS NULL OR (latitude  BETWEEN -90 AND 90)),
     CONSTRAINT chk_station_longitude CHECK (longitude IS NULL OR (longitude BETWEEN -180 AND 180))
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT = '站点 — 系统核心实体，代表一个加气站/加油站物理站点';
 
 CREATE INDEX idx_station_code   ON station (code);
 CREATE INDEX idx_station_name   ON station (name);
@@ -2082,33 +2058,27 @@ CREATE INDEX idx_station_status ON station (status);
 CREATE INDEX idx_station_group  ON station (group_id);
 CREATE INDEX idx_station_region ON station (region_id);
 CREATE INDEX idx_station_geo    ON station (latitude, longitude);
-
-COMMENT ON TABLE station IS '站点 — 系统核心实体，代表一个加气站/加油站物理站点';
-
 -- ----------------------------------------------------------------------------
 -- 5. StationImage（站点照片）
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE station_image (
-    id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
-    station_id      UUID            NOT NULL REFERENCES station (id) ON DELETE CASCADE,
+    id              CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    station_id      CHAR(36)            NOT NULL REFERENCES station (id) ON DELETE CASCADE,
     file_url        VARCHAR(500)    NOT NULL,
     file_name       VARCHAR(255)    NOT NULL,
     file_size       INTEGER,
     mime_type       VARCHAR(50),
-    image_type      image_type      NOT NULL DEFAULT 'general',
+    image_type      ENUM('primary', 'environment', 'general')      NOT NULL DEFAULT 'general',
     sort_order      INTEGER         NOT NULL DEFAULT 0,
-    uploaded_at     TIMESTAMP       NOT NULL DEFAULT NOW(),
-    uploaded_by     UUID,           -- FK → User (external module)
+    uploaded_at     TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    uploaded_by     CHAR(36),           -- FK → User (external module)
 
     CONSTRAINT chk_station_image_file_size CHECK (file_size IS NULL OR file_size > 0)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT = '站点照片 — 站点形象照片、环境照片管理';
 
 CREATE INDEX idx_station_image_station ON station_image (station_id);
 CREATE INDEX idx_station_image_type    ON station_image (image_type);
-
-COMMENT ON TABLE station_image IS '站点照片 — 站点形象照片、环境照片管理';
-
 -- Add deferred FK from station.primary_image_id → station_image.id
 ALTER TABLE station
     ADD CONSTRAINT fk_station_primary_image
@@ -2119,183 +2089,163 @@ ALTER TABLE station
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE nozzle (
-    id                  UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
-    station_id          UUID            NOT NULL REFERENCES station (id) ON DELETE CASCADE,
+    id                  CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    station_id          CHAR(36)            NOT NULL REFERENCES station (id) ON DELETE CASCADE,
     nozzle_no           VARCHAR(20)     NOT NULL,
-    fuel_type_id        UUID            NOT NULL REFERENCES fuel_type (id) ON DELETE RESTRICT,
+    fuel_type_id        CHAR(36)            NOT NULL REFERENCES fuel_type (id) ON DELETE RESTRICT,
     unit_price          DECIMAL(10, 2)  NOT NULL DEFAULT 0.00,
     dispenser_no        VARCHAR(20),
-    device_status       device_status   NOT NULL DEFAULT 'offline',
-    fueling_status      fueling_status  NOT NULL DEFAULT 'idle',
+    device_status       ENUM('online', 'offline', 'error')   NOT NULL DEFAULT 'offline',
+    fueling_status      ENUM('idle', 'fueling')  NOT NULL DEFAULT 'idle',
     last_heartbeat_at   TIMESTAMP,
-    status              general_status  NOT NULL DEFAULT 'active',
-    tags                VARCHAR(50)[],
-    config              JSONB,
-    custom_fields       JSONB,
-    source_doc          JSONB,
-    created_at          TIMESTAMP       NOT NULL DEFAULT NOW(),
-    updated_at          TIMESTAMP       NOT NULL DEFAULT NOW(),
+    status              ENUM('active', 'inactive')  NOT NULL DEFAULT 'active',
+    tags                JSON,
+    config              JSON,
+    custom_fields       JSON,
+    source_doc          JSON,
+    created_at          TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT uq_nozzle_station_no UNIQUE (station_id, nozzle_no),
     CONSTRAINT chk_nozzle_unit_price CHECK (unit_price >= 0)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT = '枪 — 加注设备末端，关联站点和燃料类型，支持外部系统对接扩展';
 
 CREATE INDEX idx_nozzle_station    ON nozzle (station_id);
 CREATE INDEX idx_nozzle_fuel_type  ON nozzle (fuel_type_id);
 CREATE INDEX idx_nozzle_status     ON nozzle (status);
-CREATE INDEX idx_nozzle_tags       ON nozzle USING GIN (tags);
-
-COMMENT ON TABLE nozzle IS '枪 — 加注设备末端，关联站点和燃料类型，支持外部系统对接扩展';
-
+-- MySQL: GIN index not supported. Consider FULLTEXT or multi-valued index
+-- Original: CREATE INDEX idx_nozzle_tags ON nozzle USING GIN (tags);
 -- ----------------------------------------------------------------------------
 -- 7. NozzlePriceLog（枪单价变更日志）
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE nozzle_price_log (
-    id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
-    nozzle_id       UUID            NOT NULL REFERENCES nozzle (id) ON DELETE CASCADE,
+    id              CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    nozzle_id       CHAR(36)            NOT NULL REFERENCES nozzle (id) ON DELETE CASCADE,
     old_price       DECIMAL(10, 2)  NOT NULL,
     new_price       DECIMAL(10, 2)  NOT NULL,
-    changed_at      TIMESTAMP       NOT NULL DEFAULT NOW(),
-    changed_by      UUID            NOT NULL,   -- FK → User (external module)
+    changed_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    changed_by      CHAR(36)            NOT NULL,   -- FK → User (external module)
     reason          VARCHAR(255),
 
     CONSTRAINT chk_nozzle_price_log_old CHECK (old_price >= 0),
     CONSTRAINT chk_nozzle_price_log_new CHECK (new_price >= 0),
     CONSTRAINT chk_nozzle_price_log_diff CHECK (old_price <> new_price)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT = '枪单价变更日志 — 记录价格变更历史，用于审计和追溯';
 
 CREATE INDEX idx_nozzle_price_log_nozzle ON nozzle_price_log (nozzle_id);
 CREATE INDEX idx_nozzle_price_log_time   ON nozzle_price_log (changed_at);
-
-COMMENT ON TABLE nozzle_price_log IS '枪单价变更日志 — 记录价格变更历史，用于审计和追溯';
-
 -- ----------------------------------------------------------------------------
 -- 8. StationEmployee（站点员工关联）
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE station_employee (
-    id              UUID              PRIMARY KEY DEFAULT gen_random_uuid(),
-    station_id      UUID              NOT NULL REFERENCES station (id) ON DELETE CASCADE,
-    user_id         UUID,             -- FK → User (external module, used in sync mode)
+    id              CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    station_id      CHAR(36)              NOT NULL REFERENCES station (id) ON DELETE CASCADE,
+    user_id         CHAR(36),             -- FK → User (external module, used in sync mode)
     employee_no     VARCHAR(32),
     name            VARCHAR(50)       NOT NULL,
     phone           VARCHAR(20),
     position        VARCHAR(50),
-    source          employee_source   NOT NULL DEFAULT 'sync',
-    status          general_status    NOT NULL DEFAULT 'active',
-    created_at      TIMESTAMP         NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMP         NOT NULL DEFAULT NOW(),
+    source          ENUM('sync', 'local')   NOT NULL DEFAULT 'sync',
+    status          ENUM('active', 'inactive')    NOT NULL DEFAULT 'active',
+    created_at      TIMESTAMP         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP         NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT uq_station_employee_station_user UNIQUE (station_id, user_id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT = '站点员工关联 — 关联站点与员工，支持同步模式和本地模式';
 
 CREATE INDEX idx_station_employee_station ON station_employee (station_id);
 CREATE INDEX idx_station_employee_user    ON station_employee (user_id);
-
-COMMENT ON TABLE station_employee IS '站点员工关联 — 关联站点与员工，支持同步模式和本地模式';
-
 -- ----------------------------------------------------------------------------
 -- 9. Shift（班次定义）
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE shift (
-    id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
-    station_id      UUID            NOT NULL REFERENCES station (id) ON DELETE CASCADE,
+    id              CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    station_id      CHAR(36)            NOT NULL REFERENCES station (id) ON DELETE CASCADE,
     name            VARCHAR(50)     NOT NULL,
     start_time      TIME            NOT NULL,
     end_time        TIME            NOT NULL,
     is_overnight    BOOLEAN         NOT NULL DEFAULT FALSE,
-    supervisor_id   UUID,           -- FK → User (external module)
-    status          general_status  NOT NULL DEFAULT 'active',
-    created_at      TIMESTAMP       NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMP       NOT NULL DEFAULT NOW(),
+    supervisor_id   CHAR(36),           -- FK → User (external module)
+    status          ENUM('active', 'inactive')  NOT NULL DEFAULT 'active',
+    created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT uq_shift_station_name UNIQUE (station_id, name)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT = '班次定义 — 工作时段模板（如早班、中班、夜班）';
 
 CREATE INDEX idx_shift_station ON shift (station_id);
-
-COMMENT ON TABLE shift IS '班次定义 — 工作时段模板（如早班、中班、夜班）';
-
 -- ----------------------------------------------------------------------------
 -- 10. Schedule（排班计划）
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE schedule (
-    id              UUID              PRIMARY KEY DEFAULT gen_random_uuid(),
-    station_id      UUID              NOT NULL REFERENCES station (id) ON DELETE CASCADE,
-    shift_id        UUID              NOT NULL REFERENCES shift (id) ON DELETE RESTRICT,
-    employee_id     UUID              NOT NULL REFERENCES station_employee (id) ON DELETE RESTRICT,
+    id              CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    station_id      CHAR(36)              NOT NULL REFERENCES station (id) ON DELETE CASCADE,
+    shift_id        CHAR(36)              NOT NULL REFERENCES shift (id) ON DELETE RESTRICT,
+    employee_id     CHAR(36)              NOT NULL REFERENCES station_employee (id) ON DELETE RESTRICT,
     schedule_date   DATE              NOT NULL,
-    status          schedule_status   NOT NULL DEFAULT 'scheduled',
+    status          ENUM('scheduled', 'completed', 'cancelled')   NOT NULL DEFAULT 'scheduled',
     note            VARCHAR(255),
-    created_at      TIMESTAMP         NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMP         NOT NULL DEFAULT NOW(),
-    created_by      UUID,             -- FK → User (external module)
+    created_at      TIMESTAMP         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by      CHAR(36),             -- FK → User (external module)
 
     CONSTRAINT uq_schedule_employee_date UNIQUE (employee_id, schedule_date)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT = '排班计划 — 员工在具体日期的班次安排';
 
 CREATE INDEX idx_schedule_station       ON schedule (station_id);
 CREATE INDEX idx_schedule_date          ON schedule (schedule_date);
 CREATE INDEX idx_schedule_employee      ON schedule (employee_id);
 CREATE INDEX idx_schedule_station_date  ON schedule (station_id, schedule_date);
-
-COMMENT ON TABLE schedule IS '排班计划 — 员工在具体日期的班次安排';
-
 -- ----------------------------------------------------------------------------
 -- 11. ChargingPile（充电桩 — 预留）
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE charging_pile (
-    id                  UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
-    station_id          UUID            NOT NULL REFERENCES station (id) ON DELETE CASCADE,
+    id                  CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    station_id          CHAR(36)            NOT NULL REFERENCES station (id) ON DELETE CASCADE,
     pile_no             VARCHAR(32)     NOT NULL,
-    pile_type           pile_type,
+    pile_type           ENUM('dc', 'ac'),
     power_kw            DECIMAL(8, 2),
     connector_count     INTEGER         NOT NULL DEFAULT 1,
-    device_status       device_status   NOT NULL DEFAULT 'offline',
-    status              general_status  NOT NULL DEFAULT 'active',
+    device_status       ENUM('online', 'offline', 'error')   NOT NULL DEFAULT 'offline',
+    status              ENUM('active', 'inactive')  NOT NULL DEFAULT 'active',
     external_id         VARCHAR(100),
-    tags                VARCHAR(50)[],
-    config              JSONB,
-    custom_fields       JSONB,
-    source_doc          JSONB,
-    created_at          TIMESTAMP       NOT NULL DEFAULT NOW(),
-    updated_at          TIMESTAMP       NOT NULL DEFAULT NOW(),
+    tags                JSON,
+    config              JSON,
+    custom_fields       JSON,
+    source_doc          JSON,
+    created_at          TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT uq_charging_pile_station_no UNIQUE (station_id, pile_no),
     CONSTRAINT chk_charging_pile_power     CHECK (power_kw IS NULL OR power_kw > 0),
     CONSTRAINT chk_charging_pile_connectors CHECK (connector_count >= 1)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT = '充电桩（预留）— 充电桩映射结构，界面暂不展示';
 
 CREATE INDEX idx_charging_pile_station ON charging_pile (station_id);
-CREATE INDEX idx_charging_pile_tags    ON charging_pile USING GIN (tags);
-
-COMMENT ON TABLE charging_pile IS '充电桩（预留）— 充电桩映射结构，界面暂不展示';
-
+-- MySQL: GIN index not supported. Consider FULLTEXT or multi-valued index
+-- Original: CREATE INDEX idx_charging_pile_tags ON charging_pile USING GIN (tags);
 -- ----------------------------------------------------------------------------
 -- 12. StationResponsibility（责任/维护站点关联）
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE station_responsibility (
-    id              UUID                PRIMARY KEY DEFAULT gen_random_uuid(),
-    station_id      UUID                NOT NULL REFERENCES station (id) ON DELETE CASCADE,
-    enterprise_id   UUID                NOT NULL,   -- FK → Enterprise (external module)
-    relation_type   responsibility_type NOT NULL,
-    created_at      TIMESTAMP           NOT NULL DEFAULT NOW(),
-    created_by      UUID,               -- FK → User (external module)
+    id              CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    station_id      CHAR(36)                NOT NULL REFERENCES station (id) ON DELETE CASCADE,
+    enterprise_id   CHAR(36)                NOT NULL,   -- FK → Enterprise (external module)
+    relation_type   ENUM('responsible', 'maintenance') NOT NULL,
+    created_at      TIMESTAMP           NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by      CHAR(36),               -- FK → User (external module)
 
     CONSTRAINT uq_station_resp UNIQUE (station_id, enterprise_id, relation_type)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT = '责任/维护站点关联 — 站点与大客户/企业的多对多关系';
 
 CREATE INDEX idx_station_resp_station    ON station_responsibility (station_id);
 CREATE INDEX idx_station_resp_enterprise ON station_responsibility (enterprise_id);
-
-COMMENT ON TABLE station_responsibility IS '责任/维护站点关联 — 站点与大客户/企业的多对多关系';
-
-COMMIT;
 ```
 
 ---

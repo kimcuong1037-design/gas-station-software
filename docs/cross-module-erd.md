@@ -367,16 +367,16 @@
 
 ```
 shared/
-├── types/
-│   ├── station.ts        # Station, StationGroup, Region
-│   ├── employee.ts       # StationEmployee, User, Role
-│   ├── fuel.ts           # FuelType, Nozzle
-│   ├── shift.ts          # Shift, Schedule
-│   ├── equipment.ts      # Equipment (设备基础信息)
-│   └── common.ts         # 通用类型 (Pagination, ApiResponse, etc.)
+├── models/
+│   ├── station.py        # Station, StationGroup, Region
+│   ├── employee.py       # StationEmployee, User, Role
+│   ├── fuel.py           # FuelType, Nozzle
+│   ├── shift.py          # Shift, Schedule
+│   ├── equipment.py      # Equipment (设备基础信息)
+│   └── common.py         # 通用类型 (Pagination, ApiResponse, etc.)
 └── enums/
-    ├── status.ts         # 全局状态枚举
-    └── payment.ts        # 支付方式枚举
+    ├── status.py         # 全局状态枚举
+    └── payment.py        # 支付方式枚举
 ```
 
 ---

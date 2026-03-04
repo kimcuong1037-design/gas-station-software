@@ -751,11 +751,11 @@ export const ROUTES = {
 ```sql
 -- ============================================================
 -- 数据分析 — 生产环境聚合层（非 MVP 阶段）
--- 建议：使用 PostgreSQL 物化视图 + 增量刷新
+-- 建议：使用 MySQL 8.0 物化视图 + 增量刷新
 -- ============================================================
 
--- 方案 A：物化视图（推荐，基于 PostgreSQL）
--- CREATE MATERIALIZED VIEW mv_daily_station_sales AS
+-- 方案 A：物化视图（推荐，基于 MySQL 8.0）
+-- CREATE VIEW -- MySQL: use regular VIEW or application-level caching (no MATERIALIZED VIEW) mv_daily_station_sales AS
 -- SELECT
 --   DATE_TRUNC('day', fo.created_at) AS sale_date,
 --   fo.station_id,
@@ -770,7 +770,7 @@ export const ROUTES = {
 --
 -- CREATE UNIQUE INDEX ON mv_daily_station_sales (sale_date, station_id, fuel_type_id);
 --
--- -- 每小时刷新：REFRESH MATERIALIZED VIEW CONCURRENTLY mv_daily_station_sales;
+-- -- 每小时刷新：REFRESH VIEW -- MySQL: use regular VIEW or application-level caching (no MATERIALIZED VIEW) CONCURRENTLY mv_daily_station_sales;
 
 -- 方案 B：TimescaleDB hypertable（高并发实时场景）
 -- ⚡ 若 FuelingOrder 表使用 TimescaleDB，可直接利用其连续聚合功能

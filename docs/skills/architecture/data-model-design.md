@@ -2,7 +2,7 @@
 
 **Skill ID:** `architecture/data-model-design`
 **所属 Agent:** Architecture Agent
-**版本：** 1.2（2026-02-24 增加 PostgreSQL Schema 草案 + 跨模块 ERD 更新）
+**版本：** 1.3（2026-03-04 PostgreSQL → MySQL 8.0 适配）
 **依赖：** `analysis/user-story-writing.md` 已完成，`user-stories.md` 已存在，`docs/cross-module-erd.md` 已存在
 
 ---
@@ -12,7 +12,7 @@
 | 项目 | 说明 |
 |------|------|
 | **输入** | `user-stories.md`（必须已存在且完整）、`docs/cross-module-erd.md`（跨模块实体关系） |
-| **输出** | `architecture.md`（数据模型 + API 设计 + 权限矩阵 + PostgreSQL Schema 草案）、更新后的 `cross-module-erd.md` |
+| **输出** | `architecture.md`（数据模型 + API 设计 + 权限矩阵 + MySQL 8.0 Schema 草案）、更新后的 `cross-module-erd.md` |
 | **阻断条件** | `user-stories.md` 不存在时，**停止执行**，要求先完成 User Story 编写 |
 
 ---
@@ -149,54 +149,48 @@ DELETE /api/v1/{resources}/:id          删除（软删除）
 
 ---
 
-### Step 5：PostgreSQL Schema 草案
+### Step 5：MySQL 8.0 Schema 草案
 
-基于 Step 1-2 的数据模型和完整性约束，生成可直接用于后端迁移的 PostgreSQL DDL 草案。
+基于 Step 1-2 的数据模型和完整性约束，生成可直接用于后端迁移的 MySQL 8.0 DDL 草案。
 
 #### 5.1 输出格式（强制）
 
 ```sql
 -- ============================================================
--- [模块名] Database Schema (PostgreSQL)
+-- [模块名] Database Schema (MySQL 8.0)
 -- 版本: 草案 v1  |  生成日期: YYYY-MM-DD
 -- ============================================================
 
-BEGIN;
-
--- ---------- ENUM 类型 ----------
-CREATE TYPE enum_name AS ENUM ('value1', 'value2', ...);
-
 -- ---------- 表定义 ----------
 CREATE TABLE table_name (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id          CHAR(36) PRIMARY KEY DEFAULT (UUID()),
     -- 业务字段...
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------- 索引 ----------
 CREATE INDEX idx_table_field ON table_name (field);
-
-COMMIT;
 ```
 
 #### 5.2 设计规则
 
 | 规则 | 说明 |
 |------|------|
-| **主键** | 统一使用 `UUID PRIMARY KEY DEFAULT gen_random_uuid()` |
-| **时间戳** | 每张表包含 `created_at` + `updated_at`（TIMESTAMPTZ） |
+| **主键** | 统一使用 `CHAR(36) PRIMARY KEY DEFAULT (UUID())` |
+| **时间戳** | 每张表包含 `created_at` + `updated_at`（DATETIME） |
 | **模块内 FK** | 使用 `REFERENCES` + `ON DELETE CASCADE/RESTRICT`（根据业务语义） |
-| **跨模块 FK** | 仅声明字段为 `UUID NOT NULL`，**不加 FK 约束**（应用层保证一致性），注释标注来源模块 |
-| **ENUM** | 有限且稳定的枚举用 PostgreSQL ENUM；可扩展的分类用关联表 |
-| **软删除** | 需要软删除的表加 `deleted_at TIMESTAMPTZ` |
+| **跨模块 FK** | 仅声明字段为 `CHAR(36) NOT NULL`，**不加 FK 约束**（应用层保证一致性），注释标注来源模块 |
+| **ENUM** | 有限且稳定的枚举用 MySQL 内联 `ENUM('v1','v2',...)`；可扩展的分类用关联表 |
+| **软删除** | 需要软删除的表加 `deleted_at DATETIME` |
 | **CHECK 约束** | 数据完整性约束（Step 2）中的规则尽量用 CHECK 约束表达 |
-| **金融数据** | 金额字段使用 `NUMERIC(12,2)`，禁止 `FLOAT/DOUBLE` |
+| **金融数据** | 金额字段使用 `DECIMAL(12,2)`，禁止 `FLOAT/DOUBLE` |
+| **引擎** | 所有表统一使用 `ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci` |
 
 #### 5.3 特殊场景标注
 
-- **时序数据**：标注 `-- ⚡ TimescaleDB hypertable 推荐` 并注明分区键
-- **全文搜索**：标注 `-- 🔍 GIN 索引推荐` 并注明 tsvector 列
+- **时序数据**：标注 `-- ⚡ MySQL PARTITION BY RANGE 推荐` 并注明分区键
+- **全文搜索**：标注 `-- 🔍 FULLTEXT 索引推荐` 并注明搜索列
 - **大表分区**：预计超过 100 万行的表标注分区策略建议
 
 ---
@@ -246,9 +240,8 @@ COMMIT;
    - 4.1 依赖其他模块的接口
    - 4.2 被其他模块依赖的接口
 
-## N. Database Schema (PostgreSQL)
-   - ENUM 类型定义
-   - CREATE TABLE 语句（含约束、索引）
+## N. Database Schema (MySQL 8.0)
+   - CREATE TABLE 语句（含内联 ENUM、约束、索引）
    - 跨模块 FK 注释说明
 ```
 
@@ -265,8 +258,8 @@ COMMIT;
 - [ ] 所有 API 路径使用 `/api/v1/` 前缀
 - [ ] 数据完整性约束已为每个有状态字段的实体定义
 - [ ] 权限矩阵覆盖所有角色
-- [ ] PostgreSQL Schema 草案已生成（ENUM + CREATE TABLE + 索引 + 约束）
-- [ ] 跨模块 FK 使用 UUID 无约束 + 注释标注来源模块
+- [ ] MySQL 8.0 Schema 草案已生成（CREATE TABLE + 内联 ENUM + 索引 + 约束 + ENGINE=InnoDB）
+- [ ] 跨模块 FK 使用 CHAR(36) 无约束 + 注释标注来源模块
 - [ ] `cross-module-erd.md` 已更新（新实体 + FK + 迁移层级）
 - [ ] `architecture.md` 包含全部必要章节（含 Database Schema 章节）
 
@@ -284,11 +277,11 @@ COMMIT;
 
 3. **ShiftSummary 聚合接口缺失**：站点概况页的聚合接口在 UX 完成后才被发现遗漏，事后补设计。解决方案：本文档 Step 3.2 的聚合接口前置分析。
 
-4. **Phase 1 后端准备缺失**：Phase 1 四模块完成前端实现后才发现缺少 PostgreSQL Schema 和跨模块 ERD，需要批量补充。解决方案：本文档 Step 5-6 将 DB Schema 和跨模块 ERD 更新纳入架构设计的标准流程，避免事后补创。
+4. **Phase 1 后端准备缺失**：Phase 1 四模块完成前端实现后才发现缺少 DB Schema 和跨模块 ERD，需要批量补充。解决方案：本文档 Step 5-6 将 DB Schema 和跨模块 ERD 更新纳入架构设计的标准流程，避免事后补创。
 
 ---
 
 *创建日期：2026-02-22*
-*版本：1.2*
-*最后更新：2026-02-24*
+*版本：1.3*
+*最后更新：2026-03-04*
 *触发条件：每个新模块开始架构设计前*

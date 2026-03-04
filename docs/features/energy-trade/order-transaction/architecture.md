@@ -410,42 +410,12 @@
 
 ---
 
-## 6. Database Schema (PostgreSQL)
+## 6. Database Schema (MySQL 8.0)
 
 ```sql
-BEGIN;
-
 -- ============================================================
 -- ENUM 类型
 -- ============================================================
-
-CREATE TYPE order_status AS ENUM (
-  'filling', 'pending_payment', 'paid', 'completed',
-  'cancelled', 'exception', 'suspended', 'refunded', 'closed'
-);
-
-CREATE TYPE payment_method AS ENUM (
-  'cash', 'wechat', 'alipay', 'unionpay',
-  'member_card', 'ic_card', 'credit', 'etc', 'other'
-);
-
-CREATE TYPE payment_status AS ENUM (
-  'pending', 'success', 'failed', 'cancelled'
-);
-
-CREATE TYPE refund_type AS ENUM ('full', 'partial');
-
-CREATE TYPE refund_status AS ENUM (
-  'pending_approval', 'refunded', 'rejected'
-);
-
-CREATE TYPE exception_type AS ENUM (
-  'power_loss', 'timeout', 'amount_error', 'other'
-);
-
-CREATE TYPE handle_status AS ENUM (
-  'pending', 'suspended', 'supplemented', 'pending_review', 'closed'
-);
 
 -- ============================================================
 -- 核心表
@@ -453,39 +423,39 @@ CREATE TYPE handle_status AS ENUM (
 
 -- 充装订单
 CREATE TABLE fueling_order (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id              CHAR(36) PRIMARY KEY DEFAULT (UUID()),
   order_no        VARCHAR(30) NOT NULL UNIQUE,
-  station_id      UUID NOT NULL,   -- → stations.id (1.1)
-  nozzle_id       UUID NOT NULL,   -- → nozzles.id (1.1)
-  fuel_type_id    UUID NOT NULL,   -- → fuel_types.id (1.1)
-  shift_id        UUID,            -- → shifts.id (1.1)
-  operator_id     UUID,            -- → station_employees.id (1.1)
+  station_id      CHAR(36) NOT NULL,   -- → stations.id (1.1)
+  nozzle_id       CHAR(36) NOT NULL,   -- → nozzles.id (1.1)
+  fuel_type_id    CHAR(36) NOT NULL,   -- → fuel_types.id (1.1)
+  shift_id        CHAR(36),            -- → shifts.id (1.1)
+  operator_id     CHAR(36),            -- → station_employees.id (1.1)
   unit_price      NUMERIC(10,2) NOT NULL,
   quantity        NUMERIC(10,3) NOT NULL CHECK (quantity > 0),
   total_amount    NUMERIC(12,2) NOT NULL CHECK (total_amount >= 0),
   discount_amount NUMERIC(12,2) NOT NULL DEFAULT 0 CHECK (discount_amount >= 0),
   payable_amount  NUMERIC(12,2) NOT NULL CHECK (payable_amount >= 0),
-  order_status    order_status NOT NULL DEFAULT 'pending_payment',
-  exception_type  exception_type,
+  order_status    ENUM('filling', 'pending_payment', 'paid', 'completed', 'cancelled', 'exception', 'suspended', 'refunded', 'closed') NOT NULL DEFAULT 'pending_payment',
+  exception_type  ENUM('power_loss', 'timeout', 'amount_error', 'other'),
   exception_reason TEXT,
-  handle_status   handle_status,
+  handle_status   ENUM('pending', 'suspended', 'supplemented', 'pending_review', 'closed'),
   vehicle_plate_no VARCHAR(20),
-  member_id       UUID,            -- ⚠️ Phase 4: → members.id
-  enterprise_id   UUID,            -- ⚠️ Phase 4: → enterprises.id
+  member_id       CHAR(36),            -- ⚠️ Phase 4: → members.id
+  enterprise_id   CHAR(36),            -- ⚠️ Phase 4: → enterprises.id
   notes           TEXT,
-  created_by      UUID,            -- 创建人（手动创建时记录）
-  cancelled_at    TIMESTAMP WITH TIME ZONE,
+  created_by      CHAR(36),            -- 创建人（手动创建时记录）
+  cancelled_at    DATETIME,
   cancel_reason   TEXT,
-  created_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  updated_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-);
-
-COMMENT ON COLUMN fueling_order.station_id IS '跨模块引用 → 1.1 stations.id';
-COMMENT ON COLUMN fueling_order.nozzle_id IS '跨模块引用 → 1.1 nozzles.id';
-COMMENT ON COLUMN fueling_order.fuel_type_id IS '跨模块引用 → 1.1 fuel_types.id';
-COMMENT ON COLUMN fueling_order.shift_id IS '跨模块引用 → 1.1 shifts.id';
-COMMENT ON COLUMN fueling_order.member_id IS '⚠️ Phase 4 回补: → 3.1 members.id';
-COMMENT ON COLUMN fueling_order.enterprise_id IS '⚠️ Phase 4 回补: → 3.2 enterprises.id';
+  created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Column comments for fueling_order:
+-- ALTER TABLE fueling_order MODIFY COLUMN station_id ... COMMENT '跨模块引用 → 1.1 stations.id';
+-- ALTER TABLE fueling_order MODIFY COLUMN nozzle_id ... COMMENT '跨模块引用 → 1.1 nozzles.id';
+-- ALTER TABLE fueling_order MODIFY COLUMN fuel_type_id ... COMMENT '跨模块引用 → 1.1 fuel_types.id';
+-- ALTER TABLE fueling_order MODIFY COLUMN shift_id ... COMMENT '跨模块引用 → 1.1 shifts.id';
+-- ALTER TABLE fueling_order MODIFY COLUMN member_id ... COMMENT '⚠️ Phase 4 回补: → 3.1 members.id';
+-- ALTER TABLE fueling_order MODIFY COLUMN enterprise_id ... COMMENT '⚠️ Phase 4 回补: → 3.2 enterprises.id';
 
 CREATE INDEX idx_fueling_order_station ON fueling_order(station_id);
 CREATE INDEX idx_fueling_order_created ON fueling_order(created_at DESC);
@@ -494,57 +464,55 @@ CREATE INDEX idx_fueling_order_shift ON fueling_order(shift_id);
 
 -- 支付记录
 CREATE TABLE payment_record (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  order_id        UUID NOT NULL REFERENCES fueling_order(id) ON DELETE RESTRICT,
-  payment_method  payment_method NOT NULL,
+  id              CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  order_id        CHAR(36) NOT NULL REFERENCES fueling_order(id) ON DELETE RESTRICT,
+  payment_method  ENUM('cash', 'wechat', 'alipay', 'unionpay', 'member_card', 'ic_card', 'credit', 'etc', 'other') NOT NULL,
   amount          NUMERIC(12,2) NOT NULL CHECK (amount > 0),
   transaction_ref VARCHAR(64),
-  payment_status  payment_status NOT NULL DEFAULT 'pending',
-  paid_at         TIMESTAMP WITH TIME ZONE,
-  created_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-);
+  payment_status  ENUM('pending', 'success', 'failed', 'cancelled') NOT NULL DEFAULT 'pending',
+  paid_at         DATETIME,
+  created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_payment_record_order ON payment_record(order_id);
 
 -- 退款记录
 CREATE TABLE refund_record (
-  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  order_id         UUID NOT NULL REFERENCES fueling_order(id) ON DELETE RESTRICT,
-  refund_type      refund_type NOT NULL,
+  id               CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  order_id         CHAR(36) NOT NULL REFERENCES fueling_order(id) ON DELETE RESTRICT,
+  refund_type      ENUM('full', 'partial') NOT NULL,
   refund_amount    NUMERIC(12,2) NOT NULL CHECK (refund_amount > 0),
   refund_reason    TEXT NOT NULL,
-  refund_status    refund_status NOT NULL DEFAULT 'pending_approval',
-  applied_by       UUID NOT NULL,  -- → station_employees.id
-  approved_by      UUID,           -- → station_employees.id
-  approved_at      TIMESTAMP WITH TIME ZONE,
-  refunded_at      TIMESTAMP WITH TIME ZONE,
+  refund_status    ENUM('pending_approval', 'refunded', 'rejected') NOT NULL DEFAULT 'pending_approval',
+  applied_by       CHAR(36) NOT NULL,  -- → station_employees.id
+  approved_by      CHAR(36),           -- → station_employees.id
+  approved_at      DATETIME,
+  refunded_at      DATETIME,
   rejection_reason TEXT,
-  created_at       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-);
+  created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_refund_record_order ON refund_record(order_id);
 CREATE INDEX idx_refund_record_status ON refund_record(refund_status);
 
 -- 订单标签关联
 CREATE TABLE order_tag (
-  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  order_id   UUID NOT NULL REFERENCES fueling_order(id) ON DELETE CASCADE,
+  id         CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  order_id   CHAR(36) NOT NULL REFERENCES fueling_order(id) ON DELETE CASCADE,
   tag_name   VARCHAR(50) NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE (order_id, tag_name)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 标签配置
 CREATE TABLE order_tag_config (
-  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  station_id UUID NOT NULL,  -- → stations.id
+  id         CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  station_id CHAR(36) NOT NULL,  -- → stations.id
   name       VARCHAR(50) NOT NULL,
   sort_order INT NOT NULL DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE (station_id, name)
-);
-
-COMMIT;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
 ---
