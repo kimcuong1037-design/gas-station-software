@@ -137,76 +137,13 @@
 
 - **SubAgent 类型：** `general-purpose`
 - **负责 Skills：**
-  - `api-implementation` — API 实现（Flask Blueprint + flask-smorest）
-  - `database-migration` — 数据库迁移（Flask-Migrate / Alembic）
-  - `business-logic` — 业务逻辑实现（Service 层）
+  - `api-implementation` — API 契约验证 + Flask Blueprint + Swagger 验证（[详见 docs/skills/backend/api-implementation.md](skills/backend/api-implementation.md)）
+  - `database-migration` — SQLAlchemy Models + Flask-Migrate 迁移（[详见 docs/skills/backend/database-migration.md](skills/backend/database-migration.md)）
+  - `business-logic` — Marshmallow Schemas + Service 层 + pytest（[详见 docs/skills/backend/business-logic.md](skills/backend/business-logic.md)）
 - **输入：** `architecture.md`（API 端点 + DB Schema 草案）、`cross-module-erd.md`、`STANDARDS.md §8-10`
 - **输出：** SQLAlchemy Models、Marshmallow Schemas、Flask Blueprints、Service 层、pytest 测试、迁移文件
 - **启用时机：** B0 基础设施完成后，按模块逐步实现（B1 → B2 → B3+，见 ROADMAP §7）
-
-##### BE Step 1：API 契约验证
-
-```
-→ 读取 architecture.md §API 端点
-→ 核验每个端点的 method / path / request / response 是否完整
-→ 确认路径前缀统一为 /api/v1/（纠正不一致的历史模块，见 STANDARDS §6.1）
-→ 对缺少请求体/响应体示例的写操作端点补充说明（CORRECTIONS P10）
-→ 输出：API 契约验证清单（哪些端点可直接实现，哪些需补充设计）
-```
-
-##### BE Step 2：SQLAlchemy Models
-
-```
-→ 以 architecture.md §MySQL 8.0 Schema 为唯一真相来源创建 Models
-→ 遵循 STANDARDS §8.3 Model 规范（审计字段、软删除、关系显式声明）
-→ 执行 flask db migrate -m "<描述>" 生成迁移文件
-→ 执行 flask db upgrade 验证迁移无误
-→ 输出：backend/app/models/{module}.py + migrations/versions/{ts}_{desc}.py
-```
-
-##### BE Step 3：Marshmallow Schemas
-
-```
-→ 为每个 Model 创建对应 Schema（序列化输出 + 输入验证）
-→ 列出所有必填字段、枚举值约束、业务校验规则（对应 architecture.md §业务规则）
-→ 输出：backend/app/schemas/{module}.py
-```
-
-##### BE Step 4：Service 层业务逻辑
-
-```
-→ 将 architecture.md §业务规则 翻译为 Python Service 方法
-→ Service 方法不依赖 Flask request/response（纯业务逻辑，便于单元测试）
-→ 为每个 Service 方法编写单元测试（pytest，目标 >= 80% 覆盖率）
-→ 输出：backend/app/services/{module}_service.py + tests/unit/test_{module}_service.py
-```
-
-##### BE Step 5：Flask Blueprint（路由层）
-
-```
-→ 对照 architecture.md §API 端点逐一实现
-→ 遵循 STANDARDS §8.4 Blueprint 规范（flask-smorest 装饰器）
-→ 在 app/api/__init__.py 注册新 Blueprint
-→ 编写 API 集成测试（pytest-flask，测试每个端点的正常/异常场景）
-→ 输出：backend/app/api/{module}s.py + tests/test_{module}s.py
-```
-
-##### BE Step 6：API 集成验证
-
-```
-→ 启动 Flask dev server（flask run）
-→ 在 Swagger UI (/api/docs/) 验证所有端点文档正确
-→ 用 curl 或 Swagger UI 验证关键端点返回符合 STANDARDS §6.4 响应结构
-→ 确认 JWT 认证保护端点（403/401 场景测试）
-→ 输出：后端模块交付 Checklist（见 Step 12i）
-```
-
-##### 特别注意事项
-
-1. **API 合同优先**：后端开发第一步是验证 architecture.md 的 API 设计是否完整，而非直接写代码
-2. **device-ledger 类型核验**：该模块 architecture.md 为事后补创，实现时必须对比前端 types.ts 逐字段核验一致性
-3. **时序数据策略**：`EquipmentMonitoringLog` 是时序数据，需在后端初始化时确定存储策略（MySQL 分区表 / 分区归档）
-4. **交接班模块 API 前缀**：该模块 architecture.md 历史上使用 `/api/` 前缀，后端实现时统一改为 `/api/v1/`
+- **执行顺序：** BE Step 1（API契约验证）→ BE Step 2（Models）→ BE Step 3（Schemas）→ BE Step 4（Service）→ BE Step 5（Blueprint）→ BE Step 6（集成验证）
 
 #### Agent 7：质量保障 Agent (QA Engineer)
 
@@ -374,8 +311,27 @@
             ☐ npm run build 编译通过
           → 有遗漏项则修复后重新验证
           ↓ (前端交付验证通过)
-
-步骤 12i-BE：后端模块交付 Checklist（后端完成该模块 BE Step 1~6 后执行）
+[决策点] 是否现在进行本模块后端实现？（前提：B0 基础设施已就绪）
+          ├── 否 / 暂缓 → 跳至步骤 13
+          │              （前端已交付，后端可日后从"后端补充入口"独立重启，见 §3.2）
+          └── 是 → 继续 ↓
+步骤 BE-1: 后端工程 Agent — API 契约验证
+           → 执行 `api-implementation` §BE Step 1（docs/skills/backend/api-implementation.md）
+           → 验证 architecture.md §API 端点完整性，输出：契约验证清单
+           ↓
+步骤 BE-2: 后端工程 Agent — 数据库 Models
+           → 执行 `database-migration` §BE Step 2（docs/skills/backend/database-migration.md）
+           → 输出：backend/app/models/{module}.py + migrations/versions/*.py
+           ↓
+步骤 BE-3: 后端工程 Agent — Schemas + Service 层
+           → 执行 `business-logic` §BE Steps 3-4（docs/skills/backend/business-logic.md）
+           → 输出：Marshmallow Schemas + Service 层 + pytest 单元测试
+           ↓
+步骤 BE-4: 后端工程 Agent — Blueprint + 集成验证
+           → 执行 `api-implementation` §BE Steps 5-6（docs/skills/backend/api-implementation.md）
+           → 输出：Flask Blueprint + API 集成测试 + Swagger UI 验证
+           ↓
+步骤 12i-BE：后端模块交付 Checklist（后端完成 BE-1~BE-4 后执行）
           → 逐项验证后端模块集成完整性：
             ☐ SQLAlchemy Model 字段与 architecture.md §DB Schema 一一对应（含审计字段、软删除）
             ☐ Flask-Migrate 迁移文件已创建且 `flask db upgrade` 可成功执行
@@ -398,28 +354,17 @@
           → 更新 CHANGELOG
 ```
 
-### 3.2 Agent 调度示例（Claude Code Task 工具）
+### 3.2 后端补充入口（为已完成前端的模块补充后端实现）
 
-```
-# Orchestrator 调度需求分析 Agent 的示例
-Task(
-  subagent_type="general-purpose",
-  description="需求拆解-站点管理",
-  prompt="""
-  你是需求分析 Agent。请按照以下 Skill 定义执行任务：
-  [读取 docs/skills/requirement-decomposition.md 中的流程定义]
+**适用场景：** 某模块前端已通过步骤 12i，当时选择暂缓后端，现在需要补充。
 
-  目标模块：基础运营 > 站点管理
-  需求来源：requirements/加气站运营管理系统-功能清单-参考.md
-  术语规范：docs/STANDARDS.md §1
+**前置条件（两项均须满足）：**
+- ☑ 该模块已通过步骤 12i 前端交付 Checklist
+- ☑ B0 基础设施已就绪（Flask 项目骨架、DB 连接、JWT 中间件等）
 
-  请输出：
-  1. 拆解后的 User Story 列表
-  2. 每个 Story 的验收标准
-  3. 需要确认的疑问点
-  """
-)
-```
+**执行步骤：** 直接从步骤 BE-1 开始，依次执行 BE-1 → BE-2 → BE-3 → BE-4 → 步骤 12i-BE。
+
+> 禁止为前端尚未通过 12i 的模块启动后端实现。
 
 ---
 
@@ -452,9 +397,9 @@ docs/skills/
 │   └── chart-visualization.md         # ✅ 图表可视化实现
 │
 ├── backend/                           # 后端工程类 Skills
-│   ├── api-implementation.md          # 🔜 API 实现（Flask Blueprint + flask-smorest，B0 完成后优先创建）
-│   ├── database-migration.md          # 🔜 数据库迁移（Flask-Migrate / Alembic，B0 完成后优先创建）
-│   └── business-logic.md              # 🔜 业务逻辑实现（Service 层 + pytest，B0 完成后优先创建）
+│   ├── api-implementation.md          # ✅ API 实现（API契约验证 + Flask Blueprint + 集成验证）
+│   ├── database-migration.md          # ✅ 数据库迁移（SQLAlchemy Models + Flask-Migrate）
+│   └── business-logic.md              # ✅ 业务逻辑实现（Marshmallow Schemas + Service 层 + pytest）
 │
 └── quality/                           # 质量保障类 Skills
     ├── code-review.md                 # ☐ 代码审查
@@ -505,32 +450,12 @@ docs/skills/
 
 ---
 
-## 6. 实施计划
+## 6. Skills 状态速查
 
-### 6.1 当前阶段（MVP 前准备）
-
-需要优先创建的 Skills（按开发流程顺序）：
-
-| 优先级 | Skill | 原因 | 状态 |
-|--------|-------|------|------|
-| P0 | `requirement-decomposition` | 所有模块开发的起点 | ✅ 已创建 |
-| P0 | `user-story-writing` | 需求确认的载体 | ✅ 已创建 |
-| P0 | `data-model-design` | 架构门禁：前端实现的前置条件（含实体三问 + 聚合接口分析 + MySQL 8.0 Schema + 跨模块 ERD） | ✅ 已创建 v1.2 |
-| P0 | `ux-design` | 用户体验设计，ui-schema-design 的前置输入 | ✅ 已创建 |
-| P0 | `ui-schema-design` | 前端开发的直接输入 | ✅ 已创建 |
-| P0 | `ui-eval` | 前端实现后的质量门禁（Phase 1 验证为关键环节） | ✅ 已创建 |
-| P1 | `react-component-development` | 核心编码 Skill（含 Import 规范、状态管理、Ant Design 模式、交互规则） | ✅ 已创建 |
-| P1 | `mock-data-creation` | MVP 阶段的数据来源（含生命周期覆盖、数据质量验证） | ✅ 已创建 |
-| P1 | `i18n-integration` | 贯穿所有页面（含键命名规范、状态标签处理） | ✅ 已创建 |
-| P2 | `workflow-design` | 复杂业务流程需要 | ☐ 待创建 |
-| P2 | `chart-visualization` | 数据分析模块需要（含 ECharts 共享组件层、主题集成、占位符替换流程） | ✅ 已创建 |
-| P3 | 其余 Skills | 按需创建 | ☐ |
-
-### 6.2 后续演进
-
-- 当 Skill 文件积累到一定程度，评估是否迁移至 Claude Agent SDK
-- 根据实际使用效果迭代 Skill 定义
-- 考虑引入 MCP Server 扩展 Agent 能力（如设计工具集成）
+前端 Skills 全部 ✅ 已创建（analysis × 3、architecture × 1、ui × 3、frontend × 4）。
+后端 Skills 已创建（`api-implementation`、`database-migration`、`business-logic`，B0 基础设施完成后启用）。
+待创建：`workflow-design`（复杂流程模块按需）、`code-review`、`test-writing`、`accessibility-check`（QA 阶段）。
+完整目录见 §4。后续按需创建，评估迁移至 Claude Agent SDK 的时机。
 
 ---
 
@@ -538,50 +463,15 @@ docs/skills/
 
 ### 7.1 目的
 
-确保每个前端页面组件都可追溯到其对应的 User Story，提供从需求 → 用户故事 → UI 组件的完整链路。此机制仅在开发模式下可见（`devOnly=true`），不影响生产构建。
+确保每个前端页面组件可追溯到对应 User Story（需求 → 用户故事 → UI 组件完整链路）。仅开发模式可见（`devOnly=true`），不影响生产构建。
 
 ### 7.2 集成三步法（每个新模块必须执行）
 
-#### Step 1: 创建 userStoryMapping.ts
+1. **Step 1 — 创建 `userStoryMapping.ts`**：在模块目录下创建映射文件，每条目含 `us`（Story ID 数组）、`desc`、`priority`、`status` 字段。
+2. **Step 2 — 注册到 `RequirementTag.tsx`**：import 映射 → spread 到 `allUserStories` → 注册到 `moduleStories`（key 为模块短名）。
+3. **Step 3 — 页面组件添加标记**：每个页面标题区域加 `<RequirementTag componentIds={[...]} module="..." showDetail />`。
 
-在模块目录下创建映射文件，覆盖该模块所有 User Story：
-
-```
-frontend/src/features/{domain}/{module}/userStoryMapping.ts
-```
-
-每个条目包含：
-- `us`: User Story ID 数组（如 `['US-001']`）
-- `desc`: 功能描述
-- `priority`: `'MVP' | 'MVP+' | 'PROD' | 'FUTURE'`
-- `status`: `'implemented' | 'partial' | 'planned' | 'not-planned'`
-
-#### Step 2: 注册到 RequirementTag.tsx
-
-在 `frontend/src/components/RequirementTag.tsx` 中：
-1. **Import** 新模块的映射：`import { xxxUserStories } from '../features/{domain}/{module}/userStoryMapping';`
-2. **Spread** 到 `allUserStories` 对象
-3. **注册** 到 `moduleStories` 对象，key 为模块短名（如 `'price-management'`）
-
-#### Step 3: 在页面组件中添加标记
-
-每个页面组件的标题区域添加 `<RequirementTag>`：
-
-```tsx
-import { RequirementTag } from '../../../../components/RequirementTag';
-
-// 在页面标题旁
-<Space align="center">
-  <Title level={4} style={{ margin: 0 }}>页面标题</Title>
-  <RequirementTag
-    componentIds={['component-id-1', 'component-id-2']}
-    module="module-short-name"
-    showDetail
-  />
-</Space>
-```
-
-**componentIds 选择原则：** 包含该页面实现或承载的所有 userStoryMapping 条目 ID。
+> 代码示例参见 `frontend/src/components/RequirementTag.tsx` 及任意已实现模块的 `userStoryMapping.ts`（如 `features/energy-trade/price-management/`）。
 
 ### 7.3 验证方法
 
@@ -613,66 +503,15 @@ grep "{module}UserStories" frontend/src/components/RequirementTag.tsx
 
 ## 8. 团队协作协议
 
-> **详细文档：** 团队协作的完整规范分布在三个专项文档中，本节提供摘要和引用。
-> - `docs/TEAM-RULES.md` — 三级行为准则（推荐/不建议/禁止）
-> - `docs/TEAM-ONBOARDING.md` — 新成员引导手册（Day 0→Day 1→Day 2）
-> - `docs/MODULE-ASSIGNMENTS.md` — 模块认领表 + 共享文件协议 + Git 分支与 PR 流程
+完整规范分布在专项文档中，本节仅提供快速引用表。
 
-### 8.1 新成员启动
-
-新成员加入项目时，按 `docs/TEAM-ONBOARDING.md` 引导手册执行：
-
-1. **Day 0：环境搭建** — clone 仓库 → `npm install` → `npm run dev` → `npm run build` 验证
-2. **Day 0-1：必读文档** — 按 TEAM-ONBOARDING §3 的人类优化阅读路径（约 2 小时）
-3. **Day 1：范例走读** — 以价格管理模块为范例，端到端走读完整文档套件和代码（TEAM-ONBOARDING §5）
-4. **Day 1-2：认领第一个模块** — 在 `MODULE-ASSIGNMENTS.md` 认领 → 创建 feature branch → 执行 AGENT-PLAN Step 0
-
-### 8.2 行为准则
-
-所有团队成员必须遵守 `docs/TEAM-RULES.md` 定义的三级行为准则：
-
-| 级别 | 说明 | 条目数 |
-|------|------|--------|
-| §1 推荐做法 (MUST DO) | 流程纪律、代码规范、协作纪律、AI 使用 | 16 条 |
-| §2 不建议做法 (DON'T) | 不会立即出问题但增加风险的行为 | 8 条 |
-| §3 禁止事项 (PROHIBITED) | 硬性红线，违规必须 revert | 9 条 |
-
-### 8.3 多人并行开发
-
-| 规则 | 说明 | 详见 |
+| 主题 | 文档 | 要点 |
 |------|------|------|
-| 模块互斥 | 同一时间只有一人开发同一模块 | `MODULE-ASSIGNMENTS.md §1` |
-| 模块认领 | 开始前必须在认领表登记 | `MODULE-ASSIGNMENTS.md §2` |
-| 共享文件协议 | 修改共享文件前 `git pull`，只改自己模块区块 | `MODULE-ASSIGNMENTS.md §3` |
-| 分支策略 | feature branch 开发，PR 合入 main，禁止直接 push | `MODULE-ASSIGNMENTS.md §4` |
-| 分层审批 | 关键文档→Roger 审批；纯代码→团队互审 | `TEAM-RULES.md §4` |
-| 进度标注 | `PROGRESS.md` 每条记录标注作者 `[姓名]` | `SESSION-PROTOCOL.md §4` |
-| 术语新增 | 新增术语先注册 STANDARDS.md，再通知团队 | `TEAM-RULES.md §1.3` |
-
-### 8.4 知识传递路径
-
-**AI Agent 阅读顺序**（Claude Code 自动加载 CLAUDE.md 后按以下顺序）：
-
-```
-CLAUDE.md（入口指令，自动加载）
-  → TEAM-RULES.md（行为边界）
-  → CONSTITUTION.md（最高准则）
-  → AGENT-PLAN.md（本文档，编排蓝图）
-  → CORRECTIONS.md（纠偏模式，防止重复犯错）
-  → STANDARDS.md（术语 + 技术规范）
-  → SESSION-PROTOCOL.md（会话协议）
-  → MODULE-ASSIGNMENTS.md（认领状态 + 共享文件协议）
-  → Skills 文件（按需阅读当前阶段涉及的 Skill）
-  → 目标模块的 features/{domain}/{module}/ 文档套件
-```
-
-**人类团队成员阅读顺序**：见 `docs/TEAM-ONBOARDING.md §3`（按时间效益优化，与 AI 顺序不同）。
-
-### 8.5 模块认领与交接
-
-- **认领**：在 `docs/MODULE-ASSIGNMENTS.md §2` 登记，认领后 3 个工作日内提交首个 PR
-- **交接**：参考 `docs/SESSION-PROTOCOL.md §3` 的交接清单模板，在 `PROGRESS.md` 中记录交接信息
-- **释放**：如因故无法继续，及时在认领表中释放模块并通知团队
+| 行为准则（推荐/不建议/禁止） | `TEAM-RULES.md` | 16 推荐 + 8 不建议 + 9 禁止 |
+| 新成员入门（Day 0→2） | `TEAM-ONBOARDING.md` | 环境搭建 → 必读 → 范例走读 → 认领模块 |
+| 模块认领 + 共享文件协议 + PR 流程 | `MODULE-ASSIGNMENTS.md` | 认领前登记，feature branch，禁止直接 push main |
+| AI Agent 阅读顺序 | `CLAUDE.md §必读文档` | TEAM-RULES → CONSTITUTION → AGENT-PLAN → CORRECTIONS → STANDARDS → SESSION → MODULE-ASSIGNMENTS → Skills |
+| Session 交接 | `SESSION-PROTOCOL.md` | 启动/结束标准流程，PROGRESS.md 标注作者 |
 
 ---
 
