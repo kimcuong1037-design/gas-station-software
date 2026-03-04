@@ -5,7 +5,7 @@
 
 | 开发者 | 当前模块 | 当前步骤 | 阻塞项 | 上次活跃 |
 |--------|---------|---------|--------|---------|
-| Roger | 7.1 数据分析 | 准备启动 Step 0（文档预检） | 无 | 2026-03-04 |
+| Roger | 7.1 数据分析 | Step 8（ui-schema.md 编写） | 无 | 2026-03-04 |
 
 **Phase 2 最终状态：** 2.1 ✅ (3.94) | 2.2 ✅ (3.71) | 2.3 ✅ (3.77)
 
@@ -84,12 +84,14 @@
 #### Next Steps
 
 - **当前模块：** 7.1 数据分析（Phase 3 首个模块）
-- **继续步骤：** AGENT-PLAN Step 0（文档完整性预检）→ Step 1（确认目标模块范围）→ Step 2（需求分析）
-- **待确认事项：** Phase 3 子模块优先级（7.1 数据分析 vs 7.2 报表中心 vs 7.3 数据大屏）— 建议从 7.1 数据分析开始
+- **已完成：** Steps 0~7（requirements + user-stories + architecture + ux-design 均已创建，共 4/5 文档）
+- **继续步骤：** AGENT-PLAN **Step 8**（UI Schema Agent → ui-schema.md 编写）→ Step 9（用户确认）→ Step 10（前端工程）
+- **待确认事项：** ui-schema.md 完成后请用户确认再进入前端实现
 - **建议首先阅读的文件：**
-  1. `docs/ROADMAP.md` §3 — Phase 3 模块定义与范围
-  2. `docs/features/analytics/data-analytics/architecture.md` — 已有架构草案（需确认完整性）
-  3. `docs/CORRECTIONS.md` §1 — 模式速查表（P1~P10）
+  1. `docs/CORRECTIONS.md` §1 — 模式速查表（P1~P10），5 分钟
+  2. `docs/features/analytics/data-analytics/ux-design.md` — UX 设计（ui-schema 的输入）
+  3. `docs/features/analytics/data-analytics/architecture.md` — 数据模型与 API 端点
+  4. `docs/features/analytics/data-analytics/user-stories.md` — User Story 列表（ui-schema 覆盖基准）
 
 ---
 
@@ -978,17 +980,28 @@
 - 8 个模块 architecture.md 统一为 MySQL 8.0 Schema ✅
 - 后端技术栈确认：Python Flask + SQLAlchemy + MySQL 8.0 ✅
 
-**下一步（Phase 3 启动）：**
-1. 在 `MODULE-ASSIGNMENTS.md §2` 认领模块 7.1 数据分析
-2. 执行 AGENT-PLAN Step 0 文档完整性预检
-3. Step 1 确认目标模块范围（7.1 子功能：经营看板、多维分析、客户分析）
-4. Step 2 需求分析 → requirements.md + user-stories.md
+**7.1 数据分析 — 文档套件现状（4/5）：**
+
+| 文档 | 状态 |
+|------|------|
+| requirements.md | ✅ 已完成 |
+| user-stories.md | ✅ 已完成 |
+| architecture.md | ✅ 已完成 |
+| ux-design.md | ✅ 已完成 |
+| ui-schema.md | ❌ **待完成（Step 8）** |
+
+**下一步（直接进入 Step 8）：**
+1. 重读 `CORRECTIONS.md §1` 模式速查（P1~P10），5 分钟
+2. 重读 `ux-design.md` + `user-stories.md` 刷新上下文
+3. 执行 AGENT-PLAN **Step 8** — UI Schema Agent → 输出 `ui-schema.md`
+4. Step 9 — 提交用户确认
+5. Step 10 — 前端工程实施
 
 **明天启动时必读（按顺序）：**
-1. `docs/CORRECTIONS.md` §1 — 模式速查表（P1~P10），5 分钟
-2. `docs/ROADMAP.md` §3 — Phase 3 模块定义
-3. `docs/features/analytics/data-analytics/architecture.md` — 架构草案现状确认
-4. `docs/MODULE-ASSIGNMENTS.md` §2 Phase 3 行 — 认领 7.1
+1. `docs/CORRECTIONS.md` §1 — 模式速查表（P1~P10）
+2. `docs/features/analytics/data-analytics/ux-design.md`
+3. `docs/features/analytics/data-analytics/architecture.md`
+4. `docs/features/analytics/data-analytics/user-stories.md`
 
 ---
 
