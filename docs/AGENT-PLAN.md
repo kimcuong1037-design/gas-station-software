@@ -78,10 +78,10 @@
 
 - **SubAgent 类型：** `general-purpose`
 - **负责 Skills：**
-  - `data-model-design` — 综合架构设计（含数据模型、API 设计、聚合接口分析、权限矩阵、数据完整性约束、PostgreSQL Schema 草案、跨模块 ERD 更新）
+  - `data-model-design` — 综合架构设计（含数据模型、API 设计、聚合接口分析、权限矩阵、数据完整性约束、MySQL 8.0 Schema 草案、跨模块 ERD 更新）
   - `workflow-design` — 业务流程设计（复杂流程模块按需启用）
 - **输入：** User Story、业务规则、`cross-module-erd.md`（已有跨模块实体关系）
-- **输出：** architecture.md（数据模型 + API 端点 + 权限矩阵 + 数据完整性约束 + PostgreSQL Schema 草案）、更新后的 `cross-module-erd.md`
+- **输出：** architecture.md（数据模型 + API 端点 + 权限矩阵 + 数据完整性约束 + MySQL 8.0 Schema 草案）、更新后的 `cross-module-erd.md`
 - **阻断性规则：** architecture.md 是进入前端实现的硬门禁，文件不存在时流程停止
 
 #### Agent 3：UI 设计 Agent (UI Designer)
@@ -137,17 +137,76 @@
 
 - **SubAgent 类型：** `general-purpose`
 - **负责 Skills：**
-  - `api-implementation` — API 实现
-  - `database-migration` — 数据库迁移
-  - `business-logic` — 业务逻辑实现
-- **输入：** API 设计文档、数据模型、PostgreSQL Schema 草案（architecture.md §DB Schema）、`cross-module-erd.md`
-- **输出：** API 代码、数据库迁移脚本、业务逻辑代码
-- **启用时机：** Phase 2 开始启用（Phase 1 模块 API 实现）
-- **Phase 2 特别注意事项：**
-  1. **API 合同优先**：后端开发第一步是验证 architecture.md 的 API 设计是否完整，而非直接写代码
-  2. **前后端类型共享**：考虑建立 `shared/types/` 目录存放公共类型定义，前后端共享引用
-  3. **device-ledger 类型核验**：该模块 architecture.md 为事后补创，后端实现时必须对比前端 types.ts 逐字段核验一致性
-  4. **时序数据策略**：`EquipmentMonitoringLog` 是时序数据，需在后端初始化时确定存储策略（TimescaleDB / 分区归档 / 独立时序库）
+  - `api-implementation` — API 实现（Flask Blueprint + flask-smorest）
+  - `database-migration` — 数据库迁移（Flask-Migrate / Alembic）
+  - `business-logic` — 业务逻辑实现（Service 层）
+- **输入：** `architecture.md`（API 端点 + DB Schema 草案）、`cross-module-erd.md`、`STANDARDS.md §8-10`
+- **输出：** SQLAlchemy Models、Marshmallow Schemas、Flask Blueprints、Service 层、pytest 测试、迁移文件
+- **启用时机：** B0 基础设施完成后，按模块逐步实现（B1 → B2 → B3+，见 ROADMAP §7）
+
+##### BE Step 1：API 契约验证
+
+```
+→ 读取 architecture.md §API 端点
+→ 核验每个端点的 method / path / request / response 是否完整
+→ 确认路径前缀统一为 /api/v1/（纠正不一致的历史模块，见 STANDARDS §6.1）
+→ 对缺少请求体/响应体示例的写操作端点补充说明（CORRECTIONS P10）
+→ 输出：API 契约验证清单（哪些端点可直接实现，哪些需补充设计）
+```
+
+##### BE Step 2：SQLAlchemy Models
+
+```
+→ 以 architecture.md §MySQL 8.0 Schema 为唯一真相来源创建 Models
+→ 遵循 STANDARDS §8.3 Model 规范（审计字段、软删除、关系显式声明）
+→ 执行 flask db migrate -m "<描述>" 生成迁移文件
+→ 执行 flask db upgrade 验证迁移无误
+→ 输出：backend/app/models/{module}.py + migrations/versions/{ts}_{desc}.py
+```
+
+##### BE Step 3：Marshmallow Schemas
+
+```
+→ 为每个 Model 创建对应 Schema（序列化输出 + 输入验证）
+→ 列出所有必填字段、枚举值约束、业务校验规则（对应 architecture.md §业务规则）
+→ 输出：backend/app/schemas/{module}.py
+```
+
+##### BE Step 4：Service 层业务逻辑
+
+```
+→ 将 architecture.md §业务规则 翻译为 Python Service 方法
+→ Service 方法不依赖 Flask request/response（纯业务逻辑，便于单元测试）
+→ 为每个 Service 方法编写单元测试（pytest，目标 >= 80% 覆盖率）
+→ 输出：backend/app/services/{module}_service.py + tests/unit/test_{module}_service.py
+```
+
+##### BE Step 5：Flask Blueprint（路由层）
+
+```
+→ 对照 architecture.md §API 端点逐一实现
+→ 遵循 STANDARDS §8.4 Blueprint 规范（flask-smorest 装饰器）
+→ 在 app/api/__init__.py 注册新 Blueprint
+→ 编写 API 集成测试（pytest-flask，测试每个端点的正常/异常场景）
+→ 输出：backend/app/api/{module}s.py + tests/test_{module}s.py
+```
+
+##### BE Step 6：API 集成验证
+
+```
+→ 启动 Flask dev server（flask run）
+→ 在 Swagger UI (/api/docs/) 验证所有端点文档正确
+→ 用 curl 或 Swagger UI 验证关键端点返回符合 STANDARDS §6.4 响应结构
+→ 确认 JWT 认证保护端点（403/401 场景测试）
+→ 输出：后端模块交付 Checklist（见 Step 12i）
+```
+
+##### 特别注意事项
+
+1. **API 合同优先**：后端开发第一步是验证 architecture.md 的 API 设计是否完整，而非直接写代码
+2. **device-ledger 类型核验**：该模块 architecture.md 为事后补创，实现时必须对比前端 types.ts 逐字段核验一致性
+3. **时序数据策略**：`EquipmentMonitoringLog` 是时序数据，需在后端初始化时确定存储策略（MySQL 分区表 / 分区归档）
+4. **交接班模块 API 前缀**：该模块 architecture.md 历史上使用 `/api/` 前缀，后端实现时统一改为 `/api/v1/`
 
 #### Agent 7：质量保障 Agent (QA Engineer)
 
@@ -209,7 +268,7 @@
          → 设计 API 接口（含聚合接口前置分析）
          → 定义数据完整性约束
          → 绘制业务流程
-         → 生成 PostgreSQL Schema 草案（ENUM 类型 + CREATE TABLE + 索引 + 约束）
+         → 生成 MySQL 8.0 Schema 草案（ENUM 类型 + CREATE TABLE + 索引 + 约束）
          → 更新 docs/cross-module-erd.md（新增实体、跨模块 FK、迁移层级）
          → 跨模块数据流定义（CORRECTIONS P7 规则 5-6）：
            - 列出所有下游消费者（谁消费本模块的数据、消费方式）
@@ -221,7 +280,7 @@
 步骤 5: [用户确认架构设计]
          ⛔ 阻断性验证：architecture.md 必须存在且包含
             全部必要章节（实体三问、API 端点、权限矩阵、
-            数据完整性约束、PostgreSQL Schema 草案），否则禁止进入步骤 6
+            数据完整性约束、MySQL 8.0 Schema 草案），否则禁止进入步骤 6
          ⛔ cross-module-erd.md 必须已更新（新模块实体已纳入）
          ↓
 步骤 6: UI 设计 Agent (UX 设计)
@@ -301,7 +360,7 @@
               ☐ a. userStoryMapping.ts 已创建且覆盖所有 User Story
               ☐ b. RequirementTag.tsx 已 import 新模块的 mapping 并注册到 moduleStories
               ☐ c. 每个页面组件的标题区域已添加 <RequirementTag> 并关联正确的 componentIds
-            ☐ PostgreSQL Schema 草案已包含在 architecture.md 中
+            ☐ MySQL 8.0 Schema 草案已包含在 architecture.md 中
             ☐ cross-module-erd.md 已更新（新模块实体 + 跨模块 FK）
             ☐ API Docs 页面数据同步更新（apiData.ts）
             ☐ 跨模块数据流完整性（CORRECTIONS P7 规则 5-7）：
@@ -314,7 +373,21 @@
               ☐ c. i18n key 与 STANDARDS.md 术语对齐
             ☐ npm run build 编译通过
           → 有遗漏项则修复后重新验证
-          ↓ (交付验证通过)
+          ↓ (前端交付验证通过)
+
+步骤 12i-BE：后端模块交付 Checklist（后端完成该模块 BE Step 1~6 后执行）
+          → 逐项验证后端模块集成完整性：
+            ☐ SQLAlchemy Model 字段与 architecture.md §DB Schema 一一对应（含审计字段、软删除）
+            ☐ Flask-Migrate 迁移文件已创建且 `flask db upgrade` 可成功执行
+            ☐ Marshmallow Schema 覆盖所有 Model 字段（含输入验证规则）
+            ☐ 所有 API 端点已按 architecture.md §API 端点实现（方法、路径、状态码）
+            ☐ API 响应结构符合 STANDARDS.md §6.4 规范（data / pagination / error）
+            ☐ pytest 测试套件全部通过（Service 单元测试 >= 80% 覆盖 + API 集成测试）
+            ☐ Swagger UI 文档完整（/api/docs/ 所有端点可见、schema 正确）
+            ☐ JWT 认证保护已验证（401/403 场景测试通过）
+            ☐ 迁移文件已 commit（与代码变更在同一 PR）
+          → 有遗漏项则修复后重新验证
+          ↓ (后端交付验证通过)
 步骤 13: 质量保障 Agent
           → 代码审查
           → 编写测试
@@ -379,9 +452,9 @@ docs/skills/
 │   └── chart-visualization.md         # ✅ 图表可视化实现
 │
 ├── backend/                           # 后端工程类 Skills
-│   ├── api-implementation.md          # ☐ API 实现
-│   ├── database-migration.md          # ☐ 数据库迁移
-│   └── business-logic.md              # ☐ 业务逻辑实现
+│   ├── api-implementation.md          # 🔜 API 实现（Flask Blueprint + flask-smorest，B0 完成后优先创建）
+│   ├── database-migration.md          # 🔜 数据库迁移（Flask-Migrate / Alembic，B0 完成后优先创建）
+│   └── business-logic.md              # 🔜 业务逻辑实现（Service 层 + pytest，B0 完成后优先创建）
 │
 └── quality/                           # 质量保障类 Skills
     ├── code-review.md                 # ☐ 代码审查
@@ -442,7 +515,7 @@ docs/skills/
 |--------|-------|------|------|
 | P0 | `requirement-decomposition` | 所有模块开发的起点 | ✅ 已创建 |
 | P0 | `user-story-writing` | 需求确认的载体 | ✅ 已创建 |
-| P0 | `data-model-design` | 架构门禁：前端实现的前置条件（含实体三问 + 聚合接口分析 + PostgreSQL Schema + 跨模块 ERD） | ✅ 已创建 v1.2 |
+| P0 | `data-model-design` | 架构门禁：前端实现的前置条件（含实体三问 + 聚合接口分析 + MySQL 8.0 Schema + 跨模块 ERD） | ✅ 已创建 v1.2 |
 | P0 | `ux-design` | 用户体验设计，ui-schema-design 的前置输入 | ✅ 已创建 |
 | P0 | `ui-schema-design` | 前端开发的直接输入 | ✅ 已创建 |
 | P0 | `ui-eval` | 前端实现后的质量门禁（Phase 1 验证为关键环节） | ✅ 已创建 |

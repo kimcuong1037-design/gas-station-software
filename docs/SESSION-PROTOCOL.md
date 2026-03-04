@@ -35,8 +35,16 @@
 ### Step 4: 加载模块上下文（如继续未完成模块）
 
 ```
+前端工作：
 读取 docs/features/{domain}/{module}/ 下已有文档
 → 确认：哪些文档已完成，从 AGENT-PLAN 哪一步继续
+
+后端工作（如在进行后端开发）：
+额外确认：
+- ROADMAP §7 后端当前里程碑（B0/B1/B2）
+- MODULE-ASSIGNMENTS.md 当前模块的 BE 状态
+- backend/app/models/{module}.py 和 backend/app/api/{module}s.py 是否已创建
+→ 确认从 BE Step N 继续
 ```
 
 ### Step 5: 与用户对齐
@@ -111,7 +119,7 @@
 
 ### 已完成的检查项
 - [x] 需求已拆解，用户已确认
-- [x] 架构设计已完成，包含 PostgreSQL Schema
+- [x] 架构设计已完成，包含 MySQL 8.0 Schema
 - [ ] UX 设计未开始
 
 ### 未解决的问题
@@ -121,6 +129,10 @@
 ### 关键文件
 - docs/features/{domain}/{module}/ — 模块文档
 - frontend/src/features/{domain}/{module}/ — 前端代码（如已开始）
+- backend/app/models/{module}.py — 后端 Model（如已开始）
+- backend/app/services/{module}_service.py — Service 层（如已开始）
+- backend/app/api/{module}s.py — Blueprint 端点（如已开始）
+- backend/tests/test_{module}s.py — API 测试（如已开始）
 
 ### 特殊注意事项
 - [跨模块依赖、已知技术债务、用户偏好等]
@@ -172,4 +184,4 @@
 
 *创建时间：2026-02-28*
 *最后更新：2026-03-04*
-*版本：1.1*
+*版本：1.2*

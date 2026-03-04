@@ -1,7 +1,8 @@
 # 团队行为准则 (Team Rules)
 
-**版本：** 1.0
+**版本：** 1.1
 **创建日期：** 2026-03-04
+**更新日期：** 2026-03-04
 **适用范围：** 所有参与项目开发的团队成员（含使用 AI Agent 辅助开发的场景）
 
 > 本文档将分散在 CONSTITUTION、CORRECTIONS、AGENT-PLAN 等文档中的行为规范整合为三级准则，
@@ -20,10 +21,17 @@
 
 ### 1.2 代码规范
 
+**前端（通用）：**
 - **architecture.md 是 types.ts 和 mock 数据的唯一真相来源** — 先有架构文档，再写类型定义和数据（来源：CORRECTIONS P3, P5）
 - **路由路径用 router.tsx 常量，组件引用常量** — 禁止在组件中硬编码路由字符串（来源：CORRECTIONS P1）
 - **每个 Table 有 column width 就必须有 `scroll={{ x: sum }}`** — 否则右侧列会被裁切（来源：CORRECTIONS P2）
-- **`npm run build` 通过后才能声明模块完成** — TypeScript 编译零错误是交付底线
+- **`npm run build` 通过后才能声明前端模块完成** — TypeScript 编译零错误是交付底线
+
+**后端（通用）：**
+- **architecture.md §DB Schema 是 SQLAlchemy Model 的唯一真相来源** — 先有架构设计，再写 Model 和迁移文件（来源：STANDARDS §8.3）
+- **数据库变更必须通过 `flask db migrate` 生成迁移文件** — 禁止直接 ALTER TABLE（来源：STANDARDS §9.1；违规见 X10）
+- **`pytest` 测试套件通过后才能声明后端模块完成** — Service 层单元测试 + API 集成测试缺一不可（来源：AGENT-PLAN Step 12i-BE）
+- **Service 层业务逻辑不得依赖 Flask request/response 对象** — 保持纯 Python，便于单元测试（来源：STANDARDS §8.5）
 
 ### 1.3 协作纪律
 
@@ -73,6 +81,7 @@
 | X7 | 直接 push 到 main 分支 | 团队新规则 | 所有变更必须通过 PR 合入，main 分支受保护 |
 | X8 | 未认领就开始模块开发 | 团队新规则 | 必须先在 `MODULE-ASSIGNMENTS.md` 登记认领 |
 | X9 | 擅自修改 CORRECTIONS.md 模式定义 | 团队新规则 | P1~P10 模式定义由 Roger 维护；可以新增纠偏记录到 §2 摘要表 |
+| X10 | 直接修改数据库 Schema 而不生成迁移文件 | STANDARDS §9.1 | 任何表结构变更（ALTER TABLE / DROP COLUMN 等）必须通过 `flask db migrate` 生成迁移文件并 commit |
 
 ---
 

@@ -94,6 +94,13 @@
 5. **全局完整性验证**：每个模块交付前，必须扫描该模块所有 `.tsx` 文件中的 `t('...')` 调用，逐一比对 zh-CN 和 en-US 的 locale 文件确认键存在。**仅检查肉眼可见页面不够**——筛选器 placeholder、统计卡片 title、分页文本等非主体区域极易遗漏
 6. **禁止仅依赖 inline fallback**：`t('key', '默认值')` 的 fallback 不能替代正式注册到 locale 文件；含 fallback 的键仍必须在 zh-CN 和 en-US 中注册
 
+### P11 后端纠偏模式（占位，B0 启动后逐步积累）
+> 来源：后端开发启动后填充
+
+*此章节预留。后端开发正式开始后，将记录 SQLAlchemy Model / Flask Blueprint / 数据库迁移 / pytest 测试等方向的高频纠偏经验。*
+
+---
+
 ### P10 API 文档写操作端点必须有 JSON 示例
 > 来源：03-01 architecture.md POST/PUT/PATCH 缺少请求体和响应体示例
 

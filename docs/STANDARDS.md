@@ -124,27 +124,29 @@
 状态管理：  React Context + useReducer（MVP阶段）；Zustand（生产阶段）
 模拟数据：  MSW (Mock Service Worker) 或静态 JSON 数据
 构建工具：  Vite
-后端：      Node.js + Express（MVP 之后添加）
-数据库：    PostgreSQL（MVP 之后添加）
+后端：      Python Flask + SQLAlchemy + Marshmallow
+ORM：       SQLAlchemy 2.0+
+迁移工具：  Flask-Migrate (Alembic)
+API 文档：  flask-smorest / flasgger（OpenAPI/Swagger）
+验证：      Marshmallow
+认证：      JWT + Refresh Token
+测试：      pytest + pytest-flask
+日志：      Python logging
+数据库：    MySQL 8.0
 ```
 
 ### 2.2 项目目录结构
 
+#### 前端
+
 ```
-gas-station-software/
-├── docs/                    # 项目文档
-│   ├── CONSTITUTION.md      # 合作原则
-│   ├── CORRECTIONS.md       # 修正记录
-│   ├── STANDARDS.md         # 本文件 - 项目规范
-│   ├── ROADMAP.md           # 项目计划与路线图
-│   ├── AGENT-PLAN.md        # Agent 结构计划
-│   └── skills/              # Skills 定义文件
-├── requirements/            # 需求文档
+frontend/
 ├── src/
 │   ├── assets/              # 图片、图标、字体
 │   ├── components/          # 共享 UI 组件
-│   │   ├── Layout/          # 应用外壳、侧边栏、顶部导航
-│   │   └── common/          # 表格、表单、图表、卡片
+│   │   ├── AppLayout.tsx    # 应用外壳、侧边栏、顶部导航
+│   │   ├── RequirementTag.tsx  # 需求追踪注册（所有模块 Story 映射）
+│   │   └── Charts/          # ECharts 共享图表组件
 │   ├── features/            # 功能模块（按业务域划分）
 │   │   ├── operations/      # 基础运营
 │   │   ├── energy-trade/    # 能源交易
@@ -153,19 +155,184 @@ gas-station-software/
 │   │   ├── finance/         # 财税与风控
 │   │   ├── non-fuel/        # 非油增值
 │   │   ├── analytics/       # 数据分析与报表
-│   │   ├── mobile/          # 微信与移动端
 │   │   └── system/          # 系统与权限
-│   ├── i18n/                # 国际化（zh-CN、en-US）
-│   ├── mock/                # 模拟数据与 API
-│   ├── hooks/               # 自定义 React Hooks
-│   ├── utils/               # 工具函数
-│   ├── routes/              # 路由定义
+│   ├── locales/             # 国际化（zh-CN、en-US）
+│   ├── router.tsx           # 路由定义（路由常量 + lazy loading）
 │   ├── App.tsx
 │   └── main.tsx
-├── PLAN.md                  # 项目索引文件
-├── PLAN-CN.md               # 项目索引文件（中文版）
-├── README.md
 └── package.json
+```
+
+#### 后端
+
+```
+backend/
+├── app/
+│   ├── __init__.py          # 应用工厂 (create_app)
+│   ├── extensions.py        # db / migrate / jwt 等扩展统一初始化
+│   ├── config.py            # 环境配置（DevelopmentConfig / ProductionConfig）
+│   ├── models/              # SQLAlchemy Models（每模块一个文件）
+│   │   ├── __init__.py      # 统一导出所有 Model（供 migration 发现）
+│   │   ├── station.py       # Station / Nozzle / Employee
+│   │   └── ...
+│   ├── schemas/             # Marshmallow Schemas（序列化 + 输入验证）
+│   │   ├── __init__.py
+│   │   └── station.py
+│   ├── services/            # 业务逻辑层（纯 Python，无 HTTP 依赖）
+│   │   └── station_service.py
+│   ├── api/                 # Flask Blueprints（路由 + 请求/响应处理）
+│   │   ├── __init__.py      # 注册所有 Blueprint
+│   │   └── stations.py      # GET/POST/PUT/DELETE 端点
+│   └── utils/               # 工具：分页助手、错误处理、日志
+├── migrations/              # Flask-Migrate / Alembic 迁移文件（自动生成）
+├── tests/                   # pytest 测试套件
+│   ├── conftest.py          # 测试 DB fixture、app fixture
+│   ├── test_stations.py     # API 集成测试
+│   └── unit/                # Service 层单元测试
+├── requirements.txt         # 生产依赖
+├── requirements-dev.txt     # 开发依赖（pytest、black、isort 等）
+└── run.py                   # 开发服务器启动入口
+```
+
+---
+
+## 8. 后端编码规范
+
+### 8.1 语言与版本
+
+- **Python 版本：** 3.11+（类型注解完整支持）
+- **代码格式：** Black (auto-format) + isort (import 排序) + flake8 (lint)
+- **类型注解：** 函数签名必须有类型注解（参数 + 返回值）
+
+### 8.2 命名规范
+
+| 类别 | 规范 | 示例 |
+|------|------|------|
+| 变量/函数 | snake_case | `get_station_by_id`, `tank_level` |
+| 类（Model/Schema/Service） | PascalCase | `Station`, `StationSchema`, `StationService` |
+| 常量 | UPPER_SNAKE_CASE | `MAX_NOZZLE_COUNT`, `DEFAULT_PAGE_SIZE` |
+| 文件 | snake_case | `station_service.py`, `shift_handover.py` |
+| Blueprint | snake_case + `_bp` 后缀 | `stations_bp`, `orders_bp` |
+| 数据库表名 | snake_case 复数 | `stations`, `shift_handovers`, `inspection_plans` |
+
+### 8.3 SQLAlchemy Model 规范
+
+```python
+# 每个 Model 文件遵循此结构
+class Station(db.Model):
+    __tablename__ = 'stations'
+
+    # 主键
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+
+    # 业务字段（参照 architecture.md §DB Schema）
+    name = db.Column(db.String(100), nullable=False)
+    status = db.Column(db.Enum('active', 'inactive'), nullable=False)
+
+    # 审计字段（每个表必须包含）
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    deleted_at = db.Column(db.DateTime, nullable=True)  # 软删除
+
+    # 关系（显式声明，不使用隐式关联）
+    nozzles = db.relationship('Nozzle', back_populates='station', lazy='dynamic')
+```
+
+### 8.4 Flask Blueprint 规范
+
+```python
+# api/stations.py
+from flask_smorest import Blueprint
+
+stations_bp = Blueprint('stations', __name__, url_prefix='/api/v1/stations',
+                         description='站点管理 API')
+
+@stations_bp.route('/')
+@stations_bp.arguments(StationQuerySchema, location='query')
+@stations_bp.response(200, StationListSchema)
+def list_stations(args):
+    """查询站点列表"""
+    return StationService.list(args)
+```
+
+### 8.5 Service 层规范
+
+- Service 层不依赖 Flask request/response 对象（纯业务逻辑）
+- 每个 Service 方法对应一个 API 端点的核心逻辑
+- 业务规则在 Service 层实现（对应 architecture.md §业务规则）
+- Service 方法是单元测试的主要目标
+
+---
+
+## 9. 数据库规范
+
+### 9.1 迁移规范
+
+- **必须通过 Flask-Migrate 生成迁移文件**：禁止直接 ALTER TABLE 或手动修改数据库 Schema
+- 每次 Model 变更后执行：`flask db migrate -m "描述变更内容"` → `flask db upgrade`
+- 迁移文件必须 commit 到 Git，与代码变更在同一 PR 中
+- 迁移文件命名遵循 Alembic 自动生成的格式（时间戳前缀）
+
+### 9.2 表设计规范
+
+| 规范项 | 规则 |
+|--------|------|
+| 主键 | INT AUTO_INCREMENT（与 architecture.md §DB Schema 保持一致） |
+| 外键 | 必须有对应索引；显式声明 `ON DELETE` 行为 |
+| 软删除 | 使用 `deleted_at DATETIME NULL`；查询时默认过滤 `deleted_at IS NULL` |
+| 审计字段 | 每表必须包含 `created_at` + `updated_at`（ORM 自动维护） |
+| 字符编码 | utf8mb4（支持中文 + emoji） |
+| 金额字段 | `DECIMAL(12,2)`，单位：元 |
+| 枚举字段 | 使用 MySQL ENUM 类型（与 architecture.md 的 Python Enum 对齐） |
+
+### 9.3 索引策略
+
+- 外键列必须建索引
+- 高频查询字段（station_id、status、created_at 范围查询）建索引
+- 复合索引：将选择性高的字段放在前面
+- 禁止在 `deleted_at` 为 NULL 过滤的场景中全表扫描（建部分索引或复合索引）
+
+---
+
+## 10. 测试规范
+
+### 10.1 测试层次
+
+| 层次 | 工具 | 覆盖目标 | 文件位置 |
+|------|------|---------|---------|
+| 单元测试 | pytest | Service 层业务逻辑 | `tests/unit/` |
+| 集成测试 | pytest-flask | API 端点（HTTP 请求→响应） | `tests/` 根目录 |
+
+### 10.2 覆盖率目标
+
+- Service 层核心函数：**>= 80%** 行覆盖率
+- 关键业务路径（状态流转、金额计算）：**100%** 覆盖
+- 边界条件（空值、权限拒绝、数据不存在）必须有对应测试用例
+
+### 10.3 测试数据规范
+
+```python
+# conftest.py 中定义共享 fixture
+@pytest.fixture
+def station(db):
+    """测试用站点数据，测试结束后自动回滚"""
+    s = Station(name='测试站点', status='active')
+    db.session.add(s)
+    db.session.commit()
+    return s
+```
+
+- 测试数据使用 pytest fixture（不使用全局静态数据文件）
+- 每个测试用例相互独立，数据在测试结束后回滚
+- 禁止测试代码依赖外部服务（DB 使用 SQLite 内存库或专用测试 DB）
+
+### 10.4 测试命名
+
+```
+test_{功能描述}_{场景}.py
+例：test_station_create_success
+    test_station_create_duplicate_name
+    test_shift_close_without_permission
 ```
 
 ---
@@ -404,4 +571,5 @@ features/operations/
 ---
 
 *创建时间：2026-02-07*
-*版本：1.0*
+*更新时间：2026-03-04*
+*版本：1.3*
