@@ -694,6 +694,7 @@ export interface CurrentShiftData {
 | 模块 | 依赖内容 | 说明 |
 |------|----------|------|
 | 财务管理 (5.1) | CashSettlement | 现金解缴数据同步至财务 |
+| 数据分析 (7.1) | ShiftSummary | 按班次/时段的销售汇总数据，用于多维分析中的时段维度分析（US-010）；触发机制：只读聚合查询，无事件触发；数据契约：shift_id, station_id, total_revenue, order_count, fuel_volume, payment_breakdown |
 
 ---
 
