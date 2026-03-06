@@ -104,6 +104,11 @@ export default {
     inventoryLedger: '进销存流水',
     inventoryTankComparison: '罐存比对',
     inventoryAlerts: '预警管理',
+    analytics: '数据分析与报表',
+    dataAnalytics: '数据分析',
+    analyticsDashboard: '经营看板',
+    analyticsSales: '多维分析',
+    analyticsCustomers: '客户分析',
   },
 
   // 用户身份
@@ -1370,4 +1375,143 @@ export default {
       export: '导出',
     },
   },
+
+  // 数据分析
+  analytics: {
+    period: {
+      day: '日',
+      week: '周',
+      month: '月',
+      year: '年',
+    },
+    compare: {
+      yoy: '同比',
+      mom: '环比',
+      none: '不对比',
+    },
+    dashboard: {
+      title: '经营看板',
+      dataAsOf: '数据截至',
+      kpi: {
+        revenue: '营业额',
+        orders: '订单数',
+        fuelVolume: '充装量',
+        avgOrderValue: '客单价',
+        avgOrderValueTooltip: '总营业额 ÷ 总订单数',
+        growthTooltip: '与去年同期相比的增长百分比',
+        viewDetail: '查看详情 ›',
+      },
+      chart: {
+        salesTrend: '销售趋势',
+        fuelBreakdown: '油品销售占比',
+        stationRanking: '站点排行',
+        emptyTrend: '该时段暂无营业数据',
+      },
+      member: {
+        title: '会员统计概览',
+        mockBanner: '会员数据接入会员管理模块（Phase 4）后自动更新，当前为演示数据',
+        total: '会员总数',
+        new: '本期新增',
+        active: '活跃会员',
+        revenueRatio: '会员消费占比',
+      },
+    },
+    sales: {
+      title: '多维分析',
+      export: '导出',
+      exportComingSoon: '即将上线',
+      expandAll: '展开全部',
+      noHistoryData: '历史数据不足',
+      dimension: {
+        time: '时间分析',
+        station: '站点对比',
+        fuel: '品类分析',
+        segment: '时段分析',
+      },
+      filter: {
+        station: '选择站点',
+        fuelType: '选择燃料类型',
+      },
+      segment: {
+        weekday: '工作日',
+        weekend: '周末',
+        compare: '对比',
+      },
+      column: {
+        time: '时间',
+        station: '站点名称',
+        fuelType: '燃料类型',
+        revenue: '营业额（元）',
+        orders: '订单数',
+        fuelVolume: '充装量（m³）',
+        avgOrderValue: '客单价（元）',
+        yoyGrowth: '同比增长',
+        momGrowth: '环比增长',
+        timeSlot: '时段',
+        dayType: '工作日类型',
+        avgRevenue: '平均营业额（元）',
+        avgOrders: '平均订单数',
+        peakFlag: '是否高峰',
+        ratio: '占比（%）',
+      },
+    },
+    customers: {
+      title: '客户分析',
+      mockBanner: '客户数据依赖会员管理模块（Phase 4），当前为演示数据，接入后自动实时更新',
+      period: {
+        '3m': '近 3 个月',
+        '6m': '近 6 个月',
+        '12m': '近 12 个月',
+      },
+      filter: {
+        allStations: '全部站点',
+      },
+      overview: {
+        total: '客户总数',
+        new: '本期新增',
+        active: '活跃客户',
+        churnRisk: '流失风险',
+      },
+      segment: {
+        high_value: '高价值',
+        growing: '成长型',
+        regular: '一般',
+        churn_risk: '流失风险',
+      },
+      rfm: {
+        title: 'RFM 客户分析',
+        tooltip: 'R=最近消费（越近越好）F=消费频次（越高越好）M=消费金额（越高越好）',
+        frequency: '消费频次',
+        monetary: '消费金额',
+      },
+      segmentPie: {
+        title: '客户分层分布',
+      },
+      lifecycle: {
+        title: '客户生命周期分布',
+      },
+      memberGrowth: {
+        title: '会员增长趋势',
+        total: '累计会员数',
+        new: '新增',
+      },
+      churn: {
+        title: '流失预警名单',
+        name: '客户名称',
+        lastDate: '最近消费日期',
+        daysSince: '未消费天数',
+        frequency: '历史消费频次',
+        timesPerMonth: '次/月',
+        totalAmount: '历史消费总额',
+        probability: '流失风险',
+      },
+      churnLevel: {
+        high: '高',
+        medium: '中',
+        low: '低',
+      },
+      dormantWarning: '沉睡客户占比较高，建议关注',
+    },
+  },
+
 };

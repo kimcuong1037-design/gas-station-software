@@ -61,6 +61,11 @@ const ExceptionOrderList = lazy(() => import('./features/energy-trade/order-tran
 const RefundManagement = lazy(() => import('./features/energy-trade/order-transaction/pages/RefundManagement'));
 const OrderSettings = lazy(() => import('./features/energy-trade/order-transaction/pages/OrderSettings'));
 
+// Data Analytics pages
+const BusinessDashboard = lazy(() => import('./features/analytics/data-analytics/pages/BusinessDashboard'));
+const SalesAnalysis = lazy(() => import('./features/analytics/data-analytics/pages/SalesAnalysis'));
+const CustomerAnalysis = lazy(() => import('./features/analytics/data-analytics/pages/CustomerAnalysis'));
+
 // Inventory Management pages
 const InventoryOverview = lazy(() => import('./features/energy-trade/inventory-management/pages/InventoryOverview'));
 const InboundManagement = lazy(() => import('./features/energy-trade/inventory-management/pages/InboundManagement'));
@@ -418,6 +423,37 @@ export const router = createBrowserRouter([
               {
                 path: 'alerts',
                 element: withSuspense(AlertManagement),
+              },
+            ],
+          },
+        ],
+      },
+      // Data Analytics routes
+      {
+        path: 'analytics',
+        children: [
+          {
+            index: true,
+            element: <Navigate to="/analytics/data-analytics/dashboard" replace />,
+          },
+          {
+            path: 'data-analytics',
+            children: [
+              {
+                index: true,
+                element: <Navigate to="/analytics/data-analytics/dashboard" replace />,
+              },
+              {
+                path: 'dashboard',
+                element: withSuspense(BusinessDashboard),
+              },
+              {
+                path: 'sales',
+                element: withSuspense(SalesAnalysis),
+              },
+              {
+                path: 'customers',
+                element: withSuspense(CustomerAnalysis),
               },
             ],
           },

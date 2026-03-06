@@ -36,6 +36,8 @@ import {
   ReconciliationOutlined,
   StockOutlined,
   LineChartOutlined,
+  PieChartOutlined,
+  UserSwitchOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
@@ -319,6 +321,35 @@ const AppLayout: React.FC = () => {
         },
       ],
     },
+    {
+      key: '/analytics',
+      icon: <PieChartOutlined />,
+      label: t('menu.analytics', '数据分析与报表'),
+      children: [
+        {
+          key: '/analytics/data-analytics',
+          icon: <BarChartOutlined />,
+          label: t('menu.dataAnalytics', '数据分析'),
+          children: [
+            {
+              key: '/analytics/data-analytics/dashboard',
+              icon: <DashboardOutlined />,
+              label: t('menu.analyticsDashboard', '经营看板'),
+            },
+            {
+              key: '/analytics/data-analytics/sales',
+              icon: <LineChartOutlined />,
+              label: t('menu.analyticsSales', '多维分析'),
+            },
+            {
+              key: '/analytics/data-analytics/customers',
+              icon: <UserSwitchOutlined />,
+              label: t('menu.analyticsCustomers', '客户分析'),
+            },
+          ],
+        },
+      ],
+    },
   ];
 
   // --- Sidebar accordion: only one submenu open per level ---
@@ -411,7 +442,8 @@ const AppLayout: React.FC = () => {
   const isPriceManagementPage = location.pathname.startsWith('/energy-trade/price-management');
   const isOrderTransactionPage = location.pathname.startsWith('/energy-trade/order');
   const isInventoryPage = location.pathname.startsWith('/energy-trade/inventory');
-  const showStationSelector = isShiftHandoverPage || isDeviceLedgerPage || isInspectionPage || isPriceManagementPage || isOrderTransactionPage || isInventoryPage;
+  const isAnalyticsPage = location.pathname.startsWith('/analytics');
+  const showStationSelector = isShiftHandoverPage || isDeviceLedgerPage || isInspectionPage || isPriceManagementPage || isOrderTransactionPage || isInventoryPage || isAnalyticsPage;
 
   // 生成当前路径的面包屑
   const getBreadcrumbItems = () => {
@@ -622,6 +654,26 @@ const AppLayout: React.FC = () => {
           items.push({ title: t('menu.inventoryTankComparison', '罐存比对') as string });
         } else if (pathSegments.includes('alerts')) {
           items.push({ title: t('menu.inventoryAlerts', '预警管理') as string });
+        }
+      }
+    }
+
+    if (pathSegments.includes('analytics')) {
+      items.push({
+        title: t('menu.analytics', '数据分析与报表') as string,
+        onClick: () => navigate('/analytics'),
+        className: 'breadcrumb-link'
+      });
+      if (pathSegments.includes('data-analytics')) {
+        items.push({
+          title: t('menu.dataAnalytics', '数据分析') as string,
+        });
+        if (pathSegments.includes('dashboard')) {
+          items.push({ title: t('menu.analyticsDashboard', '经营看板') as string });
+        } else if (pathSegments.includes('sales')) {
+          items.push({ title: t('menu.analyticsSales', '多维分析') as string });
+        } else if (pathSegments.includes('customers')) {
+          items.push({ title: t('menu.analyticsCustomers', '客户分析') as string });
         }
       }
     }

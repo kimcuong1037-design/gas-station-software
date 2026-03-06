@@ -104,6 +104,11 @@ export default {
     inventoryLedger: 'Ledger',
     inventoryTankComparison: 'Tank Comparison',
     inventoryAlerts: 'Alerts',
+    analytics: 'Analytics & Reports',
+    dataAnalytics: 'Data Analytics',
+    analyticsDashboard: 'Business Dashboard',
+    analyticsSales: 'Sales Analysis',
+    analyticsCustomers: 'Customer Analysis',
   },
 
   // User identity
@@ -1351,6 +1356,144 @@ export default {
     action: {
       createOrder: 'Create Order',
       export: 'Export',
+    },
+  },
+
+  // Data Analytics
+  analytics: {
+    period: {
+      day: 'Day',
+      week: 'Week',
+      month: 'Month',
+      year: 'Year',
+    },
+    compare: {
+      yoy: 'YoY',
+      mom: 'MoM',
+      none: 'None',
+    },
+    dashboard: {
+      title: 'Business Dashboard',
+      dataAsOf: 'Data as of',
+      kpi: {
+        revenue: 'Revenue',
+        orders: 'Orders',
+        fuelVolume: 'Fuel Volume',
+        avgOrderValue: 'Avg Order Value',
+        avgOrderValueTooltip: 'Total Revenue ÷ Total Orders',
+        growthTooltip: 'Growth percentage compared to same period last year',
+        viewDetail: 'View Details ›',
+      },
+      chart: {
+        salesTrend: 'Sales Trend',
+        fuelBreakdown: 'Fuel Sales Breakdown',
+        stationRanking: 'Station Ranking',
+        emptyTrend: 'No sales data for this period',
+      },
+      member: {
+        title: 'Member Stats',
+        mockBanner: 'Member data will auto-update after Member Management module (Phase 4) is integrated. Currently showing demo data.',
+        total: 'Total Members',
+        new: 'New This Period',
+        active: 'Active Members',
+        revenueRatio: 'Member Revenue Ratio',
+      },
+    },
+    sales: {
+      title: 'Sales Analysis',
+      export: 'Export',
+      exportComingSoon: 'Coming soon',
+      expandAll: 'Expand All',
+      noHistoryData: 'Insufficient historical data',
+      dimension: {
+        time: 'Time Analysis',
+        station: 'Station Comparison',
+        fuel: 'Fuel Category',
+        segment: 'Time Segment',
+      },
+      filter: {
+        station: 'Select Station',
+        fuelType: 'Select Fuel Type',
+      },
+      segment: {
+        weekday: 'Weekday',
+        weekend: 'Weekend',
+        compare: 'Compare',
+      },
+      column: {
+        time: 'Time',
+        station: 'Station',
+        fuelType: 'Fuel Type',
+        revenue: 'Revenue (¥)',
+        orders: 'Orders',
+        fuelVolume: 'Volume (m³)',
+        avgOrderValue: 'Avg Value (¥)',
+        yoyGrowth: 'YoY Growth',
+        momGrowth: 'MoM Growth',
+        timeSlot: 'Time Slot',
+        dayType: 'Day Type',
+        avgRevenue: 'Avg Revenue (¥)',
+        avgOrders: 'Avg Orders',
+        peakFlag: 'Peak',
+        ratio: 'Ratio (%)',
+      },
+    },
+    customers: {
+      title: 'Customer Analysis',
+      mockBanner: 'Customer data depends on Member Management module (Phase 4). Currently showing demo data.',
+      period: {
+        '3m': 'Last 3 Months',
+        '6m': 'Last 6 Months',
+        '12m': 'Last 12 Months',
+      },
+      filter: {
+        allStations: 'All Stations',
+      },
+      overview: {
+        total: 'Total Customers',
+        new: 'New This Period',
+        active: 'Active Customers',
+        churnRisk: 'Churn Risk',
+      },
+      segment: {
+        high_value: 'High Value',
+        growing: 'Growing',
+        regular: 'Regular',
+        churn_risk: 'Churn Risk',
+      },
+      rfm: {
+        title: 'RFM Customer Analysis',
+        tooltip: 'R=Recency (lower is better) F=Frequency (higher is better) M=Monetary (higher is better)',
+        frequency: 'Frequency',
+        monetary: 'Monetary',
+      },
+      segmentPie: {
+        title: 'Customer Segmentation',
+      },
+      lifecycle: {
+        title: 'Customer Lifecycle',
+      },
+      memberGrowth: {
+        title: 'Member Growth Trend',
+        total: 'Total Members',
+        new: 'New',
+      },
+      churn: {
+        title: 'Churn Risk List',
+        name: 'Customer',
+        lastDate: 'Last Purchase',
+        daysSince: 'Days Since',
+        frequency: 'Purchase Frequency',
+        timesPerMonth: '/month',
+        totalAmount: 'Total Spend',
+        probability: 'Risk Level',
+      },
+      churnLevel: {
+        high: 'High',
+        medium: 'Medium',
+        low: 'Low',
+      },
+      dormantWarning: 'High proportion of dormant customers — please pay attention',
     },
   },
 };
