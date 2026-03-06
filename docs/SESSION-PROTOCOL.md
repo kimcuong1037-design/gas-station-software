@@ -9,30 +9,36 @@
 
 ## 1. Session 启动检查（必须执行）
 
+> **Context 优化：** 遵循 `CLAUDE.md` 分层加载策略，不要一次性加载全部文档。
+
 每次启动新的 Claude Code 会话时，按以下顺序执行：
 
-### Step 1: 定位当前位置
+### Step 1: 定位当前位置（Layer 1 加载）
 
 ```
-读取 docs/PROGRESS.md 顶部的 "Current Module Status" 区块
+读取 docs/PROGRESS.md（已精简，约 100 行）
 → 确认：当前模块、当前步骤、阻塞项、上次 Session 日期
+→ 同时获取：高层进度总览 + 最近 session 日志 + 下次起点
 ```
 
-### Step 2: 确认全局进度
+### Step 2: 加载纠偏意识（Layer 1 加载）
 
 ```
-读取 docs/ROADMAP.md §6 进度跟踪
-→ 确认：哪些模块已完成、当前阶段的整体进展
-```
-
-### Step 3: 加载纠偏意识
-
-```
-读取 docs/CORRECTIONS.md §1 模式速查表
+读取 docs/CORRECTIONS.md 前 100 行（§1 模式速查表）
 → 重点关注与当前模块相关的模式（如前端开发关注 P1、P2、P4）
+→ 不需要读 §2 摘要表（按需查阅）
 ```
 
-### Step 4: 加载模块上下文（如继续未完成模块）
+### Step 3: 与用户对齐
+
+```
+向用户简要汇报：
+- "当前项目处于 [阶段 X]，模块 [Y] 在 [Step Z]"
+- "上次 Session 完成了 [...]，本次建议继续 [...]"
+- 等待用户确认或调整方向
+```
+
+### Step 4: 按需加载模块上下文（Layer 2，用户确认方向后）
 
 ```
 前端工作：
@@ -45,15 +51,8 @@
 - MODULE-ASSIGNMENTS.md 当前模块的 BE 状态
 - backend/app/models/{module}.py 和 backend/app/api/{module}s.py 是否已创建
 → 确认从 BE Step N 继续
-```
 
-### Step 5: 与用户对齐
-
-```
-向用户简要汇报：
-- "当前项目处于 [阶段 X]，模块 [Y] 在 [Step Z]"
-- "上次 Session 完成了 [...]，本次建议继续 [...]"
-- 等待用户确认或调整方向
+其他文档按需加载（见 CLAUDE.md Layer 2/3）
 ```
 
 ---
@@ -67,10 +66,13 @@
 ```
 编辑 docs/PROGRESS.md：
 1. 更新顶部 "Current Module Status"（当前步骤、阻塞项、日期）
-2. 在"进展记录"中新增本次 Session 条目，包含：
-   - 日期 + Session 主题
-   - 完成的工作内容
-   - 影响的文件清单
+2. 在"最近 Session 日志"区块新增/替换本次 Session 条目
+3. 更新"下次继续的起点"区块
+
+归档规则：
+- PROGRESS.md 只保留最近 1-2 条 session 日志
+- 当日志累积超过 2 条时，将旧条目移到 PROGRESS-ARCHIVE.md 顶部（"最近 Session 日志"标题下方）
+- 移动时保持条目完整（标题 + 内容 + 分隔线）
 ```
 
 ### Step 2: 更新路线图（如有模块完成）

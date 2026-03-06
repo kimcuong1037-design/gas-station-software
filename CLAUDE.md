@@ -2,21 +2,39 @@
 
 加气站运营管理系统 — React + TypeScript + Ant Design 前端原型，当前处于 UI 原型阶段（mock 数据驱动）。
 
-## 必读文档（按优先级）
+## 文档分层加载策略
 
-开始任何模块工作前，必须按顺序阅读：
+> **Context 优化原则：** 不要一次性加载全部文档。按需分层加载，节省 context 窗口。
 
-1. **`docs/TEAM-RULES.md`** — 三级行为准则（推荐/不建议/禁止），团队行为边界速查
-2. **`docs/CONSTITUTION.md`** — 8 条最高准则（拆解优先、规范先行、不确定必确认、文件删除双重确认等）
-3. **`docs/AGENT-PLAN.md`** — 模块开发 14 步流程 + Agent/Skill 体系 + RequirementTag 协议（§7）+ 团队协作（§8）
-4. **`docs/CORRECTIONS.md`** — 10 大纠偏模式（P1~P10），30 条历史修正。**每次开发新模块前必须重读 §1 模式速查表**
-5. **`docs/STANDARDS.md`** — 术语表（§1）+ 技术规范
-6. **`docs/SESSION-PROTOCOL.md`** — Session 启动/结束标准流程
-7. **`docs/ROADMAP.md`** — 7 个阶段 26 个模块的总路线图
-8. **`docs/PROGRESS.md`** — 精细进度追踪，顶部有 "Current Module Status" 快速定位
-9. **`docs/MODULE-ASSIGNMENTS.md`** — 模块认领表 + 共享文件修改协议 + Git 分支与 PR 流程
+### Layer 0: 自动加载（本文件 + memory）
 
-> **首次加入项目？** 请先通读 `docs/TEAM-ONBOARDING.md`（新成员引导手册），按 Day 0→Day 1→Day 2 节奏入门。
+- `CLAUDE.md`（本文件）— 关键约定、禁止事项、Checklist 已内联
+- `memory/MEMORY.md` — 跨 session 经验积累
+
+### Layer 1: Session 启动必读（~20KB）
+
+每次新 session 启动时加载：
+1. **`docs/PROGRESS.md`** — 顶部 "Current Module Status" + 高层进度 + 最近 session + 下次起点
+2. **`docs/CORRECTIONS.md` §1** — 模式速查表（P1~P10），仅读前 100 行即可
+
+### Layer 2: 进入模块开发时加载
+
+当确定要开发某个模块后，按需加载：
+- **`docs/features/{domain}/{module}/`** — 该模块的文档套件（requirements, user-stories, architecture, ux-design, ui-schema）
+- **`docs/AGENT-PLAN.md`** — 完整 14 步流程（仅在需要查步骤细节时）
+- **`docs/STANDARDS.md`** — 术语查询（仅在 Step 9.5 术语扫描或 Step 10 编码时）
+
+### Layer 3: 特定场景按需加载
+
+- **`docs/ROADMAP.md`** — 查看全局模块列表和阶段规划时
+- **`docs/cross-module-erd.md`** — Step 4 架构设计时（跨模块实体关系）
+- **`docs/MODULE-ASSIGNMENTS.md`** — 认领模块或查看共享文件协议时
+- **`docs/CONSTITUTION.md`** — 需要确认最高准则时
+- **`docs/TEAM-RULES.md`** — 需要确认行为边界时
+- **`docs/SESSION-PROTOCOL.md`** — 需要查看 session 结束更新流程时
+- **`docs/PROGRESS-ARCHIVE.md`** — 需要查看历史 session 详细日志时
+
+> **首次加入项目？** 请先通读 `docs/TEAM-ONBOARDING.md`（新成员引导手册）。
 
 ## 模块开发流程（AGENT-PLAN 14 步摘要）
 
