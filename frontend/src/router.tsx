@@ -66,6 +66,11 @@ const BusinessDashboard = lazy(() => import('./features/analytics/data-analytics
 const SalesAnalysis = lazy(() => import('./features/analytics/data-analytics/pages/SalesAnalysis'));
 const CustomerAnalysis = lazy(() => import('./features/analytics/data-analytics/pages/CustomerAnalysis'));
 
+// Report Center pages
+const ReportOverview = lazy(() => import('./features/analytics/report-center/pages/ReportOverview'));
+const StandardReport = lazy(() => import('./features/analytics/report-center/pages/StandardReport'));
+const CustomReport = lazy(() => import('./features/analytics/report-center/pages/CustomReport'));
+
 // Inventory Management pages
 const InventoryOverview = lazy(() => import('./features/energy-trade/inventory-management/pages/InventoryOverview'));
 const InboundManagement = lazy(() => import('./features/energy-trade/inventory-management/pages/InboundManagement'));
@@ -454,6 +459,27 @@ export const router = createBrowserRouter([
               {
                 path: 'customers',
                 element: withSuspense(CustomerAnalysis),
+              },
+            ],
+          },
+          {
+            path: 'report-center',
+            children: [
+              {
+                index: true,
+                element: <Navigate to="/analytics/report-center/overview" replace />,
+              },
+              {
+                path: 'overview',
+                element: withSuspense(ReportOverview),
+              },
+              {
+                path: 'standard',
+                element: withSuspense(StandardReport),
+              },
+              {
+                path: 'custom',
+                element: withSuspense(CustomReport),
               },
             ],
           },

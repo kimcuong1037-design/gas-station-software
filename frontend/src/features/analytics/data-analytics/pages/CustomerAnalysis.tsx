@@ -183,7 +183,7 @@ const CustomerAnalysis: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Title level={4} style={{ margin: 0 }}>{t('analytics.customers.title')}</Title>
-          <RequirementTag module="data-analytics" />
+          <RequirementTag componentIds={['analytics-customer-overview', 'analytics-rfm', 'analytics-customer-segment', 'analytics-member-growth', 'analytics-churn-risk']} module="data-analytics" showDetail />
         </div>
       </div>
 

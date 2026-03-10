@@ -24,7 +24,7 @@
 2. ✅ **导航菜单** — AppLayout.tsx 菜单 key/层级正确，遵循 3 层模式（Domain → Sub-group → Leaf）
 3. ✅ **面包屑** — 中间层使用子菜单分组名称，所有层级可点击
 4. ✅ **i18n** — zh-CN + en-US 翻译键完整
-5. ✅ **RequirementTag 三步**：① 创建 userStoryMapping.ts ② 在 RequirementTag.tsx 注册 ③ 每个页面组件使用
+5. ✅ **RequirementTag 四步**：① 创建 userStoryMapping.ts ② 在 RequirementTag.tsx 注册 ③ 每个页面传入 `componentIds={[...]}` + `module` + `showDetail` ④ **浏览器验证标签可见**（仅传 `module` 不传 `componentIds` 会导致 return null 不渲染）
 6. ✅ **Table scroll.x** — 每个带 explicit column width 的 `<Table>` 必须有 `scroll={{ x: sum }}`
 7. ✅ **architecture.md 存在** — 不可跳过，它是 types.ts 和 mock 数据的唯一真相来源
 8. ✅ **跨域视觉一致性** — 与已有模块做侧栏截图对比
@@ -148,6 +148,7 @@
 | 28 | 02-28 | i18n 嵌套命名空间键名冲突 | `t('inventory.action')` 指向嵌套对象而非字符串，Table 列标题渲染为错误提示 | P9 |
 | 29 | 03-01 | API 文档写操作端点缺少 JSON 示例 | architecture.md 只为 GET 响应提供 TypeScript 类型，POST/PUT/PATCH 仅在表格列字段名，缺少请求体和响应体 JSON 示例 | P10 |
 | 30 | 03-02 | i18n 全局缺失键（交接历史等 17+ 处） | 前端代码使用的 `t()` 键未注册到 locale 文件，筛选器/统计卡片/分页等非主体区域漏检 | P9 |
+| 31 | 03-10 | RequirementTag 仅传 module 未传 componentIds | 误以为 `module` 属性能显示全部 story，实际需 `componentIds` 才能渲染；Checklist 第 5 条未细化、缺运行时验证 | P2 |
 
 ---
 
@@ -165,7 +166,7 @@
 ---
 
 *创建时间：2026-02-07*
-*最后更新：2026-03-01*
+*最后更新：2026-03-10*
 *压缩重构：2026-02-27（原 357 行 → 当前约 120 行，完整版归档至 CORRECTIONS-ARCHIVE.md）*
 *P9 新增：2026-02-28（i18n 嵌套命名空间键名冲突）*
 *P10 新增：2026-03-01（API 文档写操作端点缺少 JSON 示例）*

@@ -348,6 +348,28 @@ const AppLayout: React.FC = () => {
             },
           ],
         },
+        {
+          key: '/analytics/report-center',
+          icon: <FileTextOutlined />,
+          label: t('menu.reportCenter', '报表中心'),
+          children: [
+            {
+              key: '/analytics/report-center/overview',
+              icon: <DashboardOutlined />,
+              label: t('menu.reportOverview', '报表总览'),
+            },
+            {
+              key: '/analytics/report-center/standard',
+              icon: <FileSearchOutlined />,
+              label: t('menu.standardReport', '标准报表'),
+            },
+            {
+              key: '/analytics/report-center/custom',
+              icon: <SettingOutlined />,
+              label: t('menu.customReport', '自定义报表'),
+            },
+          ],
+        },
       ],
     },
   ];
@@ -674,6 +696,20 @@ const AppLayout: React.FC = () => {
           items.push({ title: t('menu.analyticsSales', '多维分析') as string });
         } else if (pathSegments.includes('customers')) {
           items.push({ title: t('menu.analyticsCustomers', '客户分析') as string });
+        }
+      }
+      if (pathSegments.includes('report-center')) {
+        items.push({
+          title: t('menu.reportCenter', '报表中心') as string,
+          onClick: () => navigate('/analytics/report-center/overview'),
+          className: 'breadcrumb-link'
+        });
+        if (pathSegments.includes('overview')) {
+          items.push({ title: t('menu.reportOverview', '报表总览') as string });
+        } else if (pathSegments.includes('standard')) {
+          items.push({ title: t('menu.standardReport', '标准报表') as string });
+        } else if (pathSegments.includes('custom')) {
+          items.push({ title: t('menu.customReport', '自定义报表') as string });
         }
       }
     }

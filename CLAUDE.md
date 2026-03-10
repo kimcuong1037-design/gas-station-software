@@ -67,7 +67,7 @@ Step 14: 文档更新
 2. 导航菜单 — `AppLayout.tsx`，3 层模式（Domain → Sub-group → Leaf）
 3. 面包屑 — 中间层用子菜单分组名
 4. i18n — zh-CN + en-US 翻译键完整
-5. RequirementTag 三步 — ① `userStoryMapping.ts` ② 注册到 `RequirementTag.tsx` ③ 每个页面使用
+5. RequirementTag 四步 — ① `userStoryMapping.ts` ② 注册到 `RequirementTag.tsx` ③ 每个页面传入 `componentIds={[...]}` + `module` + `showDetail` ④ 浏览器验证标签可见
 6. Table scroll.x — 有 column width 的 `<Table>` 必须有 `scroll={{ x: sum }}`
 7. architecture.md 存在
 8. 跨模块视觉一致性 — 与已有模块对比侧栏/Header/表格

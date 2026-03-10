@@ -10,6 +10,7 @@ import { priceManagementUserStories } from '../features/energy-trade/price-manag
 import { orderTransactionUserStories } from '../features/energy-trade/order-transaction/userStoryMapping';
 import { inventoryUserStories } from '../features/energy-trade/inventory-management/userStoryMapping';
 import { analyticsUserStories } from '../features/analytics/data-analytics/userStoryMapping';
+import { reportCenterUserStories } from '../features/analytics/report-center/userStoryMapping';
 
 // 合并所有模块的 User Story 映射
 const allUserStories: Record<string, UserStoryMapping> = {
@@ -21,6 +22,7 @@ const allUserStories: Record<string, UserStoryMapping> = {
   ...orderTransactionUserStories,
   ...inventoryUserStories,
   ...analyticsUserStories,
+  ...reportCenterUserStories,
 };
 
 // 模块映射表，用于按模块筛选
@@ -33,6 +35,7 @@ const moduleStories = {
   'order-transaction': orderTransactionUserStories,
   'inventory-management': inventoryUserStories,
   'data-analytics': analyticsUserStories,
+  'report-center': reportCenterUserStories,
   all: allUserStories,
 } as const;
 

@@ -400,6 +400,30 @@
 
 ---
 
+## 2026-03-10 RequirementTag 仅传 module 未传 componentIds，导致标签不渲染
+
+- **修正内容：** 7.2 报表中心和 7.1 数据分析共 6 个页面的 `<RequirementTag>` 仅传了 `module="report-center"` / `module="data-analytics"`，未传 `componentIds`，导致组件内部 `ids` 为空数组 → `mappings` 为空 → return null，页面上完全不显示 User Story 关联标签。同时缺少 `showDetail` 属性，即使传了 componentId 也只会显示压缩格式而非完整 US 编号列表。
+- **原因分析：**
+  1. **API 理解不完整：** 开发者误以为 `module` 属性能让 RequirementTag 显示该模块的所有 story，实际上 `module` 只是指定"去哪个映射表查找"，真正决定渲染内容的是 `componentId` / `componentIds`
+  2. **Checklist 条目粒度不够：** P2 Checklist 第 5 条"RequirementTag 三步"只检查了"① 创建 userStoryMapping ② 注册到 RequirementTag.tsx ③ 每个页面使用"，但第 ③ 步的"使用"未定义**正确的使用方式**（需传 componentIds + showDetail），仅检查了"有引用"而非"引用正确"
+  3. **缺少运行时验证：** 交付前仅检查 `npm run build` 通过和代码中有 import/引用，但从未在浏览器中确认 RequirementTag 是否真正渲染出可见标签
+  4. **跨模块传染：** 7.1 data-analytics 首次犯此错误后，7.2 report-center 复制了同样的错误用法模式
+- **影响范围：** 6 个页面（7.1 × 3 + 7.2 × 3），所有页面 Header 区域的 RequirementTag 不可见
+- **修复文件清单：**
+  - `frontend/src/features/analytics/data-analytics/pages/BusinessDashboard.tsx` — 添加 componentIds (6 stories) + showDetail
+  - `frontend/src/features/analytics/data-analytics/pages/SalesAnalysis.tsx` — 添加 componentIds (5 stories) + showDetail
+  - `frontend/src/features/analytics/data-analytics/pages/CustomerAnalysis.tsx` — 添加 componentIds (5 stories) + showDetail
+  - `frontend/src/features/analytics/report-center/pages/ReportOverview.tsx` — 添加 componentIds (3 stories) + showDetail
+  - `frontend/src/features/analytics/report-center/pages/StandardReport.tsx` — 添加 componentIds (7 stories) + showDetail
+  - `frontend/src/features/analytics/report-center/pages/CustomReport.tsx` — 添加 componentIds (4 stories) + showDetail
+- **经验总结：**
+  1. **RequirementTag 正确用法模板：** `<RequirementTag componentIds={['story-key-1', 'story-key-2']} module="module-name" showDetail />`，三个属性缺一不可
+  2. **Checklist 第 5 条应细化为 4 个子步骤：** ① 创建 userStoryMapping.ts ② 注册到 RequirementTag.tsx ③ 每个页面传入 `componentIds` + `showDetail` ④ **浏览器验证标签可见**
+  3. **运行时验证不可替代：** build 通过 ≠ 功能正确。组件 return null 不报错但功能丧失，必须在浏览器中肉眼确认
+  4. **复制代码前验证原型正确性：** 从已有模块复制用法模式前，先确认源模块的用法本身是正确的
+
+---
+
 *创建时间：2026-02-27*
-*最后更新：2026-03-02*
+*最后更新：2026-03-10*
 *内容来源：docs/CORRECTIONS.md 原始内容 (2026-02-07 ~ 2026-02-25) + auto-memory corrections (2026-02-25 ~ 2026-03-02)*

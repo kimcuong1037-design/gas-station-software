@@ -5,7 +5,7 @@
 
 | 开发者 | 当前模块 | 当前步骤 | 阻塞项 | 上次活跃 |
 |--------|---------|---------|--------|---------|
-| Roger | 7.1 数据分析 | Step 14（文档更新 — 模块交付完成） | 无 | 2026-03-06 |
+| Roger | 7.2 报表中心 | Step 14（文档更新 — 模块交付完成） | 无 | 2026-03-10 |
 
 **Phase 2 最终状态：** 2.1 (3.94) | 2.2 (3.71) | 2.3 (3.77)
 
@@ -13,7 +13,7 @@
 
 ## 高层进度
 
-截至 2026-03-06，前端 UI 整体进展约为 **31%**（8/26 模块），Phase 1 + Phase 2 全部完成，Phase 3 进行中。
+截至 2026-03-10，前端 UI 整体进展约为 **35%**（9/26 模块），Phase 1 + Phase 2 全部完成，Phase 3 进行中。
 
 | 阶段 | 模块 | UI 评分 | 状态 |
 |------|------|---------|------|
@@ -25,6 +25,7 @@
 | Phase 2 | 2.2 订单与交易 | 3.71 | done |
 | Phase 2 | 2.3 库存管理 | 3.77 | done |
 | Phase 3 | 7.1 数据分析 | 4.00 | done |
+| Phase 3 | 7.2 报表中心 | 4.18 | done |
 
 - Phase 1 scroll.x 批量修复完成（14 个表格，4 模块）
 - 后端准备工作完成（跨模块 ERD + MySQL 8.0 Schema 草案 + API 路径一致性修复）
@@ -37,6 +38,41 @@
 ## 最近 Session 日志
 
 > 完整历史日志见 [`PROGRESS-ARCHIVE.md`](PROGRESS-ARCHIVE.md)。
+
+### 2026-03-10 [Roger] (Module 7.2 报表中心 — 前端交付完成)
+
+#### Step 0~9: 文档套件完成
+
+| 文档 | 说明 |
+|------|------|
+| requirements.md | 2 Epics (标准报表 F-001~006, 自定义报表 F-007~010) + Epic 3 (报表管理 F-011~012) |
+| user-stories.md | 12 User Stories: US-001~012 |
+| architecture.md | 2 实体 (ReportTemplate + ReportInstance), 9 API, 5 系统模板 |
+| ux-design.md | P01 总览 + P02 标准报表 + P03 自定义报表 |
+| ui-schema.md | 完整组件树，scroll.x: 660/1020/510/690/820 |
+
+#### Step 10: 前端工程实现
+
+| 类别 | 文件 | 说明 |
+|------|------|------|
+| 类型 | `types.ts` | ReportTemplate, ReportInstance + 5 种报表数据结构 |
+| 常量 | `constants.ts` | REPORT_TYPE_CONFIG, DATA_SOURCE_CONFIG, 路由常量 |
+| Mock | `templateMock.ts`, `reportInstanceMock.ts`, `reportDataMock.ts` | 8 模板 + 12 实例 + 完整报表数据 |
+| 页面 | `ReportOverview.tsx` | 快速入口卡片 + 收藏/最近列表 + 日历 Popover 钻取 |
+| 页面 | `StandardReport.tsx` | 5 Tab 标准报表 + KPI + Table + Charts |
+| 页面 | `CustomReport.tsx` | 模板列表 + 4 步 Drawer 构建器 + 表格/图表切换预览 |
+| 集成 | router, AppLayout, RequirementTag, i18n | 路由、菜单、面包屑、需求追踪、双语 |
+
+#### Step 11: UI 评审 — 4.18/5.0
+
+P1: 0 | P2: 3（全部修复） | Checklist 9/9 PASS
+
+#### Next Steps
+
+- **Phase 3 下一模块：** 7.3 数据大屏
+- **可选：** Step 3.5 识别的 5 个上游模块 architecture.md 补充下游消费者声明
+
+---
 
 ### 2026-03-06 [Roger] (Module 7.1 数据分析 — 前端交付完成)
 
@@ -67,9 +103,9 @@ P1: 3（全部修复） | P2: 8 | Checklist 9/9 PASS
 
 > 每个人维护自己的"起点"区块。新 session 开始时阅读自己的区块恢复上下文。
 
-### Roger (2026-03-06 更新)
+### Roger (2026-03-10 更新)
 
-**下一步：** Phase 3 下一模块（7.2 报表管理 或 7.3 数据导出，待确认优先级）
+**下一步：** Phase 3 下一模块 7.3 数据大屏（可视化大屏：全屏数据大屏，实时 KPI、地图、图表）
 
 **启动时按需加载（非全部必读）：**
 1. `docs/CORRECTIONS.md` §1 — 模式速查表（仅 P1~P10 标题即可）

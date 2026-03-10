@@ -79,7 +79,7 @@ const BusinessDashboard: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Title level={4} style={{ margin: 0 }}>{t('analytics.dashboard.title')}</Title>
-          <RequirementTag module="data-analytics" />
+          <RequirementTag componentIds={['analytics-kpi', 'analytics-sales-trend', 'analytics-fuel-breakdown', 'analytics-station-ranking', 'analytics-station-filter', 'analytics-member-stats']} module="data-analytics" showDetail />
         </div>
       </div>
 

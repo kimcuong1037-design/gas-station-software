@@ -211,7 +211,7 @@ const SalesAnalysis: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Title level={4} style={{ margin: 0 }}>{t('analytics.sales.title')}</Title>
-          <RequirementTag module="data-analytics" />
+          <RequirementTag componentIds={['analytics-time-analysis', 'analytics-station-compare', 'analytics-fuel-analysis', 'analytics-time-segment', 'analytics-data-table']} module="data-analytics" showDetail />
         </div>
         <Tooltip title={t('analytics.sales.exportComingSoon', '即将上线')}>
           <Button icon={<ExportOutlined />} disabled>{t('analytics.sales.export', '导出')}</Button>
